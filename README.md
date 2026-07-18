@@ -4,7 +4,7 @@
 
 ## Aeonic eval (`eval/`)
 
-Measures how many tokens the same content costs across **English (baseline), Vietnamese, Chinese, Russian, German** on the 2026 model matrix, using the committed FLORES+ parallel corpus. Premium is always measured relative to English.
+Measures how many tokens the same content costs across **English (baseline), Vietnamese, Chinese, Russian, German** on the 2026 model matrix, across **two committed parallel corpora** — FLORES+ (formal prose) and MASSIVE (short virtual-assistant utterances) — so the premium is reported in both a formal and a conversational register. Premium is always measured relative to English.
 
 ```bash
 make setup       # create the venv, install pinned deps (requirements-eval.txt)
@@ -16,7 +16,7 @@ make test        # reproduce the paper's cl100k premiums (correctness gate)
 
 **Correctness is anchored to the paper.** The eval reproduces the upstream `cl100k_base` premiums (Vietnamese 2.45, Chinese 1.91, German 1.58) to within 0.005 — see `make test`.
 
-**Coverage as committed:** OpenAI `o200k_base` and `cl100k_base` counters run offline today. The Anthropic `count_tokens` counters (both Claude tokenizer generations) are implemented and run once an `ANTHROPIC_API_KEY` is provided; the Gemini and open-weight counters have reserved interface slots pending verified model IDs. The MASSIVE second-domain corpus is a planned addition. `run_manifest.json` always reflects the true state of a given run — nothing is estimated.
+**Coverage as committed:** OpenAI `o200k_base` and `cl100k_base` counters run offline today. The Anthropic `count_tokens` counters (both Claude tokenizer generations) are implemented and run once an `ANTHROPIC_API_KEY` is provided; the Gemini and open-weight counters have reserved interface slots pending verified model IDs. Both corpora (FLORES+ and MASSIVE) are committed and run every pass; the MASSIVE slice is a CC BY 4.0 derivative built once by `python -m eval.build_massive` (see `eval/massive/PROVENANCE.md`). `run_manifest.json` always reflects the true state of a given run — nothing is estimated.
 
 ---
 

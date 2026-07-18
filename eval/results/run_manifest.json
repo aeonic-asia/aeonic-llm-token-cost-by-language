@@ -1,19 +1,21 @@
 {
   "dataset_as_of": "2026-07-18",
-  "corpus": {
-    "name": "FLORES+",
-    "splits": [
-      "dev",
-      "devtest"
-    ],
-    "languages": {
-      "eng_Latn": "English",
-      "vie_Latn": "Vietnamese",
-      "zho_Hans": "Chinese (Simplified)",
-      "rus_Cyrl": "Russian",
-      "deu_Latn": "German"
-    },
-    "sentences_per_language": 2009
+  "corpora": {
+    "flores": "FLORES+",
+    "massive": "MASSIVE"
+  },
+  "corpora_measured_this_pass": {
+    "massive": 2033
+  },
+  "corpora_carried_forward": [
+    "flores"
+  ],
+  "languages": {
+    "eng_Latn": "English",
+    "vie_Latn": "Vietnamese",
+    "zho_Hans": "Chinese (Simplified)",
+    "rus_Cyrl": "Russian",
+    "deu_Latn": "German"
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
@@ -39,6 +41,6 @@
     "tiktoken": "0.13.0",
     "pandas": "3.0.3"
   },
-  "notes": "MASSIVE second-domain corpus deferred. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample); Gemini/Llama slots deferred. See counters_ran / counters_skipped for what actually ran this pass.",
+  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini/Llama slots deferred. `corpora_carried_forward` lists corpora preserved verbatim from the prior dataset (not re-measured this pass).",
   "api_per_sentence_subsample": 200
 }

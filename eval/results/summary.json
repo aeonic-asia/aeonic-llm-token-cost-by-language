@@ -1,61 +1,123 @@
 {
   "dataset_as_of": "2026-07-18",
   "premium_vs": "English (eng_Latn)",
-  "headline_premiums_aggregate": {
-    "o200k_base": {
-      "Vietnamese": 1.482,
-      "Chinese (Simplified)": 1.2834,
-      "Russian": 1.4221,
-      "German": 1.3035
+  "corpora": {
+    "flores": "FLORES+",
+    "massive": "MASSIVE"
+  },
+  "headline_premiums_aggregate_by_corpus": {
+    "flores": {
+      "o200k_base": {
+        "Vietnamese": 1.482,
+        "Chinese (Simplified)": 1.2834,
+        "Russian": 1.4221,
+        "German": 1.3035
+      },
+      "cl100k_base": {
+        "Vietnamese": 2.4465,
+        "Chinese (Simplified)": 1.9143,
+        "Russian": 2.4889,
+        "German": 1.5795
+      },
+      "claude-new": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      },
+      "claude-old": {
+        "Vietnamese": 2.4217,
+        "Chinese (Simplified)": 1.6811,
+        "Russian": 1.9318,
+        "German": 1.7565
+      },
+      "claude-sonnet-5": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      }
     },
-    "cl100k_base": {
-      "Vietnamese": 2.4465,
-      "Chinese (Simplified)": 1.9143,
-      "Russian": 2.4889,
-      "German": 1.5795
-    },
-    "claude-new": {
-      "Vietnamese": 1.8434,
-      "Chinese (Simplified)": 1.1749,
-      "Russian": 1.3432,
-      "German": 1.7384
-    },
-    "claude-old": {
-      "Vietnamese": 2.4217,
-      "Chinese (Simplified)": 1.6811,
-      "Russian": 1.9318,
-      "German": 1.7565
-    },
-    "claude-sonnet-5": {
-      "Vietnamese": 1.8434,
-      "Chinese (Simplified)": 1.1749,
-      "Russian": 1.3432,
-      "German": 1.7384
+    "massive": {
+      "o200k_base": {
+        "Vietnamese": 1.398,
+        "Chinese (Simplified)": 1.154,
+        "Russian": 1.2773,
+        "German": 1.2041
+      },
+      "cl100k_base": {
+        "Vietnamese": 2.4526,
+        "Chinese (Simplified)": 1.8073,
+        "Russian": 2.2923,
+        "German": 1.3787
+      },
+      "claude-new": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      },
+      "claude-old": {
+        "Vietnamese": 2.544,
+        "Chinese (Simplified)": 1.7532,
+        "Russian": 1.943,
+        "German": 1.5508
+      },
+      "claude-sonnet-5": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      }
     }
   },
-  "within_vendor_claude_inflation_new_over_old": {
-    "English": {
-      "inflation": 1.4451,
-      "pct": 44.5
+  "within_vendor_claude_inflation_new_over_old_by_corpus": {
+    "flores": {
+      "English": {
+        "inflation": 1.4451,
+        "pct": 44.5
+      },
+      "Vietnamese": {
+        "inflation": 1.1,
+        "pct": 10.0
+      },
+      "Chinese (Simplified)": {
+        "inflation": 1.0099,
+        "pct": 1.0
+      },
+      "Russian": {
+        "inflation": 1.0048,
+        "pct": 0.5
+      },
+      "German": {
+        "inflation": 1.4302,
+        "pct": 43.0
+      }
     },
-    "Vietnamese": {
-      "inflation": 1.1,
-      "pct": 10.0
-    },
-    "Chinese (Simplified)": {
-      "inflation": 1.0099,
-      "pct": 1.0
-    },
-    "Russian": {
-      "inflation": 1.0048,
-      "pct": 0.5
-    },
-    "German": {
-      "inflation": 1.4302,
-      "pct": 43.0
+    "massive": {
+      "English": {
+        "inflation": 1.3887,
+        "pct": 38.9
+      },
+      "Vietnamese": {
+        "inflation": 1.0924,
+        "pct": 9.2
+      },
+      "Chinese (Simplified)": {
+        "inflation": 1.0009,
+        "pct": 0.1
+      },
+      "Russian": {
+        "inflation": 1.0048,
+        "pct": 0.5
+      },
+      "German": {
+        "inflation": 1.4355,
+        "pct": 43.5
+      }
     }
   },
-  "cl100k_oracle_vs_paper_table1": {
+  "cl100k_oracle_vs_paper_table1_flores": {
     "Vietnamese": {
       "paper": 2.45,
       "ours": 2.4465,
@@ -72,16 +134,24 @@
       "delta": -0.0005
     }
   },
-  "shared_tokenizer_pairs": [
-    [
-      "claude-new",
-      "claude-sonnet-5"
+  "shared_tokenizer_pairs_by_corpus": {
+    "flores": [
+      [
+        "claude-new",
+        "claude-sonnet-5"
+      ]
+    ],
+    "massive": [
+      [
+        "claude-new",
+        "claude-sonnet-5"
+      ]
     ]
-  ],
+  },
   "pricing_as_of": "2026-07-18",
   "usd_to_vnd": {
     "rate": 26100.0,
     "as_of": "2026-07-18"
   },
-  "cost_note": "tokens_per_1k_chars is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification (5-3)."
+  "cost_note": "tokens_per_1k_chars is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification."
 }

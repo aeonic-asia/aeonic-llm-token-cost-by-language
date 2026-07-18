@@ -19,8 +19,13 @@ setup:
 	python3 -m venv $(VENV)
 	$(PIP) install -q --disable-pip-version-check -r requirements-eval.txt
 
+# CORPORA (optional): comma-separated subset to (re)measure, e.g.
+#   make reproduce CORPORA=massive
+# Corpora not listed are carried forward verbatim from the committed dataset.
+# Empty (default) = full rebuild of every corpus.
+CORPORA ?=
 reproduce:
-	$(PY) -m eval.run
+	EVAL_CORPORA=$(CORPORA) $(PY) -m eval.run
 	$(PY) -m eval.analyze
 	$(PY) -m eval.figures
 

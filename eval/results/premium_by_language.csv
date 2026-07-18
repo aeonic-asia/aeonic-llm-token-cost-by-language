@@ -1,26 +1,51 @@
-counter_id,lang,language,premium_aggregate,premium_median,premium_p10,premium_p25,premium_p75,premium_p90,premium_mean
-o200k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-o200k_base,vie_Latn,Vietnamese,1.482,1.4737,1.2,1.3226,1.65,1.8276,1.4987
-o200k_base,zho_Hans,Chinese (Simplified),1.2834,1.2222,0.9615,1.0833,1.4118,1.6092,1.2607
-o200k_base,rus_Cyrl,Russian,1.4221,1.4048,1.1333,1.2609,1.5882,1.7692,1.4344
-o200k_base,deu_Latn,German,1.3035,1.3,1.0833,1.1786,1.4286,1.5625,1.3124
-cl100k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-cl100k_base,vie_Latn,Vietnamese,2.4465,2.4412,1.8564,2.119,2.7941,3.1485,2.4743
-cl100k_base,zho_Hans,Chinese (Simplified),1.9143,1.8571,1.4348,1.625,2.1176,2.3915,1.8867
-cl100k_base,rus_Cyrl,Russian,2.4889,2.4545,1.9474,2.1724,2.7895,3.1176,2.5029
-cl100k_base,deu_Latn,German,1.5795,1.5652,1.28,1.4048,1.7609,1.9479,1.5926
-claude-new,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-claude-new,vie_Latn,Vietnamese,1.8434,1.6608,1.3705,1.5,1.8629,2.087,1.6971
-claude-new,zho_Hans,Chinese (Simplified),1.1749,1.1654,0.931,1.0501,1.3176,1.4354,1.1859
-claude-new,rus_Cyrl,Russian,1.3432,1.2871,1.0968,1.1899,1.4739,1.6057,1.3268
-claude-new,deu_Latn,German,1.7384,1.6071,1.3126,1.4476,1.7547,1.9647,1.6087
-claude-old,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-claude-old,vie_Latn,Vietnamese,2.4217,2.0334,1.6,1.8006,2.2947,2.5337,2.0567
-claude-old,zho_Hans,Chinese (Simplified),1.6811,1.5806,1.2812,1.4476,1.7742,1.9236,1.6111
-claude-old,rus_Cyrl,Russian,1.9318,1.7621,1.4,1.5625,1.95,2.125,1.7732
-claude-old,deu_Latn,German,1.7565,1.5532,1.2835,1.4182,1.7083,1.8864,1.5719
-claude-sonnet-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-claude-sonnet-5,vie_Latn,Vietnamese,1.8434,1.6608,1.3705,1.5,1.8629,2.087,1.6971
-claude-sonnet-5,zho_Hans,Chinese (Simplified),1.1749,1.1654,0.931,1.0501,1.3176,1.4354,1.1859
-claude-sonnet-5,rus_Cyrl,Russian,1.3432,1.2871,1.0968,1.1899,1.4739,1.6057,1.3268
-claude-sonnet-5,deu_Latn,German,1.7384,1.6071,1.3126,1.4476,1.7547,1.9647,1.6087
+corpus,counter_id,lang,language,premium_aggregate,premium_median,premium_p10,premium_p25,premium_p75,premium_p90,premium_mean
+flores,o200k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+flores,o200k_base,vie_Latn,Vietnamese,1.482,1.4737,1.2,1.3226,1.65,1.8276,1.4987
+flores,o200k_base,zho_Hans,Chinese (Simplified),1.2834,1.2222,0.9615,1.0833,1.4118,1.6092,1.2607
+flores,o200k_base,rus_Cyrl,Russian,1.4221,1.4048,1.1333,1.2609,1.5882,1.7692,1.4344
+flores,o200k_base,deu_Latn,German,1.3035,1.3,1.0833,1.1786,1.4286,1.5625,1.3124
+flores,cl100k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+flores,cl100k_base,vie_Latn,Vietnamese,2.4465,2.4412,1.8564,2.119,2.7941,3.1485,2.4743
+flores,cl100k_base,zho_Hans,Chinese (Simplified),1.9143,1.8571,1.4348,1.625,2.1176,2.3915,1.8867
+flores,cl100k_base,rus_Cyrl,Russian,2.4889,2.4545,1.9474,2.1724,2.7895,3.1176,2.5029
+flores,cl100k_base,deu_Latn,German,1.5795,1.5652,1.28,1.4048,1.7609,1.9479,1.5926
+flores,claude-new,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-new,vie_Latn,Vietnamese,1.8434,1.6608,1.3705,1.5,1.8629,2.087,1.6971
+flores,claude-new,zho_Hans,Chinese (Simplified),1.1749,1.1654,0.931,1.0501,1.3176,1.4354,1.1859
+flores,claude-new,rus_Cyrl,Russian,1.3432,1.2871,1.0968,1.1899,1.4739,1.6057,1.3268
+flores,claude-new,deu_Latn,German,1.7384,1.6071,1.3126,1.4476,1.7547,1.9647,1.6087
+flores,claude-old,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-old,vie_Latn,Vietnamese,2.4217,2.0334,1.6,1.8006,2.2947,2.5337,2.0567
+flores,claude-old,zho_Hans,Chinese (Simplified),1.6811,1.5806,1.2812,1.4476,1.7742,1.9236,1.6111
+flores,claude-old,rus_Cyrl,Russian,1.9318,1.7621,1.4,1.5625,1.95,2.125,1.7732
+flores,claude-old,deu_Latn,German,1.7565,1.5532,1.2835,1.4182,1.7083,1.8864,1.5719
+flores,claude-sonnet-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-sonnet-5,vie_Latn,Vietnamese,1.8434,1.6608,1.3705,1.5,1.8629,2.087,1.6971
+flores,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.1749,1.1654,0.931,1.0501,1.3176,1.4354,1.1859
+flores,claude-sonnet-5,rus_Cyrl,Russian,1.3432,1.2871,1.0968,1.1899,1.4739,1.6057,1.3268
+flores,claude-sonnet-5,deu_Latn,German,1.7384,1.6071,1.3126,1.4476,1.7547,1.9647,1.6087
+massive,o200k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+massive,o200k_base,vie_Latn,Vietnamese,1.398,1.5,1.0714,1.2778,1.8333,2.2,1.5933
+massive,o200k_base,zho_Hans,Chinese (Simplified),1.154,1.0769,0.75,0.8889,1.3333,1.6,1.1297
+massive,o200k_base,rus_Cyrl,Russian,1.2773,1.375,1.0,1.1429,1.6667,2.0,1.4482
+massive,o200k_base,deu_Latn,German,1.2041,1.25,0.9,1.0,1.5,1.7143,1.2937
+massive,cl100k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+massive,cl100k_base,vie_Latn,Vietnamese,2.4526,2.5,1.6667,2.0,3.0,3.6583,2.601
+massive,cl100k_base,zho_Hans,Chinese (Simplified),1.8073,1.7143,1.1429,1.4,2.0,2.5,1.7827
+massive,cl100k_base,rus_Cyrl,Russian,2.2923,2.35,1.625,2.0,2.875,3.5,2.4641
+massive,cl100k_base,deu_Latn,German,1.3787,1.4167,1.0,1.2,1.6667,2.0,1.4866
+massive,claude-new,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-new,vie_Latn,Vietnamese,2.0013,1.5941,1.2143,1.4545,1.822,2.0,1.6174
+massive,claude-new,zho_Hans,Chinese (Simplified),1.2636,1.0909,0.8483,0.9466,1.25,1.4171,1.1057
+massive,claude-new,rus_Cyrl,Russian,1.406,1.2143,0.9412,1.0769,1.3588,1.5029,1.2341
+massive,claude-new,deu_Latn,German,1.6031,1.3693,1.1159,1.2,1.5385,1.6667,1.3722
+massive,claude-old,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-old,vie_Latn,Vietnamese,2.544,1.7333,1.3333,1.5294,1.9286,2.1133,1.7453
+massive,claude-old,zho_Hans,Chinese (Simplified),1.7532,1.3333,1.0702,1.2133,1.5066,1.6923,1.3576
+massive,claude-old,rus_Cyrl,Russian,1.943,1.4167,1.1493,1.2452,1.5714,1.735,1.4277
+massive,claude-old,deu_Latn,German,1.5508,1.25,1.0,1.1083,1.375,1.5,1.2565
+massive,claude-sonnet-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-sonnet-5,vie_Latn,Vietnamese,2.0013,1.5941,1.2143,1.4545,1.822,2.0,1.6174
+massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.2636,1.0909,0.8483,0.9466,1.25,1.4171,1.1057
+massive,claude-sonnet-5,rus_Cyrl,Russian,1.406,1.2143,0.9412,1.0769,1.3588,1.5029,1.2341
+massive,claude-sonnet-5,deu_Latn,German,1.6031,1.3693,1.1159,1.2,1.5385,1.6667,1.3722

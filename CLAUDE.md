@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Aeonic fork.** This is Aeonic's fork of `AleksandarPetrov/tokenization-fairness` (MIT; `upstream` remote retained). The upstream research measures how the same text tokenizes into wildly different token counts across FLORES-200 languages. Aeonic extends it into a **current-generation, five-language token-cost eval** (Vietnamese lead + English baseline + Chinese/Russian/German) across the 2026 model matrix — the reproducible companion to the *Vietnamese Token Tax* article. The upstream pipeline is left intact; the Aeonic eval lives in its own `eval/` package.
+**Aeonic fork.** This is Aeonic's fork of `AleksandarPetrov/tokenization-fairness` (MIT; `upstream` remote retained). The upstream research measures how the same text tokenizes into wildly different token counts across FLORES-200 languages. Aeonic extends it into a **current-generation, five-language token-cost eval** (Vietnamese lead + English baseline + Chinese/Russian/German) across the 2026 model matrix and **two registers** — FLORES+ (formal prose) and MASSIVE (short virtual-assistant utterances; CC BY 4.0, committed slice built by `eval/build_massive.py`) — the reproducible companion to the *Vietnamese Token Tax* article. The upstream pipeline is left intact; the Aeonic eval lives in its own `eval/` package.
 
 ## Reference paper (read first)
 

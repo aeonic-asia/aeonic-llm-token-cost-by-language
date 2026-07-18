@@ -22,6 +22,7 @@ from typing import Optional
 # ── paths ────────────────────────────────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FLORES_DIR = REPO_ROOT / "flores200_dataset"
+MASSIVE_DIR = REPO_ROOT / "eval" / "massive"
 RESULTS_DIR = REPO_ROOT / "eval" / "results"
 # tiktoken BPE-ranks cache, committed so `make reproduce` runs fully offline.
 TIKTOKEN_CACHE_DIR = REPO_ROOT / "eval" / "tiktoken_cache"
@@ -38,6 +39,14 @@ LANGUAGES: dict[str, str] = {
     "rus_Cyrl": "Russian",
     "deu_Latn": "German",
 }
+
+# ── corpora (dual-register) ──────────────────────────────────────────────────
+# Premium is reported *per corpus* so the article can show the tax holds across
+# both a formal register and the conversational one SME chatbots actually serve.
+#   flores  — FLORES+ formal/encyclopedic prose (committed under flores200_dataset/)
+#   massive — MASSIVE short virtual-assistant utterances (committed under
+#             eval/massive/, built once by eval/build_massive.py; CC BY 4.0)
+CORPORA: dict[str, str] = {"flores": "FLORES+", "massive": "MASSIVE"}
 
 # ── counter availability ─────────────────────────────────────────────────────
 # live      : runs now, fully offline, real measured data.

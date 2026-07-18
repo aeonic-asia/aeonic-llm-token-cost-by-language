@@ -37,7 +37,7 @@ def _save(fig, stem: str) -> None:
     plt.close(fig)
 
 
-def premium_heatmap(premium: pd.DataFrame) -> None:
+def premium_heatmap(premium: pd.DataFrame, corpus_name: str, stem: str) -> None:
     counters = list(premium.counter_id.unique())
     langs = CONTRAST
     mat = np.array([[premium[(premium.counter_id == c) & (premium.lang == l)]
@@ -54,12 +54,12 @@ def premium_heatmap(premium: pd.DataFrame) -> None:
         for j in range(len(counters)):
             ax.text(j, i, f"{mat[i, j]:.2f}×", ha="center", va="center",
                     color="black" if mat[i, j] < mat.max() * 0.75 else "white", fontsize=9)
-    ax.set_title("Token premium vs. English (FLORES+)", fontsize=11)
+    ax.set_title(f"Token premium vs. English ({corpus_name})", fontsize=11)
     fig.colorbar(im, ax=ax, label="× English tokens")
-    _save(fig, "fig-premium-heatmap")
+    _save(fig, stem)
 
 
-def cost_driver_bars(cost: pd.DataFrame) -> None:
+def cost_driver_bars(cost: pd.DataFrame, corpus_name: str, stem: str) -> None:
     counters = list(cost.counter_id.unique())
     langs = list(config.LANGUAGES)
     x = np.arange(len(langs))
@@ -73,16 +73,22 @@ def cost_driver_bars(cost: pd.DataFrame) -> None:
     ax.set_xticks(x + width * (len(counters) - 1) / 2)
     ax.set_xticklabels([config.LANGUAGES[l] for l in langs], rotation=15, ha="right")
     ax.set_ylabel("Tokens per 1,000 NFC characters")
-    ax.set_title("Cost driver: tokens per 1,000 characters (lower = cheaper)")
+    ax.set_title(f"Cost driver: tokens per 1,000 characters — {corpus_name} (lower = cheaper)")
     ax.legend(fontsize=9)
-    _save(fig, "fig-cost-driver-bars")
+    _save(fig, stem)
 
 
 def make_figures() -> None:
     premium = pd.read_csv(config.RESULTS_DIR / "premium_by_language.csv")
     cost = pd.read_csv(config.RESULTS_DIR / "cost_by_language.csv")
-    premium_heatmap(premium)
-    cost_driver_bars(cost)
+    # One heatmap + one cost-bar chart per corpus (the premium differs by register).
+    for corpus_id, corpus_name in config.CORPORA.items():
+        p = premium[premium.corpus == corpus_id]
+        c = cost[cost.corpus == corpus_id]
+        if p.empty:
+            continue
+        premium_heatmap(p, corpus_name, f"fig-premium-heatmap-{corpus_id}")
+        cost_driver_bars(c, corpus_name, f"fig-cost-driver-bars-{corpus_id}")
     print(f"wrote figures to {FIG_DIR}/ (svg + png)")
 
 
