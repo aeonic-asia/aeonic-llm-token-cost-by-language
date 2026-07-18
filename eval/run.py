@@ -86,8 +86,11 @@ def run() -> None:
         "counters_ran": ran,
         "counters_skipped": skipped,
         "versions": {"tiktoken": tiktoken.__version__, "pandas": pd.__version__},
-        "notes": "MASSIVE second-domain corpus deferred; Anthropic + Gemini/Llama "
-                 "counters plumbed but not yet run (see counters_skipped).",
+        "notes": "MASSIVE second-domain corpus deferred. Anthropic counters run "
+                 "when ANTHROPIC_API_KEY is present (aggregate + per-sentence "
+                 "subsample); Gemini/Llama slots deferred. See counters_ran / "
+                 "counters_skipped for what actually ran this pass.",
+        "api_per_sentence_subsample": config.API_PER_SENTENCE_SUBSAMPLE,
     }
     with open(config.RESULTS_DIR / "run_manifest.json", "w") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)

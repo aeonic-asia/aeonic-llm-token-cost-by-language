@@ -39,5 +39,6 @@
     "tiktoken": "0.13.0",
     "pandas": "3.0.3"
   },
-  "notes": "MASSIVE second-domain corpus deferred; Anthropic + Gemini/Llama counters plumbed but not yet run (see counters_skipped)."
+  "notes": "MASSIVE second-domain corpus deferred. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample); Gemini/Llama slots deferred. See counters_ran / counters_skipped for what actually ran this pass.",
+  "api_per_sentence_subsample": 200
 }

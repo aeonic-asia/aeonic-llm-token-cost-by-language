@@ -55,7 +55,12 @@ STATUS_DEFERRED = "deferred"
 # per-sentence sweep would be ~2000 free-but-rate-limited requests per language.
 # `count_tokens` is not token-billed, so this is a latency/RPM budget, not cost.
 API_KINDS = {"anthropic"}
-API_PER_SENTENCE_SUBSAMPLE = 0   # 0 = aggregate-only (closes the premium gate); bump for a Claude distribution
+API_PER_SENTENCE_SUBSAMPLE = 200  # per-sentence calls per API counter for the
+# premium *distribution* (median/p10..p90). 0 = aggregate-only. Deterministic
+# head-slice sentences[:N] (no sampling), so re-runs stay byte-identical *with a
+# key*; offline counters always do the full per-sentence sweep. 200 keeps the
+# ~3k free-but-rate-limited count_tokens calls well inside the RPM budget while
+# giving stable percentiles. Note: the slice is FLORES+ dev-split sentences.
 
 
 @dataclass(frozen=True)

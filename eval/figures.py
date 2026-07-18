@@ -13,6 +13,11 @@ from __future__ import annotations
 
 import matplotlib
 matplotlib.use("Agg")
+# Determinism: pin the SVG element-id hash salt (else matplotlib re-randomises
+# clip-path / marker ids every run) so re-runs are byte-identical. The wall-clock
+# <dc:date> is stripped per-save below. Together these keep `make reproduce` from
+# churning the committed figures when only the timestamp/ids would differ.
+matplotlib.rcParams["svg.hashsalt"] = "aeonic-token-cost-eval"
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -26,7 +31,9 @@ CONTRAST = [l for l in config.LANGUAGES if l != config.BASELINE_LANG]
 def _save(fig, stem: str) -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     for ext in ("svg", "png"):
-        fig.savefig(FIG_DIR / f"{stem}.{ext}", bbox_inches="tight", dpi=150)
+        # Drop the wall-clock Date from SVG metadata so re-runs are byte-identical.
+        kw = {"metadata": {"Date": None}} if ext == "svg" else {}
+        fig.savefig(FIG_DIR / f"{stem}.{ext}", bbox_inches="tight", dpi=150, **kw)
     plt.close(fig)
 
 
