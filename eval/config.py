@@ -50,13 +50,16 @@ CORPORA: dict[str, str] = {"flores": "FLORES+", "massive": "MASSIVE"}
 
 # ── counter availability ─────────────────────────────────────────────────────
 # live      : runs now, fully offline, real measured data.
-# needs_key : implemented + plumbed; skipped until an API key is present
-#             (Anthropic count_tokens — the article's headline hook).
-# deferred  : interface slot reserved; not wired to live downloads this session
-#             (exact model IDs are medium-confidence; verify at build time).
+# needs_key : implemented + plumbed; skipped until an API key / access token is
+#             present (Anthropic count_tokens — the headline hook; Llama 4's
+#             gated HF repo needs an HF token).
+# needs_sdk : implemented + plumbed; offline (no key), but skipped until an
+#             optional SDK is installed and its one-time tokenizer asset is
+#             downloaded (Gemini google-genai LocalTokenizer). Kept out of the
+#             lean `requirements-eval.txt` so `make setup` stays minimal.
 STATUS_LIVE = "live"
 STATUS_NEEDS_KEY = "needs_key"
-STATUS_DEFERRED = "deferred"
+STATUS_NEEDS_SDK = "needs_sdk"
 
 # Counter kinds that hit a rate-limited network API. For these, the driver
 # measures the aggregate premium (one call per language) and takes at most
@@ -116,14 +119,17 @@ MODEL_MATRIX: list[Counter] = [
     Counter("claude-sonnet-5", "Claude Sonnet 5 (newer, shared)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
             spec="claude-sonnet-5", stands_in_for="shared newer Claude tokenizer (verify)"),
-    # Gemini — offline LocalTokenizer (Gemma family). Deferred: exact 2026 IDs
-    # and local-vs-hosted parity to verify at build time.
-    Counter("gemini-3.1-pro", "Gemini 3.1 Pro (local)", "Google", "gemini_local",
-            STATUS_DEFERRED, spec="gemini-3.1-pro"),
-    # Open-weight representative — HuggingFace AutoTokenizer, gated. Deferred:
-    # needs HF token + verified 2026 model id.
-    Counter("llama-4", "Llama 4 (open-weight)", "Meta", "hf",
-            STATUS_DEFERRED, spec="meta-llama/Llama-4-Scout-17B-16E"),
+    # Gemini — offline LocalTokenizer (google-genai). `spec` is the SDK's exact
+    # supported model string. In the shipped SDK the whole Gemini 2.0/2.5/3 line
+    # maps to one `gemma3` sentencepiece tokenizer, so there is no within-vendor
+    # generational split on Google's side (contrast the Claude jump). Local, no key.
+    Counter("gemini-3-pro", "Gemini 3 Pro (local)", "Google", "gemini_local",
+            STATUS_NEEDS_SDK, spec="gemini-3-pro-preview",
+            stands_in_for="shared Gemini 2.x/3 'gemma3' tokenizer"),
+    # Open-weight representative — HuggingFace AutoTokenizer. Gated repo: needs an
+    # HF access token (HF_TOKEN). Content-token count (no BOS/EOS).
+    Counter("llama-4", "Llama 4 Scout (open-weight)", "Meta", "hf",
+            STATUS_NEEDS_KEY, spec="meta-llama/Llama-4-Scout-17B-16E"),
 ]
 
 MATRIX_BY_ID = {c.id: c for c in MODEL_MATRIX}
@@ -159,6 +165,7 @@ PRICING: dict[str, Price] = {
                         "set at ratification alongside the API run"),
     "claude-old": Price(None, PRICING_AS_OF, "unknown",
                         "set at ratification alongside the API run"),
-    "gemini-3.1-pro": Price(None, PRICING_AS_OF, "unknown", "deferred"),
+    "gemini-3-pro": Price(None, PRICING_AS_OF, "unknown",
+                          "Gemini 3 Pro list price unconfirmed; ratify in draft step"),
     "llama-4": Price(None, PRICING_AS_OF, "unknown", "self-host; no per-token list price"),
 }

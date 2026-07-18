@@ -5,10 +5,12 @@
     "massive": "MASSIVE"
   },
   "corpora_measured_this_pass": {
+    "flores": 2009,
     "massive": 2033
   },
   "corpora_carried_forward": [
-    "flores"
+    "flores",
+    "massive"
   ],
   "languages": {
     "eng_Latn": "English",
@@ -19,28 +21,26 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "o200k_base",
+    "gemini-3-pro"
+  ],
+  "counters_carried_forward": [
     "cl100k_base",
     "claude-new",
     "claude-old",
-    "claude-sonnet-5"
+    "claude-sonnet-5",
+    "o200k_base"
   ],
   "counters_skipped": [
     {
-      "counter": "gemini-3.1-pro",
-      "status": "deferred",
-      "reason": "deferred (gemini_local); verify model id + install SDK/token"
-    },
-    {
       "counter": "llama-4",
-      "status": "deferred",
-      "reason": "deferred (hf); verify model id + install SDK/token"
+      "status": "needs_key",
+      "reason": "errored at run: RuntimeError: gated repo meta-llama/Llama-4-Scout-17B-16E: token lacks access — accept the model's license on its HF page, then re-run"
     }
   ],
   "versions": {
     "tiktoken": "0.13.0",
     "pandas": "3.0.3"
   },
-  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini/Llama slots deferred. `corpora_carried_forward` lists corpora preserved verbatim from the prior dataset (not re-measured this pass).",
+  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); Llama 4 via HF AutoTokenizer (gated repo, needs HF_TOKEN). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement.",
   "api_per_sentence_subsample": 200
 }

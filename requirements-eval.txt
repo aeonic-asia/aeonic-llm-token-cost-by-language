@@ -6,9 +6,9 @@
 # `make reproduce` is fully reproducible from these pins alone.
 #
 # Counters added later bring their own pinned deps:
-#   Anthropic count_tokens  ->  anthropic>=0.40
-#   Gemini LocalTokenizer   ->  google-genai   (verify exact tokenizer package)
-#   open-weight (Llama 4)   ->  transformers + sentencepiece + HF token
+#   Anthropic count_tokens  ->  anthropic>=0.40                (needs API key)
+#   Gemini LocalTokenizer   ->  google-genai[local-tokenizer]  (offline; no key)
+#   open-weight (Llama 4)   ->  transformers + sentencepiece   (gated repo: HF_TOKEN)
 tiktoken==0.13.0
 pandas==3.0.3
 numpy==2.5.1

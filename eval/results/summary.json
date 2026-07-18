@@ -36,6 +36,12 @@
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
         "German": 1.7384
+      },
+      "gemini-3-pro": {
+        "Vietnamese": 1.3602,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3189
       }
     },
     "massive": {
@@ -68,6 +74,12 @@
         "Chinese (Simplified)": 1.2636,
         "Russian": 1.406,
         "German": 1.6031
+      },
+      "gemini-3-pro": {
+        "Vietnamese": 1.2738,
+        "Chinese (Simplified)": 0.9784,
+        "Russian": 1.2126,
+        "German": 1.2072
       }
     }
   },

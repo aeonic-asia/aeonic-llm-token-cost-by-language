@@ -108,6 +108,82 @@ class AnthropicCounter(TokenCounter):
         return resp.input_tokens
 
 
+class HFCounter(TokenCounter):
+    """Open-weight tokenizer via HuggingFace `AutoTokenizer` (e.g. Llama 4).
+
+    Offline once the tokenizer files are cached, but the first load downloads
+    them — and the flagship open-weight repos (Meta Llama) are *gated*, so a HF
+    access token must be present (read from the standard `HF_TOKEN` /
+    `HUGGING_FACE_HUB_TOKEN` env vars by `from_pretrained`). Counts *content*
+    tokens only (`add_special_tokens=False`), matching the tiktoken counters —
+    per-sequence BOS/EOS would inflate short-sentence premiums.
+    """
+
+    def __init__(self, spec: config.Counter):
+        self.spec = spec
+        self._tok = None  # lazy: defer the (network) load until first count
+
+    @staticmethod
+    def available() -> tuple[bool, str]:
+        try:
+            import transformers  # noqa: F401
+        except ImportError:
+            return False, "transformers not installed (pip install transformers sentencepiece)"
+        import os
+        if not (os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")):
+            return False, "HF token unset (gated repo) — set HF_TOKEN and re-run"
+        return True, ""
+
+    def _ensure_tok(self):
+        if self._tok is None:
+            from transformers import AutoTokenizer
+            try:
+                self._tok = AutoTokenizer.from_pretrained(self.spec.spec)
+            except Exception as exc:  # concise, truthful reason for the manifest
+                msg = str(exc)
+                if any(k in msg for k in ("gated repo", "restricted", "403")):
+                    raise RuntimeError(
+                        f"gated repo {self.spec.spec}: token lacks access — "
+                        "accept the model's license on its HF page, then re-run"
+                    ) from None
+                raise
+        return self._tok
+
+    def count(self, text: str) -> int:
+        return len(self._ensure_tok().encode(nfc(text), add_special_tokens=False))
+
+
+class GeminiLocalCounter(TokenCounter):
+    """Gemini token counts via the google-genai offline `LocalTokenizer`.
+
+    No API key: the SDK downloads the Gemma sentencepiece model once (~30MB),
+    then counts fully offline. The Gemini 3 family shares the "gemma4" tokenizer
+    with the open Gemma models. `count_tokens(text).total_tokens` is the count;
+    only text is measured (the SDK ignores non-text parts anyway).
+    """
+
+    def __init__(self, spec: config.Counter):
+        self.spec = spec
+        self._tok = None  # lazy: first construction triggers the one-time download
+
+    @staticmethod
+    def available() -> tuple[bool, str]:
+        try:
+            from google.genai.local_tokenizer import LocalTokenizer  # noqa: F401
+        except ImportError:
+            return False, "google-genai[local-tokenizer] not installed"
+        return True, ""
+
+    def _ensure_tok(self):
+        if self._tok is None:
+            from google.genai.local_tokenizer import LocalTokenizer
+            self._tok = LocalTokenizer(self.spec.spec)
+        return self._tok
+
+    def count(self, text: str) -> int:
+        return self._ensure_tok().count_tokens(nfc(text)).total_tokens
+
+
 def build_counter(spec: config.Counter) -> tuple[TokenCounter | None, str]:
     """Instantiate a counter if runnable, else return (None, reason-skipped).
 
@@ -120,6 +196,10 @@ def build_counter(spec: config.Counter) -> tuple[TokenCounter | None, str]:
         if not AnthropicCounter.available():
             return None, "ANTHROPIC_API_KEY unset — run later with a key"
         return AnthropicCounter(spec), ""
-    if spec.kind in ("gemini_local", "hf"):
-        return None, f"deferred ({spec.kind}); verify model id + install SDK/token"
+    if spec.kind == "hf":
+        ok, reason = HFCounter.available()
+        return (HFCounter(spec), "") if ok else (None, reason)
+    if spec.kind == "gemini_local":
+        ok, reason = GeminiLocalCounter.available()
+        return (GeminiLocalCounter(spec), "") if ok else (None, reason)
     return None, f"unknown counter kind: {spec.kind}"
