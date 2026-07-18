@@ -152,20 +152,34 @@ class Price:
     source: str
 
 
-# Input prices per 1M tokens. Populated only where defensibly dated/sourced;
-# forward-dated flagships stay None until ratified in the draft step (5-3),
-# so the committed cost table reports premiums-only for them rather than
-# inventing a price. Kept here as the single edit point for price ratification.
+# Input prices per 1M input tokens (serving/inference list price — NOT the token
+# *counting* endpoint, which is free). Dated 2026-07-18; each carries a confidence.
+# Unpriced models stay None → cost is omitted (premium-only), never invented.
+# Kept here as the single edit point for price ratification.
+#
+# Two editorial choices flagged for review (both defensible, both easy to change here):
+#  * o200k_base / GPT-5.6: the o200k tokenizer is shared across the GPT-5.6 tiers
+#    (Luna $1.00 / Terra $2.50 / Sol $5.00 input); we price the *flagship* Sol tier
+#    ($5.00) for a flagship-vs-flagship comparison. Confidence medium for the tier
+#    pick, not the number.
+#  * claude-sonnet-5: standard $3.00 used (the durable price). An introductory
+#    $2.00/1M applies through 2026-08-31, then reverts to $3.00 on 2026-09-01.
 PRICING: dict[str, Price] = {
-    "o200k_base": Price(None, PRICING_AS_OF, "unknown",
-                        "GPT-5.6 list price unconfirmed; ratify in draft step"),
+    "o200k_base": Price(5.00, PRICING_AS_OF, "medium",
+                        "GPT-5.6 flagship (Sol) input list price; o200k shared across "
+                        "GPT-5.6 tiers (Luna $1.00 / Terra $2.50 / Sol $5.00)"),
     "cl100k_base": Price(None, PRICING_AS_OF, "unknown",
                          "historical baseline tokenizer; not a current serving SKU"),
-    "claude-new": Price(None, PRICING_AS_OF, "unknown",
-                        "set at ratification alongside the API run"),
-    "claude-old": Price(None, PRICING_AS_OF, "unknown",
-                        "set at ratification alongside the API run"),
-    "gemini-3-pro": Price(None, PRICING_AS_OF, "unknown",
-                          "Gemini 3 Pro list price unconfirmed; ratify in draft step"),
-    "llama-4": Price(None, PRICING_AS_OF, "unknown", "self-host; no per-token list price"),
+    "claude-new": Price(5.00, PRICING_AS_OF, "high",
+                        "Claude Opus 4.8 input list price ($5.00/1M in, $25.00/1M out)"),
+    "claude-old": Price(3.00, PRICING_AS_OF, "high",
+                        "Claude Sonnet 4.6 input list price ($3.00/1M in, $15.00/1M out)"),
+    "claude-sonnet-5": Price(3.00, PRICING_AS_OF, "high",
+                             "Claude Sonnet 5 standard input list price ($3.00/1M in, "
+                             "$15.00/1M out); intro $2.00/1M in effect through 2026-08-31"),
+    "gemini-3-pro": Price(2.00, PRICING_AS_OF, "high",
+                          "Gemini 3 Pro input list price, <=200K-context tier "
+                          "($2.00/1M in; $4.00/1M above 200K — our texts are short)"),
+    "llama-4": Price(None, PRICING_AS_OF, "unknown",
+                     "self-host / open-weight; no single per-token list price"),
 }
