@@ -42,6 +42,12 @@
         "Chinese (Simplified)": 1.1078,
         "Russian": 1.3703,
         "German": 1.3189
+      },
+      "llama-4": {
+        "Vietnamese": 1.3241,
+        "Chinese (Simplified)": 1.094,
+        "Russian": 1.2362,
+        "German": 1.2888
       }
     },
     "massive": {
@@ -80,6 +86,12 @@
         "Chinese (Simplified)": 0.9784,
         "Russian": 1.2126,
         "German": 1.2072
+      },
+      "llama-4": {
+        "Vietnamese": 1.2524,
+        "Chinese (Simplified)": 1.0099,
+        "Russian": 1.1183,
+        "German": 1.2289
       }
     }
   },

@@ -21,22 +21,17 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "gemini-3-pro"
+    "llama-4"
   ],
   "counters_carried_forward": [
     "cl100k_base",
     "claude-new",
     "claude-old",
     "claude-sonnet-5",
+    "gemini-3-pro",
     "o200k_base"
   ],
-  "counters_skipped": [
-    {
-      "counter": "llama-4",
-      "status": "needs_key",
-      "reason": "errored at run: RuntimeError: gated repo meta-llama/Llama-4-Scout-17B-16E: token lacks access — accept the model's license on its HF page, then re-run"
-    }
-  ],
+  "counters_skipped": [],
   "versions": {
     "tiktoken": "0.13.0",
     "pandas": "3.0.3"

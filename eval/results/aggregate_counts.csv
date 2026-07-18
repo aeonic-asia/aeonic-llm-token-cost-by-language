@@ -59,3 +59,13 @@ massive,gemini-3-pro,vie_Latn,19079,77842
 massive,gemini-3-pro,zho_Hans,14654,23254
 massive,gemini-3-pro,rus_Cyrl,18162,76655
 massive,gemini-3-pro,deu_Latn,18081,81766
+flores,llama-4,eng_Latn,52585,259168
+flores,llama-4,vie_Latn,69627,272594
+flores,llama-4,zho_Hans,57530,87443
+flores,llama-4,rus_Cyrl,65007,282206
+flores,llama-4,deu_Latn,67771,302375
+massive,llama-4,eng_Latn,14992,72761
+massive,llama-4,vie_Latn,18776,77842
+massive,llama-4,zho_Hans,15140,23254
+massive,llama-4,rus_Cyrl,16765,76655
+massive,llama-4,deu_Latn,18424,81766
