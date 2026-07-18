@@ -49,6 +49,14 @@ STATUS_LIVE = "live"
 STATUS_NEEDS_KEY = "needs_key"
 STATUS_DEFERRED = "deferred"
 
+# Counter kinds that hit a rate-limited network API. For these, the driver
+# measures the aggregate premium (one call per language) and takes at most
+# API_PER_SENTENCE_SUBSAMPLE per-sentence calls for the distribution — the full
+# per-sentence sweep would be ~2000 free-but-rate-limited requests per language.
+# `count_tokens` is not token-billed, so this is a latency/RPM budget, not cost.
+API_KINDS = {"anthropic"}
+API_PER_SENTENCE_SUBSAMPLE = 0   # 0 = aggregate-only (closes the premium gate); bump for a Claude distribution
+
 
 @dataclass(frozen=True)
 class Counter:
@@ -88,6 +96,12 @@ MODEL_MATRIX: list[Counter] = [
     Counter("claude-old", "Claude (older tokenizer)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-old", spec="claude-sonnet-4-6",
             stands_in_for="older Claude tokenizer baseline"),
+    # Sonnet 5 shares the newer Claude tokenizer with Opus 4.8. Included so the
+    # coincidence check *confirms* that in the committed dataset (identical
+    # counts across all languages), not just by assertion.
+    Counter("claude-sonnet-5", "Claude Sonnet 5 (newer, shared)", "Anthropic",
+            "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
+            spec="claude-sonnet-5", stands_in_for="shared newer Claude tokenizer (verify)"),
     # Gemini — offline LocalTokenizer (Gemma family). Deferred: exact 2026 IDs
     # and local-vs-hosted parity to verify at build time.
     Counter("gemini-3.1-pro", "Gemini 3.1 Pro (local)", "Google", "gemini_local",

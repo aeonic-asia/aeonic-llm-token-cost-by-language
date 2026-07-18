@@ -9,3 +9,18 @@ cl100k_base,vie_Latn,Vietnamese,2.4465,2.4412,1.8564,2.119,2.7941,3.1485,2.4743
 cl100k_base,zho_Hans,Chinese (Simplified),1.9143,1.8571,1.4348,1.625,2.1176,2.3915,1.8867
 cl100k_base,rus_Cyrl,Russian,2.4889,2.4545,1.9474,2.1724,2.7895,3.1176,2.5029
 cl100k_base,deu_Latn,German,1.5795,1.5652,1.28,1.4048,1.7609,1.9479,1.5926
+claude-new,eng_Latn,English,1.0,,,,,,
+claude-new,vie_Latn,Vietnamese,1.8434,,,,,,
+claude-new,zho_Hans,Chinese (Simplified),1.1749,,,,,,
+claude-new,rus_Cyrl,Russian,1.3432,,,,,,
+claude-new,deu_Latn,German,1.7384,,,,,,
+claude-old,eng_Latn,English,1.0,,,,,,
+claude-old,vie_Latn,Vietnamese,2.4217,,,,,,
+claude-old,zho_Hans,Chinese (Simplified),1.6811,,,,,,
+claude-old,rus_Cyrl,Russian,1.9318,,,,,,
+claude-old,deu_Latn,German,1.7565,,,,,,
+claude-sonnet-5,eng_Latn,English,1.0,,,,,,
+claude-sonnet-5,vie_Latn,Vietnamese,1.8434,,,,,,
+claude-sonnet-5,zho_Hans,Chinese (Simplified),1.1749,,,,,,
+claude-sonnet-5,rus_Cyrl,Russian,1.3432,,,,,,
+claude-sonnet-5,deu_Latn,German,1.7384,,,,,,

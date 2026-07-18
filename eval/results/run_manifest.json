@@ -18,19 +18,12 @@
   "baseline_language": "eng_Latn",
   "counters_ran": [
     "o200k_base",
-    "cl100k_base"
+    "cl100k_base",
+    "claude-new",
+    "claude-old",
+    "claude-sonnet-5"
   ],
   "counters_skipped": [
-    {
-      "counter": "claude-new",
-      "status": "needs_key",
-      "reason": "ANTHROPIC_API_KEY unset — run later with a key"
-    },
-    {
-      "counter": "claude-old",
-      "status": "needs_key",
-      "reason": "ANTHROPIC_API_KEY unset — run later with a key"
-    },
     {
       "counter": "gemini-3.1-pro",
       "status": "deferred",

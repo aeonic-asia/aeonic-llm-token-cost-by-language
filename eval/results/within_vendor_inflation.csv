@@ -1,0 +1,6 @@
+lang,language,tokens_old,tokens_new,inflation,inflation_pct
+eng_Latn,English,56520,81677,1.4451,44.5
+vie_Latn,Vietnamese,136876,150561,1.1,10.0
+zho_Hans,Chinese (Simplified),95017,95961,1.0099,1.0
+rus_Cyrl,Russian,109188,109712,1.0048,0.5
+deu_Latn,German,99279,141984,1.4302,43.0

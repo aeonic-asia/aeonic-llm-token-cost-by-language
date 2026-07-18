@@ -13,6 +13,46 @@
       "Chinese (Simplified)": 1.9143,
       "Russian": 2.4889,
       "German": 1.5795
+    },
+    "claude-new": {
+      "Vietnamese": 1.8434,
+      "Chinese (Simplified)": 1.1749,
+      "Russian": 1.3432,
+      "German": 1.7384
+    },
+    "claude-old": {
+      "Vietnamese": 2.4217,
+      "Chinese (Simplified)": 1.6811,
+      "Russian": 1.9318,
+      "German": 1.7565
+    },
+    "claude-sonnet-5": {
+      "Vietnamese": 1.8434,
+      "Chinese (Simplified)": 1.1749,
+      "Russian": 1.3432,
+      "German": 1.7384
+    }
+  },
+  "within_vendor_claude_inflation_new_over_old": {
+    "English": {
+      "inflation": 1.4451,
+      "pct": 44.5
+    },
+    "Vietnamese": {
+      "inflation": 1.1,
+      "pct": 10.0
+    },
+    "Chinese (Simplified)": {
+      "inflation": 1.0099,
+      "pct": 1.0
+    },
+    "Russian": {
+      "inflation": 1.0048,
+      "pct": 0.5
+    },
+    "German": {
+      "inflation": 1.4302,
+      "pct": 43.0
     }
   },
   "cl100k_oracle_vs_paper_table1": {
@@ -32,7 +72,12 @@
       "delta": -0.0005
     }
   },
-  "shared_tokenizer_pairs": [],
+  "shared_tokenizer_pairs": [
+    [
+      "claude-new",
+      "claude-sonnet-5"
+    ]
+  ],
   "pricing_as_of": "2026-07-18",
   "usd_to_vnd": {
     "rate": 26100.0,

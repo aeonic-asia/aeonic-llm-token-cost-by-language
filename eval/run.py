@@ -41,22 +41,37 @@ def run() -> None:
             print(f"  skip  {spec.id:16s} — {reason}")
             continue
         ran.append(spec.id)
-        print(f"  run   {spec.id:16s} ({spec.display})")
-        for lang in langs:
-            sentences = corpus[lang]
-            # aggregate: paper-style — concatenate, count once
-            joined = " ".join(sentences)
-            aggregate.append({
-                "counter_id": spec.id, "lang": lang,
-                "total_tokens": counter.count(joined),
-                "total_chars": char_count(joined),
-            })
-            # per-sentence: for the premium distribution
-            for idx, sent in enumerate(sentences):
-                per_sentence.append({
-                    "counter_id": spec.id, "lang": lang, "sentence_idx": idx,
-                    "n_tokens": counter.count(sent), "n_chars": char_count(sent),
+        # API counters are rate-limited: aggregate always, per-sentence only up
+        # to a subsample. Offline counters do the full per-sentence sweep.
+        is_api = spec.kind in config.API_KINDS
+        max_per_sentence = config.API_PER_SENTENCE_SUBSAMPLE if is_api else n_sentences
+        print(f"  run   {spec.id:16s} ({spec.display})"
+              f"{' [aggregate + %d-sentence subsample]' % max_per_sentence if is_api else ''}")
+        try:
+            for lang in langs:
+                sentences = corpus[lang]
+                # aggregate: paper-style — concatenate, count once
+                joined = " ".join(sentences)
+                aggregate.append({
+                    "counter_id": spec.id, "lang": lang,
+                    "total_tokens": counter.count(joined),
+                    "total_chars": char_count(joined),
                 })
+                # per-sentence: for the premium distribution
+                for idx, sent in enumerate(sentences[:max_per_sentence]):
+                    per_sentence.append({
+                        "counter_id": spec.id, "lang": lang, "sentence_idx": idx,
+                        "n_tokens": counter.count(sent), "n_chars": char_count(sent),
+                    })
+        except Exception as exc:  # noqa: BLE001 — one bad counter must not kill the run
+            # roll back any partial rows for this counter so the dataset stays clean
+            aggregate[:] = [r for r in aggregate if r["counter_id"] != spec.id]
+            per_sentence[:] = [r for r in per_sentence if r["counter_id"] != spec.id]
+            ran.pop()
+            skipped.append({"counter": spec.id, "status": spec.status,
+                            "reason": f"errored at run: {type(exc).__name__}: {exc}"})
+            print(f"  ERROR {spec.id:16s} — {type(exc).__name__}: {exc}")
+            continue
 
     config.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(per_sentence).to_csv(config.RESULTS_DIR / "raw_counts.csv", index=False)
