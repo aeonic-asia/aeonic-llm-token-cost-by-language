@@ -1,6 +1,28 @@
-# Tokenization unfairness between languages
+# LLM token cost by language
 
-This repository holds the code for experiments and the project page for the [Language Model Tokenizers Introduce Unfairness Between Languages](https://arxiv.org/abs/2305.15425) paper.
+> **Aeonic fork** of [`AleksandarPetrov/tokenization-fairness`](https://github.com/AleksandarPetrov/tokenization-fairness) (MIT). The upstream research (below) measured 2023-era tokenizers. This fork extends the same method to a **current-generation, five-language token-cost eval** — the reproducible companion to Aeonic's *Vietnamese Token Tax* analysis.
+
+## Aeonic eval (`eval/`)
+
+Measures how many tokens the same content costs across **English (baseline), Vietnamese, Chinese, Russian, German** on the 2026 model matrix, using the committed FLORES+ parallel corpus. Premium is always measured relative to English.
+
+```bash
+make setup       # create the venv, install pinned deps (requirements-eval.txt)
+make reproduce   # counters -> premium/cost analysis -> figures (fully offline)
+make test        # reproduce the paper's cl100k premiums (correctness gate)
+```
+
+`make reproduce` is offline: the tiktoken BPE ranks are committed under `eval/tiktoken_cache/`. Outputs land in `eval/results/` (raw counts, premium and cost tables, figures) with a `run_manifest.json` recording exactly which counters ran.
+
+**Correctness is anchored to the paper.** The eval reproduces the upstream `cl100k_base` premiums (Vietnamese 2.45, Chinese 1.91, German 1.58) to within 0.005 — see `make test`.
+
+**Coverage as committed:** OpenAI `o200k_base` and `cl100k_base` counters run offline today. The Anthropic `count_tokens` counters (both Claude tokenizer generations) are implemented and run once an `ANTHROPIC_API_KEY` is provided; the Gemini and open-weight counters have reserved interface slots pending verified model IDs. The MASSIVE second-domain corpus is a planned addition. `run_manifest.json` always reflects the true state of a given run — nothing is estimated.
+
+---
+
+## Upstream research: tokenization unfairness between languages
+
+This repository holds the code for experiments and the project page for the [Language Model Tokenizers Introduce Unfairness Between Languages](https://arxiv.org/abs/2305.15425) paper (`paper/2305.15425v2.pdf`).
 
 **Abstract:**
 

@@ -1,0 +1,15 @@
+# Aeonic token-cost eval — pinned deps for the offline reproduce path.
+#
+# Deliberately minimal: the Aeonic eval (eval/) does NOT use the upstream
+# SeamlessM4T/NLLB pipeline, so the unpinned `seamless_communication @ main`
+# dependency in the upstream requirements.txt is not on this path at all —
+# `make reproduce` is fully reproducible from these pins alone.
+#
+# Counters added later bring their own pinned deps:
+#   Anthropic count_tokens  ->  anthropic>=0.40
+#   Gemini LocalTokenizer   ->  google-genai   (verify exact tokenizer package)
+#   open-weight (Llama 4)   ->  transformers + sentencepiece + HF token
+tiktoken==0.13.0
+pandas==3.0.3
+numpy==2.5.1
+matplotlib==3.11.1

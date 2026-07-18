@@ -1,0 +1,11 @@
+counter_id,lang,language,tokens_per_1k_chars,price_usd_per_mtok,price_confidence,cost_usd_per_1k_chars,cost_vnd_per_1k_chars
+o200k_base,eng_Latn,English,201.71,,unknown,,
+o200k_base,vie_Latn,Vietnamese,284.21,,unknown,,
+o200k_base,zho_Hans,Chinese (Simplified),767.29,,unknown,,
+o200k_base,rus_Cyrl,Russian,263.44,,unknown,,
+o200k_base,deu_Latn,German,225.37,,unknown,,
+cl100k_base,eng_Latn,English,203.86,,unknown,,
+cl100k_base,vie_Latn,Vietnamese,474.17,,unknown,,
+cl100k_base,zho_Hans,Chinese (Simplified),1156.59,,unknown,,
+cl100k_base,rus_Cyrl,Russian,465.95,,unknown,,
+cl100k_base,deu_Latn,German,275.98,,unknown,,

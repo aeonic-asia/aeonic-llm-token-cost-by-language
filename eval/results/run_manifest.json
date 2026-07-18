@@ -1,0 +1,50 @@
+{
+  "dataset_as_of": "2026-07-18",
+  "corpus": {
+    "name": "FLORES+",
+    "splits": [
+      "dev",
+      "devtest"
+    ],
+    "languages": {
+      "eng_Latn": "English",
+      "vie_Latn": "Vietnamese",
+      "zho_Hans": "Chinese (Simplified)",
+      "rus_Cyrl": "Russian",
+      "deu_Latn": "German"
+    },
+    "sentences_per_language": 2009
+  },
+  "baseline_language": "eng_Latn",
+  "counters_ran": [
+    "o200k_base",
+    "cl100k_base"
+  ],
+  "counters_skipped": [
+    {
+      "counter": "claude-new",
+      "status": "needs_key",
+      "reason": "ANTHROPIC_API_KEY unset — run later with a key"
+    },
+    {
+      "counter": "claude-old",
+      "status": "needs_key",
+      "reason": "ANTHROPIC_API_KEY unset — run later with a key"
+    },
+    {
+      "counter": "gemini-3.1-pro",
+      "status": "deferred",
+      "reason": "deferred (gemini_local); verify model id + install SDK/token"
+    },
+    {
+      "counter": "llama-4",
+      "status": "deferred",
+      "reason": "deferred (hf); verify model id + install SDK/token"
+    }
+  ],
+  "versions": {
+    "tiktoken": "0.13.0",
+    "pandas": "3.0.3"
+  },
+  "notes": "MASSIVE second-domain corpus deferred; Anthropic + Gemini/Llama counters plumbed but not yet run (see counters_skipped)."
+}

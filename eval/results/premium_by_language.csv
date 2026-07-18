@@ -1,0 +1,11 @@
+counter_id,lang,language,premium_aggregate,premium_median,premium_p10,premium_p25,premium_p75,premium_p90,premium_mean
+o200k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+o200k_base,vie_Latn,Vietnamese,1.482,1.4737,1.2,1.3226,1.65,1.8276,1.4987
+o200k_base,zho_Hans,Chinese (Simplified),1.2834,1.2222,0.9615,1.0833,1.4118,1.6092,1.2607
+o200k_base,rus_Cyrl,Russian,1.4221,1.4048,1.1333,1.2609,1.5882,1.7692,1.4344
+o200k_base,deu_Latn,German,1.3035,1.3,1.0833,1.1786,1.4286,1.5625,1.3124
+cl100k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+cl100k_base,vie_Latn,Vietnamese,2.4465,2.4412,1.8564,2.119,2.7941,3.1485,2.4743
+cl100k_base,zho_Hans,Chinese (Simplified),1.9143,1.8571,1.4348,1.625,2.1176,2.3915,1.8867
+cl100k_base,rus_Cyrl,Russian,2.4889,2.4545,1.9474,2.1724,2.7895,3.1176,2.5029
+cl100k_base,deu_Latn,German,1.5795,1.5652,1.28,1.4048,1.7609,1.9479,1.5926

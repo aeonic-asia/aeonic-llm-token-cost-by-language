@@ -160,3 +160,12 @@ cython_debug/
 #.idea/
 
 # assets/examples
+# Aeonic eval venv (re-creatable; committed tiktoken cache keeps reproduce offline)
+.venv-eval/
+
+# IDE / editor cruft
+.idea/
+
+# Third-party reference paper kept local-only (redistribution not clearly licensed);
+# cite by arXiv:2305.15425 instead of committing the PDF to this public repo.
+paper/

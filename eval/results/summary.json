@@ -1,0 +1,42 @@
+{
+  "dataset_as_of": "2026-07-18",
+  "premium_vs": "English (eng_Latn)",
+  "headline_premiums_aggregate": {
+    "o200k_base": {
+      "Vietnamese": 1.482,
+      "Chinese (Simplified)": 1.2834,
+      "Russian": 1.4221,
+      "German": 1.3035
+    },
+    "cl100k_base": {
+      "Vietnamese": 2.4465,
+      "Chinese (Simplified)": 1.9143,
+      "Russian": 2.4889,
+      "German": 1.5795
+    }
+  },
+  "cl100k_oracle_vs_paper_table1": {
+    "Vietnamese": {
+      "paper": 2.45,
+      "ours": 2.4465,
+      "delta": -0.0035
+    },
+    "Chinese (Simplified)": {
+      "paper": 1.91,
+      "ours": 1.9143,
+      "delta": 0.0043
+    },
+    "German": {
+      "paper": 1.58,
+      "ours": 1.5795,
+      "delta": -0.0005
+    }
+  },
+  "shared_tokenizer_pairs": [],
+  "pricing_as_of": "2026-07-18",
+  "usd_to_vnd": {
+    "rate": 26100.0,
+    "as_of": "2026-07-18"
+  },
+  "cost_note": "tokens_per_1k_chars is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification (5-3)."
+}
