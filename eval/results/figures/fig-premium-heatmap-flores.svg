@@ -1653,7 +1653,7 @@ z
    </g>
   </g>
   <g id="text_40">
-   <!-- Gemini 3.1 Pro shown (current flagship); Gemini 3 Pro superseded, within ~0.01% — omitted -->
+   <!-- Gemini 3.1 Pro shown (current flagship); Gemini 3 Pro superseded, within 0.01% — omitted -->
    <g style="fill: #555555" transform="translate(26.822219 182.177812) scale(0.075 -0.075)">
     <defs>
      <path id="DejaVuSans-5a" d="M 269 3500 
@@ -1717,27 +1717,6 @@ L 897 -744
 L 494 -744 
 L 750 256 
 L 750 794 
-z
-" transform="scale(0.015625)"/>
-     <path id="DejaVuSans-61" d="M 4684 2553 
-L 4684 1997 
-Q 4356 1750 4076 1644 
-Q 3797 1538 3494 1538 
-Q 3150 1538 2694 1722 
-Q 2659 1734 2644 1741 
-Q 2622 1750 2575 1766 
-Q 2091 1959 1797 1959 
-Q 1522 1959 1253 1839 
-Q 984 1719 678 1459 
-L 678 2016 
-Q 1006 2263 1286 2370 
-Q 1566 2478 1869 2478 
-Q 2213 2478 2672 2291 
-Q 2703 2278 2719 2272 
-Q 2744 2263 2788 2247 
-Q 3272 2053 3566 2053 
-Q 3834 2053 4098 2172 
-Q 4363 2291 4684 2553 
 z
 " transform="scale(0.015625)"/>
      <path id="DejaVuSans-8" d="M 4653 2053 
@@ -1867,22 +1846,21 @@ z
     <use xlink:href="#DejaVuSans-4c" transform="translate(3584.859375 0)"/>
     <use xlink:href="#DejaVuSans-51" transform="translate(3612.640625 0)"/>
     <use xlink:href="#DejaVuSans-3" transform="translate(3676.015625 0)"/>
-    <use xlink:href="#DejaVuSans-61" transform="translate(3707.796875 0)"/>
-    <use xlink:href="#DejaVuSans-13" transform="translate(3791.59375 0)"/>
-    <use xlink:href="#DejaVuSans-11" transform="translate(3855.21875 0)"/>
-    <use xlink:href="#DejaVuSans-13" transform="translate(3887 0)"/>
-    <use xlink:href="#DejaVuSans-14" transform="translate(3950.625 0)"/>
-    <use xlink:href="#DejaVuSans-8" transform="translate(4014.25 0)"/>
-    <use xlink:href="#DejaVuSans-3" transform="translate(4109.265625 0)"/>
-    <use xlink:href="#DejaVuSans-af6" transform="translate(4141.046875 0)"/>
-    <use xlink:href="#DejaVuSans-3" transform="translate(4241.046875 0)"/>
-    <use xlink:href="#DejaVuSans-52" transform="translate(4272.828125 0)"/>
-    <use xlink:href="#DejaVuSans-50" transform="translate(4334.015625 0)"/>
-    <use xlink:href="#DejaVuSans-4c" transform="translate(4431.421875 0)"/>
-    <use xlink:href="#DejaVuSans-57" transform="translate(4459.203125 0)"/>
-    <use xlink:href="#DejaVuSans-57" transform="translate(4498.40625 0)"/>
-    <use xlink:href="#DejaVuSans-48" transform="translate(4537.609375 0)"/>
-    <use xlink:href="#DejaVuSans-47" transform="translate(4599.140625 0)"/>
+    <use xlink:href="#DejaVuSans-13" transform="translate(3707.796875 0)"/>
+    <use xlink:href="#DejaVuSans-11" transform="translate(3771.421875 0)"/>
+    <use xlink:href="#DejaVuSans-13" transform="translate(3803.203125 0)"/>
+    <use xlink:href="#DejaVuSans-14" transform="translate(3866.828125 0)"/>
+    <use xlink:href="#DejaVuSans-8" transform="translate(3930.453125 0)"/>
+    <use xlink:href="#DejaVuSans-3" transform="translate(4025.46875 0)"/>
+    <use xlink:href="#DejaVuSans-af6" transform="translate(4057.25 0)"/>
+    <use xlink:href="#DejaVuSans-3" transform="translate(4157.25 0)"/>
+    <use xlink:href="#DejaVuSans-52" transform="translate(4189.03125 0)"/>
+    <use xlink:href="#DejaVuSans-50" transform="translate(4250.21875 0)"/>
+    <use xlink:href="#DejaVuSans-4c" transform="translate(4347.625 0)"/>
+    <use xlink:href="#DejaVuSans-57" transform="translate(4375.40625 0)"/>
+    <use xlink:href="#DejaVuSans-57" transform="translate(4414.609375 0)"/>
+    <use xlink:href="#DejaVuSans-48" transform="translate(4453.8125 0)"/>
+    <use xlink:href="#DejaVuSans-47" transform="translate(4515.34375 0)"/>
    </g>
    <!-- Claude Opus 4.8 = Sonnet 5 = Fable 5 — one shared tokenizer, identical counts (verified here); prices differ (Sonnet 5 cheapest) -->
    <g style="fill: #555555" transform="translate(26.822219 192.677812) scale(0.075 -0.075)">

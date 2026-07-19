@@ -3,7 +3,7 @@
 This is the single binding spec for the eval. Everything downstream (run.py,
 analyze.py, figures.py) reads scope from here. Scope is locked for the
 *Vietnamese Token Tax* article: five languages, premium measured vs. English,
-current-generation model matrix, dual-corpus (FLORES+ now, MASSIVE deferred).
+current-generation model matrix, dual-corpus (FLORES+ and MASSIVE, both live).
 
 Honesty rules baked in:
   * Every counter declares an availability `status`; nothing is fabricated.
@@ -67,6 +67,24 @@ STATUS_NEEDS_SDK = "needs_sdk"
 # per-sentence sweep would be ~2000 free-but-rate-limited requests per language.
 # `count_tokens` is not token-billed, so this is a latency/RPM budget, not cost.
 API_KINDS = {"anthropic"}
+
+# Message-envelope calibration. Anthropic's `count_tokens` counts the fully
+# rendered chat prompt, so a fixed turn/role frame sits on top of the content
+# tokens (measured: 6 tokens for the newer Claude tokenizer, 7 for the older).
+# The offline counters (tiktoken / gemma / Llama) count bare text with no frame,
+# so a raw comparison would inflate Claude's *per-sentence* counts by that fixed
+# floor — negligible on the whole-corpus aggregate (one call over ~10^5 tokens),
+# but material on short sentences (a true 2.0x premium reads ~1.6x when +6 lands
+# on both sides of the ratio). The driver measures this floor per API counter and
+# subtracts it from the per-sentence counts so the distribution is comparable to
+# the offline counters — measured, never assumed. A lone ASCII character is
+# exactly one token in every tokenizer here (BPE never merges a single char), so
+# the floor = count(probe) - 1. Empty content is rejected by the API, hence the
+# single-char probe. The aggregate is left uncorrected (fixed frame is <0.01% of
+# a ~10^5-token concatenated call) and stays the paper-style raw count.
+ENVELOPE_PROBE = "x"
+ENVELOPE_PROBE_TOKENS = 1
+
 API_PER_SENTENCE_SUBSAMPLE = 200  # per-sentence calls per API counter for the
 # premium *distribution* (median/p10..p90). 0 = aggregate-only. Deterministic
 # head-slice sentences[:N] (no sampling), so re-runs stay byte-identical *with a
@@ -194,8 +212,17 @@ MATRIX_BY_ID = {c.id: c for c in MODEL_MATRIX}
 # The token side is always real measurement; only the $ side lives here.
 # UNVERIFIED prices are None → cost is omitted for that counter, never guessed.
 PRICING_AS_OF = "2026-07-18"
-USD_TO_VND = 26_100.0          # dated FX anchor; confidence: medium (mid-2026).
-USD_TO_VND_AS_OF = "2026-07-18"
+# Interbank mid-market USD/VND. Source: TradingEconomics / Wise interbank quote
+# for the as-of date (prior-week range 26,249–26,305). Confidence: medium — a
+# reference mid-rate, not a specific bank's card rate; cost figures scale
+# linearly with it, so treat VND as indicative and USD as the primary unit.
+USD_TO_VND = 26_295.0
+USD_TO_VND_AS_OF = "2026-07-17"
+
+# Measurement date of the committed token dataset — kept distinct from
+# PRICING_AS_OF (the $ layer can be re-ratified without re-measuring tokens, and
+# vice versa; stamping one with the other would assert a false provenance date).
+DATASET_AS_OF = "2026-07-19"
 
 
 @dataclass(frozen=True)

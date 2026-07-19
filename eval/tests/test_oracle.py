@@ -14,10 +14,13 @@ from eval import config
 from eval.corpora import load_flores
 from eval.measure import TiktokenCounter
 
-# Paper Table 1, cl100k_base column. Values are reported to 2 d.p.; allow a
-# small tolerance for corpus-version / concatenation differences.
+# Paper Table 1, cl100k_base column. Values are reported to 2 d.p., so the paper
+# value carries ±0.005 of rounding; that rounding half-step is the tolerance —
+# it's the precision the paper actually pins, and the docs advertise "<0.005".
+# Observed deltas are all under it (max |Δ| ≈ 0.0043), so the gate holds the
+# pipeline to the precision the docs claim rather than a looser bound.
 PAPER_CL100K = {"vie_Latn": 2.45, "zho_Hans": 1.91, "deu_Latn": 1.58}
-TOL = 0.03
+TOL = 0.005
 
 
 def aggregate_premium(counter, lang: str, baseline: str) -> float:

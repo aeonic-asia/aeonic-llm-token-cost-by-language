@@ -70,6 +70,17 @@ def _identical(agg: pd.DataFrame, corpus_id: str, a: str, b: str) -> bool:
     return bool((piv[a] == piv[b]).all())
 
 
+def _max_rel_divergence(agg: pd.DataFrame, corpus_id: str, a: str, b: str):
+    """Max per-language relative gap between counters `a` and `b` in `corpus_id`,
+    or None if either is absent. Lets the "superseded, within X%" legend quote a
+    number computed from the data instead of a hard-coded claim that can go stale."""
+    piv = (agg[agg.corpus == corpus_id]
+           .pivot(index="lang", columns="counter_id", values="total_tokens"))
+    if a not in piv.columns or b not in piv.columns:
+        return None
+    return float(((piv[a] - piv[b]).abs() / piv[b]).max())
+
+
 def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[str]:
     """Human-readable fold notes for the columns actually shown, in column order.
     A "shared" fold is emitted only if re-verified byte-identical in this corpus."""
@@ -88,9 +99,13 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
                 note += f"; prices differ ({cheapest} cheapest)"
             lines.append(note)
         for m in superseded:
+            div = _max_rel_divergence(agg, corpus_id, m.id, flag)
+            if div is None:
+                continue  # superseded counter absent in this corpus — nothing to note
+            within = "identical" if div == 0 else f"within {div * 100:.2f}%"
             lines.append(
                 f"{_label(flag)} shown (current flagship); "
-                f"{_label(m.id)} superseded, within ~0.01% — omitted")
+                f"{_label(m.id)} superseded, {within} — omitted")
         if flag == "cl100k_base":
             lines.append(f"{_label(flag)} — GPT-4/3.5-era baseline, historical anchor")
     return lines

@@ -28,6 +28,11 @@ from . import config, corpora
 def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
     rows = []
     base = config.BASELINE_LANG
+    # Per-sentence premium uses the envelope-stripped content count so a
+    # wrapped-message counter (Claude) is comparable to the bare-text offline
+    # counters; the fixed frame otherwise compresses short-sentence premiums
+    # toward 1.0. Older datasets without the column fall back to raw n_tokens.
+    tok_col = "n_tokens_content" if "n_tokens_content" in raw.columns else "n_tokens"
     for corpus_id in agg["corpus"].unique():
         ac = agg[agg.corpus == corpus_id]
         rc = raw[raw.corpus == corpus_id]
@@ -36,13 +41,13 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
             base_tokens_total = a.loc[base, "total_tokens"]
             r = rc[rc.counter_id == counter_id]
             base_per_sent = (r[r.lang == base]
-                             .set_index("sentence_idx")["n_tokens"])
+                             .set_index("sentence_idx")[tok_col])
             for lang, name in config.LANGUAGES.items():
-                # aggregate premium (paper method)
+                # aggregate premium (paper method) — envelope-inclusive raw total
                 agg_prem = a.loc[lang, "total_tokens"] / base_tokens_total
-                # per-sentence premium distribution
+                # per-sentence premium distribution — envelope-stripped
                 lang_per_sent = (r[r.lang == lang]
-                                 .set_index("sentence_idx")["n_tokens"])
+                                 .set_index("sentence_idx")[tok_col])
                 ratios = (lang_per_sent / base_per_sent).replace(
                     [np.inf, -np.inf], np.nan).dropna()
                 row = {
@@ -170,8 +175,14 @@ def analyze() -> None:
     inflation = _within_vendor_inflation(agg)
     premium.to_csv(config.RESULTS_DIR / "premium_by_language.csv", index=False)
     cost.to_csv(config.RESULTS_DIR / "cost_by_language.csv", index=False)
+    # Inflation needs both Claude generations. Write it when present; otherwise
+    # remove any prior copy so a stale file can't disagree with summary.json
+    # (which would show no inflation) after a run that dropped the Claude pair.
+    infl_path = config.RESULTS_DIR / "within_vendor_inflation.csv"
     if not inflation.empty:
-        inflation.to_csv(config.RESULTS_DIR / "within_vendor_inflation.csv", index=False)
+        inflation.to_csv(infl_path, index=False)
+    elif infl_path.exists():
+        infl_path.unlink()
 
     # headline: aggregate premium per corpus × counter × language (contrast langs)
     headline: dict[str, dict] = {}
@@ -199,13 +210,22 @@ def analyze() -> None:
                 "inflation": r["inflation"], "pct": r["inflation_pct"]}
 
     summary = {
-        "dataset_as_of": config.PRICING_AS_OF,
+        "dataset_as_of": config.DATASET_AS_OF,
         "premium_vs": "English (eng_Latn)",
         "corpora": config.CORPORA,
         "headline_premiums_aggregate_by_corpus": headline,
         "within_vendor_claude_inflation_new_over_old_by_corpus": infl,
         "cl100k_oracle_vs_paper_table1_flores": oracle,
         "shared_tokenizer_pairs_by_corpus": _coincidence_check(agg),
+        "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION "
+                     "(median/p10..p90 in premium_by_language.csv) is measured on "
+                     "envelope-stripped content tokens (raw_counts.n_tokens_content): "
+                     "Anthropic count_tokens counts a wrapped chat message, so a "
+                     "fixed frame (see run_manifest.envelope_tokens_by_counter) is "
+                     "subtracted to compare like-for-like with the bare-text offline "
+                     "counters. The AGGREGATE premium is the raw paper-style "
+                     "concatenated count (frame negligible over ~10^5 tokens), so "
+                     "aggregate and median premia are on consistent bare-text bases.",
         "pricing_as_of": config.PRICING_AS_OF,
         "usd_to_vnd": {"rate": config.USD_TO_VND, "as_of": config.USD_TO_VND_AS_OF},
         "cost_note": "token density is measured; USD/VND cost emitted only where "

@@ -54,6 +54,17 @@ class TokenCounter(ABC):
         """Return the number of input tokens for `text` (after NFC)."""
         raise NotImplementedError
 
+    def envelope_tokens(self) -> int:
+        """Fixed per-message token overhead this counter adds beyond bare text.
+
+        Zero for bare-text (offline) counters, which encode the raw string.
+        API counters that count a wrapped chat message (Anthropic `count_tokens`)
+        override this to expose the turn/role frame so the driver can subtract it
+        from per-sentence counts — making them comparable to the offline
+        counters. See config.ENVELOPE_PROBE.
+        """
+        return 0
+
     @property
     def display(self) -> str:
         return self.spec.display
@@ -106,6 +117,18 @@ class AnthropicCounter(TokenCounter):
             messages=[{"role": "user", "content": nfc(text)}],
         )
         return resp.input_tokens
+
+    def envelope_tokens(self) -> int:
+        """Measured turn/role frame `count_tokens` wraps around the content.
+
+        `count_tokens` counts the fully-rendered prompt, so every call carries a
+        fixed frame on top of the content tokens. Measure it directly with a
+        single-token probe (never estimated): count(probe) minus the probe's
+        known content-token count. A lone ASCII char is exactly one token, so
+        this isolates the frame (6 for the newer Claude tokenizer, 7 for the
+        older). Deterministic — a fixed probe, so re-runs are byte-identical.
+        """
+        return self.count(config.ENVELOPE_PROBE) - config.ENVELOPE_PROBE_TOKENS
 
 
 class HFCounter(TokenCounter):

@@ -1951,7 +1951,7 @@ z
    </g>
   </g>
   <g id="text_21">
-   <!-- USD to serve 1,000,000 input characters — input list price (2026-07-18); VND = USD × 26,100 -->
+   <!-- USD to serve 1,000,000 input characters — input list price (2026-07-18); VND = USD × 26,295 -->
    <g style="fill: #555555" transform="translate(7.2 344.637656) scale(0.075 -0.075)">
     <defs>
      <path id="DejaVuSans-1a" d="M 525 4666 
@@ -1975,6 +1975,36 @@ L 1241 3903
 L 1241 0 
 L 628 0 
 L 628 4666 
+z
+" transform="scale(0.015625)"/>
+     <path id="DejaVuSans-1c" d="M 703 97 
+L 703 672 
+Q 941 559 1184 500 
+Q 1428 441 1663 441 
+Q 2288 441 2617 861 
+Q 2947 1281 2994 2138 
+Q 2813 1869 2534 1725 
+Q 2256 1581 1919 1581 
+Q 1219 1581 811 2004 
+Q 403 2428 403 3163 
+Q 403 3881 828 4315 
+Q 1253 4750 1959 4750 
+Q 2769 4750 3195 4129 
+Q 3622 3509 3622 2328 
+Q 3622 1225 3098 567 
+Q 2575 -91 1691 -91 
+Q 1453 -91 1209 -44 
+Q 966 3 703 97 
+z
+M 1959 2075 
+Q 2384 2075 2632 2365 
+Q 2881 2656 2881 3163 
+Q 2881 3666 2632 3958 
+Q 2384 4250 1959 4250 
+Q 1534 4250 1286 3958 
+Q 1038 3666 1038 3163 
+Q 1038 2656 1286 2365 
+Q 1534 2075 1959 2075 
 z
 " transform="scale(0.015625)"/>
     </defs>
@@ -2066,9 +2096,9 @@ z
     <use xlink:href="#DejaVuSans-15" transform="translate(4410.671875 0)"/>
     <use xlink:href="#DejaVuSans-19" transform="translate(4474.296875 0)"/>
     <use xlink:href="#DejaVuSans-f" transform="translate(4537.921875 0)"/>
-    <use xlink:href="#DejaVuSans-14" transform="translate(4569.703125 0)"/>
-    <use xlink:href="#DejaVuSans-13" transform="translate(4633.328125 0)"/>
-    <use xlink:href="#DejaVuSans-13" transform="translate(4696.953125 0)"/>
+    <use xlink:href="#DejaVuSans-15" transform="translate(4569.703125 0)"/>
+    <use xlink:href="#DejaVuSans-1c" transform="translate(4633.328125 0)"/>
+    <use xlink:href="#DejaVuSans-18" transform="translate(4696.953125 0)"/>
    </g>
    <!-- Same tokens, different price: Opus 4.8 $5 / Sonnet 5 $3 / Fable 5 $10; Sonnet 4.6 $3 / Haiku 4.5 $1 (per 1M tokens) -->
    <g style="fill: #555555" transform="translate(7.2 355.137656) scale(0.075 -0.075)">

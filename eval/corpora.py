@@ -18,6 +18,28 @@ from typing import Callable
 from . import config
 
 
+def _lines(text: str, src: str) -> list[str]:
+    """Split into sentence lines — CRLF-tolerant, positional, blank-intolerant.
+
+    Alignment across languages is by line index, so a blank line silently
+    *filtered* in one language would shift every later index and mis-pair every
+    subsequent sentence — and the equal-count guard in load_corpus can't catch a
+    same-count shift. So we do NOT filter: strip a single trailing newline's empty
+    tail (a real file ends in "\\n"), tolerate CRLF checkouts, and treat any
+    remaining blank line as corruption (a hard error naming the offending index).
+    """
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()                              # the file's terminal newline
+    out = [ln.rstrip("\r") for ln in lines]      # tolerate CRLF (core.autocrlf)
+    blanks = [i for i, ln in enumerate(out) if not ln.strip()]
+    if blanks:
+        raise ValueError(f"{src}: blank line(s) at index {blanks} would break "
+                         "cross-language line alignment — one non-empty line per "
+                         "sentence is required")
+    return out
+
+
 def load_flores(lang: str) -> list[str]:
     """Return the FLORES+ sentences for `lang` (dev + devtest), NFC-normalized."""
     from .measure import nfc
@@ -25,8 +47,7 @@ def load_flores(lang: str) -> list[str]:
     sentences: list[str] = []
     for split, ext in (("dev", "dev"), ("devtest", "devtest")):
         path = config.FLORES_DIR / split / f"{lang}.{ext}"
-        text = path.read_text(encoding="utf-8")
-        sentences.extend(nfc(line) for line in text.split("\n") if line.strip())
+        sentences.extend(nfc(ln) for ln in _lines(path.read_text(encoding="utf-8"), str(path)))
     return sentences
 
 
@@ -34,8 +55,8 @@ def load_massive(lang: str) -> list[str]:
     """Return the committed MASSIVE utterances for `lang`, NFC-normalized."""
     from .measure import nfc
 
-    text = (config.MASSIVE_DIR / f"{lang}.txt").read_text(encoding="utf-8")
-    return [nfc(line) for line in text.split("\n") if line.strip()]
+    path = config.MASSIVE_DIR / f"{lang}.txt"
+    return [nfc(ln) for ln in _lines(path.read_text(encoding="utf-8"), str(path))]
 
 
 _LOADERS: dict[str, Callable[[str], list[str]]] = {

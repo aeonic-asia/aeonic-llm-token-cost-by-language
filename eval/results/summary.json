@@ -1,5 +1,5 @@
 {
-  "dataset_as_of": "2026-07-18",
+  "dataset_as_of": "2026-07-19",
   "premium_vs": "English (eng_Latn)",
   "corpora": {
     "flores": "FLORES+",
@@ -236,10 +236,11 @@
       ]
     ]
   },
+  "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): Anthropic count_tokens counts a wrapped chat message, so a fixed frame (see run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count (frame negligible over ~10^5 tokens), so aggregate and median premia are on consistent bare-text bases.",
   "pricing_as_of": "2026-07-18",
   "usd_to_vnd": {
-    "rate": 26100.0,
-    "as_of": "2026-07-18"
+    "rate": 26295.0,
+    "as_of": "2026-07-17"
   },
   "cost_note": "token density is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification. Cost is reported under two denominators — per-1k-NFC-chars and per-sentence (parallel corpus, so per-sentence = same meaning across languages); they rank dense scripts (CJK) very differently."
 }

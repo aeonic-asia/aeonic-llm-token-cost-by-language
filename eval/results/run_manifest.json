@@ -1,5 +1,5 @@
 {
-  "dataset_as_of": "2026-07-18",
+  "dataset_as_of": "2026-07-19",
   "corpora": {
     "flores": "FLORES+",
     "massive": "MASSIVE"
@@ -39,6 +39,18 @@
     "tiktoken": "0.13.0",
     "pandas": "3.0.3"
   },
-  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); Llama 4 via HF AutoTokenizer (gated repo, needs HF_TOKEN). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement.",
-  "api_per_sentence_subsample": 200
+  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); Llama 4 via HF AutoTokenizer (gated repo, needs HF_TOKEN). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:subsample]), not a random sample.",
+  "api_per_sentence_subsample": 200,
+  "envelope_tokens_by_counter": {
+    "o200k_base": 0,
+    "cl100k_base": 0,
+    "claude-new": 6,
+    "claude-old": 7,
+    "claude-sonnet-5": 6,
+    "gemini-3-pro": 0,
+    "llama-4": 0,
+    "claude-fable-5": 6,
+    "gemini-3-1-pro": 0,
+    "claude-haiku-4-5": 7
+  }
 }
