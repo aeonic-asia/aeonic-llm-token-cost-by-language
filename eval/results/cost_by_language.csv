@@ -49,16 +49,16 @@ massive,claude-sonnet-5,vie_Latn,Vietnamese,539.79,3.0,high,0.001619,42.26
 massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1140.84,3.0,high,0.003423,89.34
 massive,claude-sonnet-5,rus_Cyrl,Russian,385.08,3.0,high,0.001155,30.15
 massive,claude-sonnet-5,deu_Latn,German,411.64,3.0,high,0.001235,32.23
-flores,gemini-3-pro,eng_Latn,English,203.96,2.0,high,0.000408,10.65
-flores,gemini-3-pro,vie_Latn,Vietnamese,263.77,2.0,high,0.000528,13.78
-flores,gemini-3-pro,zho_Hans,Chinese (Simplified),669.72,2.0,high,0.001339,34.95
-flores,gemini-3-pro,rus_Cyrl,Russian,256.68,2.0,high,0.000513,13.39
-flores,gemini-3-pro,deu_Latn,German,230.56,2.0,high,0.000461,12.03
-massive,gemini-3-pro,eng_Latn,English,205.85,2.0,high,0.000412,10.75
-massive,gemini-3-pro,vie_Latn,Vietnamese,245.1,2.0,high,0.00049,12.79
-massive,gemini-3-pro,zho_Hans,Chinese (Simplified),630.17,2.0,high,0.00126,32.89
-massive,gemini-3-pro,rus_Cyrl,Russian,236.93,2.0,high,0.000474,12.37
-massive,gemini-3-pro,deu_Latn,German,221.13,2.0,high,0.000442,11.54
+flores,gemini-3-pro,eng_Latn,English,203.96,2.0,medium,0.000408,10.65
+flores,gemini-3-pro,vie_Latn,Vietnamese,263.77,2.0,medium,0.000528,13.78
+flores,gemini-3-pro,zho_Hans,Chinese (Simplified),669.72,2.0,medium,0.001339,34.95
+flores,gemini-3-pro,rus_Cyrl,Russian,256.68,2.0,medium,0.000513,13.39
+flores,gemini-3-pro,deu_Latn,German,230.56,2.0,medium,0.000461,12.03
+massive,gemini-3-pro,eng_Latn,English,205.85,2.0,medium,0.000412,10.75
+massive,gemini-3-pro,vie_Latn,Vietnamese,245.1,2.0,medium,0.00049,12.79
+massive,gemini-3-pro,zho_Hans,Chinese (Simplified),630.17,2.0,medium,0.00126,32.89
+massive,gemini-3-pro,rus_Cyrl,Russian,236.93,2.0,medium,0.000474,12.37
+massive,gemini-3-pro,deu_Latn,German,221.13,2.0,medium,0.000442,11.54
 flores,llama-4,eng_Latn,English,202.9,,unknown,,
 flores,llama-4,vie_Latn,Vietnamese,255.42,,unknown,,
 flores,llama-4,zho_Hans,Chinese (Simplified),657.91,,unknown,,
@@ -79,3 +79,13 @@ massive,claude-fable-5,vie_Latn,Vietnamese,539.79,10.0,high,0.005398,140.89
 massive,claude-fable-5,zho_Hans,Chinese (Simplified),1140.84,10.0,high,0.011408,297.75
 massive,claude-fable-5,rus_Cyrl,Russian,385.08,10.0,high,0.003851,100.51
 massive,claude-fable-5,deu_Latn,German,411.64,10.0,high,0.004116,107.43
+flores,gemini-3-1-pro,eng_Latn,English,203.96,2.0,high,0.000408,10.65
+flores,gemini-3-1-pro,vie_Latn,Vietnamese,263.8,2.0,high,0.000528,13.78
+flores,gemini-3-1-pro,zho_Hans,Chinese (Simplified),669.72,2.0,high,0.001339,34.95
+flores,gemini-3-1-pro,rus_Cyrl,Russian,256.68,2.0,high,0.000513,13.39
+flores,gemini-3-1-pro,deu_Latn,German,230.56,2.0,high,0.000461,12.03
+massive,gemini-3-1-pro,eng_Latn,English,205.85,2.0,high,0.000412,10.75
+massive,gemini-3-1-pro,vie_Latn,Vietnamese,245.1,2.0,high,0.00049,12.79
+massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),630.17,2.0,high,0.00126,32.89
+massive,gemini-3-1-pro,rus_Cyrl,Russian,236.93,2.0,high,0.000474,12.37
+massive,gemini-3-1-pro,deu_Latn,German,221.13,2.0,high,0.000442,11.54

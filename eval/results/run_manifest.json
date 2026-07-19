@@ -21,10 +21,11 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "claude-fable-5"
+    "gemini-3-1-pro"
   ],
   "counters_carried_forward": [
     "cl100k_base",
+    "claude-fable-5",
     "claude-new",
     "claude-old",
     "claude-sonnet-5",

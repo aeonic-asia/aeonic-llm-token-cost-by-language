@@ -79,3 +79,13 @@ massive,claude-fable-5,vie_Latn,42018,77842
 massive,claude-fable-5,zho_Hans,26529,23254
 massive,claude-fable-5,rus_Cyrl,29518,76655
 massive,claude-fable-5,deu_Latn,33658,81766
+flores,gemini-3-1-pro,eng_Latn,52861,259168
+flores,gemini-3-1-pro,vie_Latn,71911,272594
+flores,gemini-3-1-pro,zho_Hans,58562,87443
+flores,gemini-3-1-pro,rus_Cyrl,72436,282206
+flores,gemini-3-1-pro,deu_Latn,69716,302375
+massive,gemini-3-1-pro,eng_Latn,14978,72761
+massive,gemini-3-1-pro,vie_Latn,19079,77842
+massive,gemini-3-1-pro,zho_Hans,14654,23254
+massive,gemini-3-1-pro,rus_Cyrl,18162,76655
+massive,gemini-3-1-pro,deu_Latn,18081,81766

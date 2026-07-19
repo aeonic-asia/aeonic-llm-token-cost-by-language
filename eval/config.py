@@ -126,18 +126,22 @@ MODEL_MATRIX: list[Counter] = [
     Counter("claude-fable-5", "Claude Fable 5 (newer, shared — confirmed)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
             spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)"),
-    # Gemini — offline LocalTokenizer (google-genai). `spec` is the SDK's exact
-    # supported model string (`gemini-3-pro-preview`, what we actually measured).
-    # In the shipped SDK the whole Gemini 2.0/2.5/3 line maps to one `gemma3`
-    # sentencepiece tokenizer, so there is no within-vendor generational split on
-    # Google's side (contrast the Claude jump) — and the premium is the same for
-    # the current Pro flagship (Gemini 3.1 Pro) as for this preview binding, since
-    # they share gemma3. The reader-facing `display` therefore names the current
-    # Pro flagship + the shared tokenizer, not the preview string. Local, no key.
-    # (`id` stays gemini-3-pro as the stable CSV key across the committed dataset.)
-    Counter("gemini-3-pro", "Gemini 3.1 Pro (gemma3)", "Google", "gemini_local",
+    # Gemini — offline LocalTokenizer (google-genai 2.12.1). Google DOES have a
+    # within-vendor tokenizer split, at the 3.0 -> 3.1 boundary (verified against
+    # the SDK's own _local_tokenizer_loader model->tokenizer map):
+    #   gemma3  <- Gemini 2.0 / 2.5 / 3.0 (gemini-3-pro-preview, gemini-3-flash-preview)
+    #   gemma4  <- Gemini 3.1 / 3.5 / 4    (gemini-3.1-pro-preview, gemini-3.5-flash, ...)
+    # Both load offline (gemma3 via a pinned URL; gemma4 via HF google/gemma-4-E4B-it,
+    # unauthenticated download OK). We measure BOTH Pro generations: gemma3 = the 3.0
+    # Pro tokenizer, gemma4 = the CURRENT Pro flagship (3.1 Pro). No key.
+    Counter("gemini-3-pro", "Gemini 3 Pro (gemma3)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3-pro-preview",
-            stands_in_for="shared Gemini 2.x/3 'gemma3' tokenizer (current Pro flagship: 3.1 Pro)"),
+            generation="gemini-gemma3",
+            stands_in_for="Gemini 2.0/2.5/3.0 'gemma3' tokenizer (superseded by gemma4 at 3.1)"),
+    Counter("gemini-3-1-pro", "Gemini 3.1 Pro (gemma4)", "Google", "gemini_local",
+            STATUS_NEEDS_SDK, spec="gemini-3.1-pro-preview",
+            generation="gemini-gemma4",
+            stands_in_for="current Google Pro flagship — Gemini 3.1/3.5/4 'gemma4' tokenizer"),
     # Open-weight representative — HuggingFace AutoTokenizer. Gated repo: needs an
     # HF access token (HF_TOKEN). Content-token count (no BOS/EOS).
     Counter("llama-4", "Llama 4 Scout (open-weight)", "Meta", "hf",
@@ -194,10 +198,14 @@ PRICING: dict[str, Price] = {
                             "2x Opus 4.8; shares Opus 4.8's tokenizer so identical token counts "
                             "at double the price. Verified 2026-07-19 vs. the Anthropic pricing "
                             "page + claude-api reference"),
-    "gemini-3-pro": Price(2.00, PRICING_AS_OF, "high",
-                          "Gemini 3.1 Pro (current Google Pro flagship) input list price, "
-                          "<=200K-context tier ($2.00/1M in; $4.00/1M above 200K — our texts "
-                          "are short). Shares the gemma3 tokenizer measured via gemini-3-pro-preview"),
+    "gemini-3-pro": Price(2.00, PRICING_AS_OF, "medium",
+                          "Gemini 3.0-generation Pro (gemma3 tokenizer). Priced at the Google "
+                          "Pro <=200K tier ($2.00/1M in); the 3.0 preview shares this tier price "
+                          "with 3.1, but 3.0 Pro is superseded — confidence medium on the exact SKU"),
+    "gemini-3-1-pro": Price(2.00, "2026-07-19", "high",
+                            "Gemini 3.1 Pro (CURRENT Google Pro flagship, gemma4 tokenizer) input "
+                            "list price, <=200K-context tier ($2.00/1M in; $4.00/1M above 200K). "
+                            "Verified 2026-07-19 vs. the Anthropic/Google 2026 pricing comparisons"),
     "llama-4": Price(None, PRICING_AS_OF, "unknown",
                      "self-host / open-weight; no single per-token list price"),
 }
