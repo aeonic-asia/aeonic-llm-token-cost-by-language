@@ -93,6 +93,17 @@ class Counter:
     spec: str = ""            # tiktoken encoding name, HF id, or Anthropic model id
     stands_in_for: str = ""   # model whose tokenizer this measures, if a proxy
     init_kwargs: dict = field(default_factory=dict)
+    # ── figure display (headline charts) ────────────────────────────────────
+    # The full matrix carries proxy/duplicate counters (e.g. the three models
+    # that share one Claude tokenizer, both Gemini generations) so the eval can
+    # *verify* equivalence in-dataset. The headline figures collapse those to one
+    # column per distinct tokenizer to stay readable. These fields drive that
+    # collapse; nothing here affects measurement — only what the charts show.
+    headline: bool = True     # own column in the headline figures?
+    headline_display: str = ""  # short chart/legend label (falls back to display)
+    flagship_group: str = ""  # id of the headline column a folded counter maps to
+    fold_reason: str = ""     # why folded: "shared" (byte-identical tokenizer)
+    #                           | "superseded" (older flagship, near-identical)
 
 
 # The trimmed flagship matrix. ≈7 counters: one flagship per provider + both
@@ -101,31 +112,41 @@ class Counter:
 MODEL_MATRIX: list[Counter] = [
     # OpenAI — offline via tiktoken, real now.
     Counter("o200k_base", "GPT-5.6 (o200k_base)", "OpenAI", "tiktoken",
-            STATUS_LIVE, spec="o200k_base", stands_in_for="gpt-5.6"),
+            STATUS_LIVE, spec="o200k_base", stands_in_for="gpt-5.6",
+            headline_display="GPT-5.6"),
     Counter("cl100k_base", "cl100k_base (GPT-4/3.5 era)", "OpenAI", "tiktoken",
             STATUS_LIVE, spec="cl100k_base",
-            stands_in_for="historical OpenAI baseline + validation oracle"),
+            stands_in_for="historical OpenAI baseline + validation oracle",
+            headline_display="cl100k (2023)"),
     # Anthropic — count_tokens API, both tokenizer generations. Plumbed; runs
     # once ANTHROPIC_API_KEY is set. Exposes the ~30–41% within-vendor jump.
+    # The newer tokenizer is shared by Opus 4.8 / Sonnet 5 / Fable 5, so it is the
+    # flagship column those two fold into (verified byte-identical below).
     Counter("claude-new", "Claude (newer tokenizer)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-new", spec="claude-opus-4-8",
-            stands_in_for="shared Fable 5 / Opus 4.8 / Sonnet 5 tokenizer"),
+            stands_in_for="shared Fable 5 / Opus 4.8 / Sonnet 5 tokenizer",
+            headline_display="Claude Opus 4.8"),
     Counter("claude-old", "Claude (older tokenizer)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-old", spec="claude-sonnet-4-6",
-            stands_in_for="older Claude tokenizer baseline"),
+            stands_in_for="older Claude tokenizer baseline",
+            headline_display="Claude Sonnet 4.6"),
     # Sonnet 5 shares the newer Claude tokenizer with Opus 4.8. Included so the
     # coincidence check *confirms* that in the committed dataset (identical
-    # counts across all languages), not just by assertion.
+    # counts across all languages), not just by assertion. Folds into claude-new.
     Counter("claude-sonnet-5", "Claude Sonnet 5 (newer, shared)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
-            spec="claude-sonnet-5", stands_in_for="shared newer Claude tokenizer (verify)"),
+            spec="claude-sonnet-5", stands_in_for="shared newer Claude tokenizer (verify)",
+            headline=False, headline_display="Sonnet 5",
+            flagship_group="claude-new", fold_reason="shared"),
     # Fable 5 was assumed (source research) to share the newer Claude tokenizer
     # with Opus 4.8 / Sonnet 5; now CONFIRMED in-dataset — the coincidence check
     # finds claude-fable-5 ≡ claude-new ≡ claude-sonnet-5 byte-identical across
     # all five languages in BOTH corpora (see summary.json shared_tokenizer_pairs).
     Counter("claude-fable-5", "Claude Fable 5 (newer, shared — confirmed)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
-            spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)"),
+            spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)",
+            headline=False, headline_display="Fable 5",
+            flagship_group="claude-new", fold_reason="shared"),
     # Gemini — offline LocalTokenizer (google-genai 2.12.1). Google DOES have a
     # within-vendor tokenizer split, at the 3.0 -> 3.1 boundary (verified against
     # the SDK's own _local_tokenizer_loader model->tokenizer map):
@@ -134,18 +155,25 @@ MODEL_MATRIX: list[Counter] = [
     # Both load offline (gemma3 via a pinned URL; gemma4 via HF google/gemma-4-E4B-it,
     # unauthenticated download OK). We measure BOTH Pro generations: gemma3 = the 3.0
     # Pro tokenizer, gemma4 = the CURRENT Pro flagship (3.1 Pro). No key.
+    # gemma3 (3.0-era Pro) is superseded by gemma4 (3.1 Pro, current flagship) and
+    # within ~0.01% of it — it folds into the 3.1 Pro column as "superseded", NOT
+    # "shared" (the two are distinct tokenizers: gemma3≠gemma4 in Vietnamese/FLORES).
     Counter("gemini-3-pro", "Gemini 3 Pro (gemma3)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3-pro-preview",
             generation="gemini-gemma3",
-            stands_in_for="Gemini 2.0/2.5/3.0 'gemma3' tokenizer (superseded by gemma4 at 3.1)"),
+            stands_in_for="Gemini 2.0/2.5/3.0 'gemma3' tokenizer (superseded by gemma4 at 3.1)",
+            headline=False, headline_display="Gemini 3 Pro",
+            flagship_group="gemini-3-1-pro", fold_reason="superseded"),
     Counter("gemini-3-1-pro", "Gemini 3.1 Pro (gemma4)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3.1-pro-preview",
             generation="gemini-gemma4",
-            stands_in_for="current Google Pro flagship — Gemini 3.1/3.5/4 'gemma4' tokenizer"),
+            stands_in_for="current Google Pro flagship — Gemini 3.1/3.5/4 'gemma4' tokenizer",
+            headline_display="Gemini 3.1 Pro"),
     # Open-weight representative — HuggingFace AutoTokenizer. Gated repo: needs an
     # HF access token (HF_TOKEN). Content-token count (no BOS/EOS).
     Counter("llama-4", "Llama 4 Scout (open-weight)", "Meta", "hf",
-            STATUS_NEEDS_KEY, spec="meta-llama/Llama-4-Scout-17B-16E"),
+            STATUS_NEEDS_KEY, spec="meta-llama/Llama-4-Scout-17B-16E",
+            headline_display="Llama 4"),
 ]
 
 MATRIX_BY_ID = {c.id: c for c in MODEL_MATRIX}
