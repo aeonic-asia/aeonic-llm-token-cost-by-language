@@ -241,5 +241,5 @@
     "rate": 26100.0,
     "as_of": "2026-07-18"
   },
-  "cost_note": "tokens_per_1k_chars is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification."
+  "cost_note": "token density is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification. Cost is reported under two denominators — per-1k-NFC-chars and per-sentence (parallel corpus, so per-sentence = same meaning across languages); they rank dense scripts (CJK) very differently."
 }

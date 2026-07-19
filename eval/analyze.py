@@ -3,9 +3,11 @@
 Reads the committed raw dataset (eval/results/*.csv) and writes:
   premium_by_language.csv  aggregate premium + per-sentence distribution
                            (median, p10/p25/p75/p90, mean) per counter × language
-  cost_by_language.csv     tokens-per-1k-NFC-chars (real) + cost-per-1k-chars in
-                           USD and VND where a dated price exists (else blank —
-                           never estimated)
+  cost_by_language.csv     token density + cost under TWO denominators —
+                           per-1k-NFC-chars and per-sentence — in USD and VND
+                           where a dated price exists (else blank, never
+                           estimated). The two denominators rank languages
+                           differently for dense scripts (see _cost_table).
   summary.json            headline premiums, oracle check, shared-tokenizer
                            coincidence check, and provenance
 
@@ -20,7 +22,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from . import config
+from . import config, corpora
 
 
 def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
@@ -94,24 +96,45 @@ def _within_vendor_inflation(agg: pd.DataFrame) -> pd.DataFrame:
 
 
 def _cost_table(agg: pd.DataFrame) -> pd.DataFrame:
+    """Cost under two denominators, because they tell different stories.
+
+    * per-1k-NFC-chars — the per-character cost that token density drives. A dense
+      script (CJK) reads high here: many tokens per character.
+    * per-sentence — cost for the same *meaning*. The corpora are parallel (one
+      aligned line per language), so a CJK sentence carries identical content in
+      far fewer characters; per sentence it costs far less than the per-character
+      view implies. For a serving workload counted in messages/documents this is
+      the honest unit, and per-character overstates CJK.
+
+    tokens_per_sentence is the paper-style concatenated total divided by the
+    corpus sentence count (mean tokens per sentence) — consistent with the
+    aggregate premium, which is built from the same concatenated total.
+    """
+    n_sent = {c: corpora.corpus_size(c) for c in agg["corpus"].unique()}
     rows = []
     for _, row in agg.iterrows():
         cid = row["counter_id"]
         tokens_per_1k = row["total_tokens"] / row["total_chars"] * 1000
+        tokens_per_sent = row["total_tokens"] / n_sent[row["corpus"]]
         price = config.PRICING.get(cid)
-        usd = vnd = None
+        usd_1k = vnd_1k = usd_sent = vnd_sent = None
         if price and price.input_usd_per_mtok is not None:
             usd_per_token = price.input_usd_per_mtok / 1_000_000
-            usd = round(tokens_per_1k * usd_per_token, 6)
-            vnd = round(usd * config.USD_TO_VND, 2)
+            usd_1k = round(tokens_per_1k * usd_per_token, 6)
+            vnd_1k = round(usd_1k * config.USD_TO_VND, 2)
+            usd_sent = round(tokens_per_sent * usd_per_token, 8)
+            vnd_sent = round(usd_sent * config.USD_TO_VND, 4)
         rows.append({
             "corpus": row["corpus"], "counter_id": cid, "lang": row["lang"],
             "language": config.LANGUAGES[row["lang"]],
             "tokens_per_1k_chars": round(tokens_per_1k, 2),
+            "tokens_per_sentence": round(tokens_per_sent, 2),
             "price_usd_per_mtok": price.input_usd_per_mtok if price else None,
             "price_confidence": price.confidence if price else "unknown",
-            "cost_usd_per_1k_chars": usd,
-            "cost_vnd_per_1k_chars": vnd,
+            "cost_usd_per_1k_chars": usd_1k,
+            "cost_vnd_per_1k_chars": vnd_1k,
+            "cost_usd_per_sentence": usd_sent,
+            "cost_vnd_per_sentence": vnd_sent,
         })
     return pd.DataFrame(rows)
 
@@ -185,9 +208,12 @@ def analyze() -> None:
         "shared_tokenizer_pairs_by_corpus": _coincidence_check(agg),
         "pricing_as_of": config.PRICING_AS_OF,
         "usd_to_vnd": {"rate": config.USD_TO_VND, "as_of": config.USD_TO_VND_AS_OF},
-        "cost_note": "tokens_per_1k_chars is measured; USD/VND cost emitted only "
-                     "where config.PRICING has a dated price. Forward-dated "
-                     "flagships are premium-only until price ratification.",
+        "cost_note": "token density is measured; USD/VND cost emitted only where "
+                     "config.PRICING has a dated price. Forward-dated flagships are "
+                     "premium-only until price ratification. Cost is reported under "
+                     "two denominators — per-1k-NFC-chars and per-sentence (parallel "
+                     "corpus, so per-sentence = same meaning across languages); they "
+                     "rank dense scripts (CJK) very differently.",
     }
     with open(config.RESULTS_DIR / "summary.json", "w") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

@@ -57,3 +57,15 @@ def load_corpus(corpus: str, langs: list[str]) -> dict[str, list[str]]:
 def load_parallel(langs: list[str]) -> dict[str, list[str]]:
     """Backward-compatible alias: the FLORES+ corpus."""
     return load_corpus("flores", langs)
+
+
+def corpus_size(corpus: str) -> int:
+    """Number of aligned sentences/utterances in `corpus`.
+
+    The corpora are parallel (one line per sentence, aligned across languages),
+    so the count is language-independent — measured on the baseline language.
+    This is corpus metadata and the honest denominator for a *per-sentence* cost,
+    distinct from the per-character one: a dense script says the same thing in far
+    fewer characters, so the two denominators rank the languages differently.
+    """
+    return len(_LOADERS[corpus](config.BASELINE_LANG))

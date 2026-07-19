@@ -13,8 +13,13 @@ article's lead language, Vietnamese), and print a legend beneath spelling out th
 folds. Which counters fold is config; that a "shared" fold really is byte-identical
 is re-verified here against the counts — never asserted.
 
-The "cost bars" show tokens-per-1,000-NFC-characters — the measured, price-
-independent driver of per-character cost.
+Two dollar figures are emitted per corpus, differing only in denominator:
+per-1,000,000-characters and per-1,000-sentences. The corpora are parallel, so
+the per-sentence figure is cost for the same *meaning* across languages. They are
+meant to be read together — a dense script (Chinese) towers per character yet
+ranks low per sentence, because it says the same thing in far fewer characters.
+The "cost driver" bars show tokens-per-1,000-NFC-characters — the measured,
+price-independent driver of the per-character view.
 """
 from __future__ import annotations
 
@@ -185,6 +190,51 @@ def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
     _save(fig, stem)
 
 
+# Per-sentence dollar figure — same price × tokens, divided by the corpus
+# sentence count instead of characters. Parallel corpus, so this is cost for the
+# same *meaning* across languages; the honest unit for a message/document
+# workload. Deliberately contrasts with dollar_cost_bars (per character): a dense
+# script (Chinese) towers per character yet ranks low per sentence.
+_SENTENCE_UNIT = {"flores": "sentence", "massive": "message"}
+
+
+def _cost_per_sentence_legend_lines(corpus_id: str) -> list[str]:
+    unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
+    return [
+        f"USD to serve 1,000 {unit}s — parallel corpus, so the SAME content "
+        f"across languages (price × tokens per {unit}); input list price "
+        f"({config.PRICING_AS_OF}); VND = USD × {int(config.USD_TO_VND):,}",
+        f"Read against the per-character chart: a dense script (Chinese) needs "
+        f"few characters, so per-character overstates its cost; per {unit} it "
+        f"ranks far lower.",
+        "Same tokens, different price: Opus 4.8 $5 / Sonnet 5 $3 / Fable 5 $10; "
+        "Sonnet 4.6 $3 / Haiku 4.5 $1 (per 1M tokens)",
+    ]
+
+
+def dollar_cost_per_sentence_bars(cost: pd.DataFrame, corpus_id: str,
+                                  corpus_name: str, order: list[str], stem: str) -> None:
+    counters = [c for c in order if c in set(cost.counter_id)]
+    langs = list(config.LANGUAGES)
+    x = np.arange(len(langs))
+    width = 0.8 / len(counters)
+    unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
+
+    fig, ax = plt.subplots(figsize=(11, 5.5))
+    for k, c in enumerate(counters):
+        vals = [cost[(cost.counter_id == c) & (cost.lang == l)]
+                ["cost_usd_per_sentence"].iloc[0] * 1000 for l in langs]  # USD / 1000 units
+        ax.bar(x + k * width, vals, width, label=_label(c))
+    ax.set_xticks(x + width * (len(counters) - 1) / 2)
+    ax.set_xticklabels([config.LANGUAGES[l] for l in langs], rotation=15, ha="right")
+    ax.set_ylabel(f"USD per 1,000 {unit}s")
+    ax.set_title(f"Serving cost: USD per 1,000 {unit}s — {corpus_name} "
+                 f"(price × tokens per {unit}; lower = cheaper)")
+    ax.legend(fontsize=8, ncol=3)
+    _caption(fig, _cost_per_sentence_legend_lines(corpus_id))
+    _save(fig, stem)
+
+
 def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
                      corpus_id: str, corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
@@ -222,6 +272,8 @@ def make_figures() -> None:
         premium_heatmap(p, agg, corpus_id, corpus_name, order, f"fig-premium-heatmap-{corpus_id}")
         cost_driver_bars(c, agg, corpus_id, corpus_name, order, f"fig-cost-driver-bars-{corpus_id}")
         dollar_cost_bars(c, corpus_name, dollar_order, f"fig-dollar-cost-{corpus_id}")
+        dollar_cost_per_sentence_bars(c, corpus_id, corpus_name, dollar_order,
+                                      f"fig-dollar-cost-per-sentence-{corpus_id}")
     print(f"wrote figures to {FIG_DIR}/ (svg + png)")
     print(f"  tokenizer columns: {[_label(c) for c in order]}")
     print(f"  dollar columns:    {[_label(c) for c in dollar_order]}")
