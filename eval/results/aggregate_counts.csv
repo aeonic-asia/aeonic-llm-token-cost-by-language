@@ -69,3 +69,13 @@ massive,llama-4,vie_Latn,18776,77842
 massive,llama-4,zho_Hans,15140,23254
 massive,llama-4,rus_Cyrl,16765,76655
 massive,llama-4,deu_Latn,18424,81766
+flores,claude-fable-5,eng_Latn,81677,259168
+flores,claude-fable-5,vie_Latn,150561,272594
+flores,claude-fable-5,zho_Hans,95961,87443
+flores,claude-fable-5,rus_Cyrl,109712,282206
+flores,claude-fable-5,deu_Latn,141984,302375
+massive,claude-fable-5,eng_Latn,20995,72761
+massive,claude-fable-5,vie_Latn,42018,77842
+massive,claude-fable-5,zho_Hans,26529,23254
+massive,claude-fable-5,rus_Cyrl,29518,76655
+massive,claude-fable-5,deu_Latn,33658,81766

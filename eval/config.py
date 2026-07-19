@@ -119,6 +119,13 @@ MODEL_MATRIX: list[Counter] = [
     Counter("claude-sonnet-5", "Claude Sonnet 5 (newer, shared)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
             spec="claude-sonnet-5", stands_in_for="shared newer Claude tokenizer (verify)"),
+    # Fable 5 was assumed (source research) to share the newer Claude tokenizer
+    # with Opus 4.8 / Sonnet 5; now CONFIRMED in-dataset — the coincidence check
+    # finds claude-fable-5 ≡ claude-new ≡ claude-sonnet-5 byte-identical across
+    # all five languages in BOTH corpora (see summary.json shared_tokenizer_pairs).
+    Counter("claude-fable-5", "Claude Fable 5 (newer, shared — confirmed)", "Anthropic",
+            "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
+            spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)"),
     # Gemini — offline LocalTokenizer (google-genai). `spec` is the SDK's exact
     # supported model string. In the shipped SDK the whole Gemini 2.0/2.5/3 line
     # maps to one `gemma3` sentencepiece tokenizer, so there is no within-vendor
@@ -177,6 +184,9 @@ PRICING: dict[str, Price] = {
     "claude-sonnet-5": Price(3.00, PRICING_AS_OF, "high",
                              "Claude Sonnet 5 standard input list price ($3.00/1M in, "
                              "$15.00/1M out); intro $2.00/1M in effect through 2026-08-31"),
+    "claude-fable-5": Price(None, PRICING_AS_OF, "unknown",
+                            "added to verify the shared newer-Claude tokenizer; price "
+                            "not ratified for this run → token-count/premium only"),
     "gemini-3-pro": Price(2.00, PRICING_AS_OF, "high",
                           "Gemini 3 Pro input list price, <=200K-context tier "
                           "($2.00/1M in; $4.00/1M above 200K — our texts are short)"),

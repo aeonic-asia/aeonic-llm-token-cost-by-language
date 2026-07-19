@@ -21,7 +21,7 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "llama-4"
+    "claude-fable-5"
   ],
   "counters_carried_forward": [
     "cl100k_base",
@@ -29,6 +29,7 @@
     "claude-old",
     "claude-sonnet-5",
     "gemini-3-pro",
+    "llama-4",
     "o200k_base"
   ],
   "counters_skipped": [],

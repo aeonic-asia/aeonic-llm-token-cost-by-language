@@ -48,6 +48,12 @@
         "Chinese (Simplified)": 1.094,
         "Russian": 1.2362,
         "German": 1.2888
+      },
+      "claude-fable-5": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
       }
     },
     "massive": {
@@ -92,6 +98,12 @@
         "Chinese (Simplified)": 1.0099,
         "Russian": 1.1183,
         "German": 1.2289
+      },
+      "claude-fable-5": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
       }
     }
   },
@@ -161,11 +173,27 @@
   "shared_tokenizer_pairs_by_corpus": {
     "flores": [
       [
+        "claude-fable-5",
+        "claude-new"
+      ],
+      [
+        "claude-fable-5",
+        "claude-sonnet-5"
+      ],
+      [
         "claude-new",
         "claude-sonnet-5"
       ]
     ],
     "massive": [
+      [
+        "claude-fable-5",
+        "claude-new"
+      ],
+      [
+        "claude-fable-5",
+        "claude-sonnet-5"
+      ],
       [
         "claude-new",
         "claude-sonnet-5"
