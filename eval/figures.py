@@ -77,8 +77,10 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
         if shared:
             names = " = ".join([_label(flag)] + [_label(m.id) for m in shared])
             note = f"{names} — one shared tokenizer, identical counts (verified here)"
-            if flag == "claude-new":
-                note += "; prices differ (Sonnet 5 cheapest)"
+            # same tokens, different serving price — name the cheapest in the group
+            cheapest = {"claude-new": "Sonnet 5", "claude-old": "Haiku 4.5"}.get(flag)
+            if cheapest:
+                note += f"; prices differ ({cheapest} cheapest)"
             lines.append(note)
         for m in superseded:
             lines.append(

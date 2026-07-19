@@ -60,6 +60,12 @@
         "Chinese (Simplified)": 1.1078,
         "Russian": 1.3703,
         "German": 1.3189
+      },
+      "claude-haiku-4-5": {
+        "Vietnamese": 2.4217,
+        "Chinese (Simplified)": 1.6811,
+        "Russian": 1.9318,
+        "German": 1.7565
       }
     },
     "massive": {
@@ -116,6 +122,12 @@
         "Chinese (Simplified)": 0.9784,
         "Russian": 1.2126,
         "German": 1.2072
+      },
+      "claude-haiku-4-5": {
+        "Vietnamese": 2.544,
+        "Chinese (Simplified)": 1.7532,
+        "Russian": 1.943,
+        "German": 1.5508
       }
     }
   },
@@ -193,6 +205,10 @@
         "claude-sonnet-5"
       ],
       [
+        "claude-haiku-4-5",
+        "claude-old"
+      ],
+      [
         "claude-new",
         "claude-sonnet-5"
       ]
@@ -205,6 +221,10 @@
       [
         "claude-fable-5",
         "claude-sonnet-5"
+      ],
+      [
+        "claude-haiku-4-5",
+        "claude-old"
       ],
       [
         "claude-new",

@@ -147,6 +147,16 @@ MODEL_MATRIX: list[Counter] = [
             spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)",
             headline=False, headline_display="Fable 5",
             flagship_group="claude-new", fold_reason="shared"),
+    # Haiku 4.5 — the cheapest Claude serving tier ($1/1M in). Which tokenizer
+    # generation it uses was NOT assumed: measured via count_tokens, it is
+    # byte-identical to claude-old (Sonnet 4.6) across all five languages in BOTH
+    # corpora (see summary.json shared_tokenizer_pairs). So the *older* Claude
+    # tokenizer spans Sonnet 4.6 + Haiku 4.5 — folds into claude-old, at 1/3 the price.
+    Counter("claude-haiku-4-5", "Claude Haiku 4.5", "Anthropic", "anthropic",
+            STATUS_NEEDS_KEY, generation="claude-old", spec="claude-haiku-4-5",
+            stands_in_for="shared older Claude tokenizer (confirmed ≡ Sonnet 4.6); cheapest Claude tier",
+            headline=False, headline_display="Haiku 4.5",
+            flagship_group="claude-old", fold_reason="shared"),
     # Gemini — offline LocalTokenizer (google-genai 2.12.1). Google DOES have a
     # within-vendor tokenizer split, at the 3.0 -> 3.1 boundary (verified against
     # the SDK's own _local_tokenizer_loader model->tokenizer map):
@@ -226,6 +236,10 @@ PRICING: dict[str, Price] = {
                             "2x Opus 4.8; shares Opus 4.8's tokenizer so identical token counts "
                             "at double the price. Verified 2026-07-19 vs. the Anthropic pricing "
                             "page + claude-api reference"),
+    "claude-haiku-4-5": Price(1.00, "2026-07-19", "high",
+                              "Claude Haiku 4.5 input list price ($1.00/1M in, $5.00/1M out) — "
+                              "the cheapest Claude serving tier. Verified 2026-07-19 vs. the "
+                              "claude-api reference"),
     "gemini-3-pro": Price(2.00, PRICING_AS_OF, "medium",
                           "Gemini 3.0-generation Pro (gemma3 tokenizer). Priced at the Google "
                           "Pro <=200K tier ($2.00/1M in); the 3.0 preview shares this tier price "

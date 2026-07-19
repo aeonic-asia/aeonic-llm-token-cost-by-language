@@ -89,3 +89,13 @@ massive,gemini-3-1-pro,vie_Latn,19079,77842
 massive,gemini-3-1-pro,zho_Hans,14654,23254
 massive,gemini-3-1-pro,rus_Cyrl,18162,76655
 massive,gemini-3-1-pro,deu_Latn,18081,81766
+flores,claude-haiku-4-5,eng_Latn,56520,259168
+flores,claude-haiku-4-5,vie_Latn,136876,272594
+flores,claude-haiku-4-5,zho_Hans,95017,87443
+flores,claude-haiku-4-5,rus_Cyrl,109188,282206
+flores,claude-haiku-4-5,deu_Latn,99279,302375
+massive,claude-haiku-4-5,eng_Latn,15119,72761
+massive,claude-haiku-4-5,vie_Latn,38463,77842
+massive,claude-haiku-4-5,zho_Hans,26506,23254
+massive,claude-haiku-4-5,rus_Cyrl,29376,76655
+massive,claude-haiku-4-5,deu_Latn,23447,81766

@@ -89,3 +89,13 @@ massive,gemini-3-1-pro,vie_Latn,Vietnamese,245.1,2.0,high,0.00049,12.79
 massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),630.17,2.0,high,0.00126,32.89
 massive,gemini-3-1-pro,rus_Cyrl,Russian,236.93,2.0,high,0.000474,12.37
 massive,gemini-3-1-pro,deu_Latn,German,221.13,2.0,high,0.000442,11.54
+flores,claude-haiku-4-5,eng_Latn,English,218.08,1.0,high,0.000218,5.69
+flores,claude-haiku-4-5,vie_Latn,Vietnamese,502.12,1.0,high,0.000502,13.1
+flores,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1086.62,1.0,high,0.001087,28.37
+flores,claude-haiku-4-5,rus_Cyrl,Russian,386.91,1.0,high,0.000387,10.1
+flores,claude-haiku-4-5,deu_Latn,German,328.33,1.0,high,0.000328,8.56
+massive,claude-haiku-4-5,eng_Latn,English,207.79,1.0,high,0.000208,5.43
+massive,claude-haiku-4-5,vie_Latn,Vietnamese,494.12,1.0,high,0.000494,12.89
+massive,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1139.85,1.0,high,0.00114,29.75
+massive,claude-haiku-4-5,rus_Cyrl,Russian,383.22,1.0,high,0.000383,10.0
+massive,claude-haiku-4-5,deu_Latn,German,286.76,1.0,high,0.000287,7.49
