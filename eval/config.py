@@ -127,12 +127,17 @@ MODEL_MATRIX: list[Counter] = [
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
             spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)"),
     # Gemini — offline LocalTokenizer (google-genai). `spec` is the SDK's exact
-    # supported model string. In the shipped SDK the whole Gemini 2.0/2.5/3 line
-    # maps to one `gemma3` sentencepiece tokenizer, so there is no within-vendor
-    # generational split on Google's side (contrast the Claude jump). Local, no key.
-    Counter("gemini-3-pro", "Gemini 3 Pro (local)", "Google", "gemini_local",
+    # supported model string (`gemini-3-pro-preview`, what we actually measured).
+    # In the shipped SDK the whole Gemini 2.0/2.5/3 line maps to one `gemma3`
+    # sentencepiece tokenizer, so there is no within-vendor generational split on
+    # Google's side (contrast the Claude jump) — and the premium is the same for
+    # the current Pro flagship (Gemini 3.1 Pro) as for this preview binding, since
+    # they share gemma3. The reader-facing `display` therefore names the current
+    # Pro flagship + the shared tokenizer, not the preview string. Local, no key.
+    # (`id` stays gemini-3-pro as the stable CSV key across the committed dataset.)
+    Counter("gemini-3-pro", "Gemini 3.1 Pro (gemma3)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3-pro-preview",
-            stands_in_for="shared Gemini 2.x/3 'gemma3' tokenizer"),
+            stands_in_for="shared Gemini 2.x/3 'gemma3' tokenizer (current Pro flagship: 3.1 Pro)"),
     # Open-weight representative — HuggingFace AutoTokenizer. Gated repo: needs an
     # HF access token (HF_TOKEN). Content-token count (no BOS/EOS).
     Counter("llama-4", "Llama 4 Scout (open-weight)", "Meta", "hf",
@@ -190,8 +195,9 @@ PRICING: dict[str, Price] = {
                             "at double the price. Verified 2026-07-19 vs. the Anthropic pricing "
                             "page + claude-api reference"),
     "gemini-3-pro": Price(2.00, PRICING_AS_OF, "high",
-                          "Gemini 3 Pro input list price, <=200K-context tier "
-                          "($2.00/1M in; $4.00/1M above 200K — our texts are short)"),
+                          "Gemini 3.1 Pro (current Google Pro flagship) input list price, "
+                          "<=200K-context tier ($2.00/1M in; $4.00/1M above 200K — our texts "
+                          "are short). Shares the gemma3 tokenizer measured via gemini-3-pro-preview"),
     "llama-4": Price(None, PRICING_AS_OF, "unknown",
                      "self-host / open-weight; no single per-token list price"),
 }
