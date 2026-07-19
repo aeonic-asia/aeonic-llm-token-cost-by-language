@@ -1,0 +1,246 @@
+{
+  "dataset_as_of": "2026-07-19",
+  "premium_vs": "English (eng_Latn)",
+  "corpora": {
+    "flores": "FLORES+",
+    "massive": "MASSIVE"
+  },
+  "headline_premiums_aggregate_by_corpus": {
+    "flores": {
+      "o200k_base": {
+        "Vietnamese": 1.482,
+        "Chinese (Simplified)": 1.2834,
+        "Russian": 1.4221,
+        "German": 1.3035
+      },
+      "cl100k_base": {
+        "Vietnamese": 2.4465,
+        "Chinese (Simplified)": 1.9143,
+        "Russian": 2.4889,
+        "German": 1.5795
+      },
+      "claude-new": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      },
+      "claude-old": {
+        "Vietnamese": 2.4217,
+        "Chinese (Simplified)": 1.6811,
+        "Russian": 1.9318,
+        "German": 1.7565
+      },
+      "claude-sonnet-5": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      },
+      "gemini-3-pro": {
+        "Vietnamese": 1.3602,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3189
+      },
+      "llama-4": {
+        "Vietnamese": 1.3241,
+        "Chinese (Simplified)": 1.094,
+        "Russian": 1.2362,
+        "German": 1.2888
+      },
+      "claude-fable-5": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      },
+      "gemini-3-1-pro": {
+        "Vietnamese": 1.3604,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3189
+      },
+      "claude-haiku-4-5": {
+        "Vietnamese": 2.4217,
+        "Chinese (Simplified)": 1.6811,
+        "Russian": 1.9318,
+        "German": 1.7565
+      }
+    },
+    "massive": {
+      "o200k_base": {
+        "Vietnamese": 1.398,
+        "Chinese (Simplified)": 1.154,
+        "Russian": 1.2773,
+        "German": 1.2041
+      },
+      "cl100k_base": {
+        "Vietnamese": 2.4526,
+        "Chinese (Simplified)": 1.8073,
+        "Russian": 2.2923,
+        "German": 1.3787
+      },
+      "claude-new": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      },
+      "claude-old": {
+        "Vietnamese": 2.544,
+        "Chinese (Simplified)": 1.7532,
+        "Russian": 1.943,
+        "German": 1.5508
+      },
+      "claude-sonnet-5": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      },
+      "gemini-3-pro": {
+        "Vietnamese": 1.2738,
+        "Chinese (Simplified)": 0.9784,
+        "Russian": 1.2126,
+        "German": 1.2072
+      },
+      "llama-4": {
+        "Vietnamese": 1.2524,
+        "Chinese (Simplified)": 1.0099,
+        "Russian": 1.1183,
+        "German": 1.2289
+      },
+      "claude-fable-5": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      },
+      "gemini-3-1-pro": {
+        "Vietnamese": 1.2738,
+        "Chinese (Simplified)": 0.9784,
+        "Russian": 1.2126,
+        "German": 1.2072
+      },
+      "claude-haiku-4-5": {
+        "Vietnamese": 2.544,
+        "Chinese (Simplified)": 1.7532,
+        "Russian": 1.943,
+        "German": 1.5508
+      }
+    }
+  },
+  "within_vendor_claude_inflation_new_over_old_by_corpus": {
+    "flores": {
+      "English": {
+        "inflation": 1.4451,
+        "pct": 44.5
+      },
+      "Vietnamese": {
+        "inflation": 1.1,
+        "pct": 10.0
+      },
+      "Chinese (Simplified)": {
+        "inflation": 1.0099,
+        "pct": 1.0
+      },
+      "Russian": {
+        "inflation": 1.0048,
+        "pct": 0.5
+      },
+      "German": {
+        "inflation": 1.4302,
+        "pct": 43.0
+      }
+    },
+    "massive": {
+      "English": {
+        "inflation": 1.3887,
+        "pct": 38.9
+      },
+      "Vietnamese": {
+        "inflation": 1.0924,
+        "pct": 9.2
+      },
+      "Chinese (Simplified)": {
+        "inflation": 1.0009,
+        "pct": 0.1
+      },
+      "Russian": {
+        "inflation": 1.0048,
+        "pct": 0.5
+      },
+      "German": {
+        "inflation": 1.4355,
+        "pct": 43.5
+      }
+    }
+  },
+  "cl100k_oracle_vs_paper_table1_flores": {
+    "Vietnamese": {
+      "paper": 2.45,
+      "ours": 2.4465,
+      "delta": -0.0035
+    },
+    "Chinese (Simplified)": {
+      "paper": 1.91,
+      "ours": 1.9143,
+      "delta": 0.0043
+    },
+    "German": {
+      "paper": 1.58,
+      "ours": 1.5795,
+      "delta": -0.0005
+    }
+  },
+  "shared_tokenizer_pairs_by_corpus": {
+    "flores": [
+      [
+        "claude-fable-5",
+        "claude-new"
+      ],
+      [
+        "claude-fable-5",
+        "claude-sonnet-5"
+      ],
+      [
+        "claude-haiku-4-5",
+        "claude-old"
+      ],
+      [
+        "claude-new",
+        "claude-sonnet-5"
+      ]
+    ],
+    "massive": [
+      [
+        "claude-fable-5",
+        "claude-new"
+      ],
+      [
+        "claude-fable-5",
+        "claude-sonnet-5"
+      ],
+      [
+        "claude-haiku-4-5",
+        "claude-old"
+      ],
+      [
+        "claude-new",
+        "claude-sonnet-5"
+      ],
+      [
+        "gemini-3-1-pro",
+        "gemini-3-pro"
+      ]
+    ]
+  },
+  "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): Anthropic count_tokens counts a wrapped chat message, so a fixed frame (see run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count (frame negligible over ~10^5 tokens), so aggregate and median premia are on consistent bare-text bases.",
+  "pricing_as_of": "2026-07-18",
+  "usd_to_vnd": {
+    "rate": 26295.0,
+    "as_of": "2026-07-17"
+  },
+  "cost_note": "token density is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification. Cost is reported under two denominators — per-1k-NFC-chars and per-sentence (parallel corpus, so per-sentence = same meaning across languages); they rank dense scripts (CJK) very differently."
+}
