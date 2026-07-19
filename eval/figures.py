@@ -132,6 +132,59 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     _save(fig, stem)
 
 
+def _priced_order(cost: pd.DataFrame) -> list[str]:
+    """Priced serving options, ordered by the lead language's USD cost (ascending).
+
+    Unlike the tokenizer figures, this does NOT fold shared-tokenizer models: they
+    have identical tokens but *different serving prices*, so each is its own bar —
+    that price split is exactly what the dollar figure exists to show. Superseded
+    near-duplicates (gemma3) are still dropped, and unpriced counters (Llama 4
+    self-host, cl100k historical) fall out for having no USD cost.
+    """
+    priced = [c.id for c in config.MODEL_MATRIX if c.fold_reason != "superseded"
+              and not cost[(cost.counter_id == c.id)
+                           & cost.cost_usd_per_1k_chars.notna()].empty]
+    for corpus in ("flores", *config.CORPORA):
+        sub = cost[(cost.corpus == corpus) & (cost.lang == LEAD_LANG)]
+        rank = {r.counter_id: r.cost_usd_per_1k_chars for r in sub.itertuples()
+                if pd.notna(r.cost_usd_per_1k_chars)}
+        if rank:
+            return sorted([i for i in priced if i in rank], key=lambda i: rank[i])
+    return priced
+
+
+def _cost_legend_lines() -> list[str]:
+    return [
+        f"USD to serve 1,000,000 input characters — input list price "
+        f"({config.PRICING_AS_OF}); VND = USD × {int(config.USD_TO_VND):,}",
+        "Same tokens, different price: Opus 4.8 $5 / Sonnet 5 $3 / Fable 5 $10; "
+        "Sonnet 4.6 $3 / Haiku 4.5 $1 (per 1M tokens)",
+        "Llama 4 (self-host) and cl100k (2023) omitted — no serving list price",
+    ]
+
+
+def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
+                     order: list[str], stem: str) -> None:
+    counters = [c for c in order if c in set(cost.counter_id)]
+    langs = list(config.LANGUAGES)
+    x = np.arange(len(langs))
+    width = 0.8 / len(counters)
+
+    fig, ax = plt.subplots(figsize=(11, 5.5))
+    for k, c in enumerate(counters):
+        vals = [cost[(cost.counter_id == c) & (cost.lang == l)]
+                ["cost_usd_per_1k_chars"].iloc[0] * 1000 for l in langs]  # USD / 1M chars
+        ax.bar(x + k * width, vals, width, label=_label(c))
+    ax.set_xticks(x + width * (len(counters) - 1) / 2)
+    ax.set_xticklabels([config.LANGUAGES[l] for l in langs], rotation=15, ha="right")
+    ax.set_ylabel("USD per 1,000,000 input characters")
+    ax.set_title(f"Serving cost: USD per 1M input characters — {corpus_name} "
+                 f"(price × tokens; lower = cheaper)")
+    ax.legend(fontsize=8, ncol=3)
+    _caption(fig, _cost_legend_lines())
+    _save(fig, stem)
+
+
 def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
                      corpus_id: str, corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
@@ -157,9 +210,10 @@ def make_figures() -> None:
     premium = pd.read_csv(config.RESULTS_DIR / "premium_by_language.csv")
     cost = pd.read_csv(config.RESULTS_DIR / "cost_by_language.csv")
     agg = pd.read_csv(config.RESULTS_DIR / "aggregate_counts.csv")
-    # One canonical column order, shared by every figure (see _headline_order).
+    # Tokenizer figures share one canonical column order (see _headline_order); the
+    # dollar figure has its own (priced options, unfolded — see _priced_order).
     order = _headline_order(premium, sorted(set(premium.counter_id)))
-    # One heatmap + one cost-bar chart per corpus (the premium differs by register).
+    dollar_order = _priced_order(cost)
     for corpus_id, corpus_name in config.CORPORA.items():
         p = premium[premium.corpus == corpus_id]
         c = cost[cost.corpus == corpus_id]
@@ -167,7 +221,10 @@ def make_figures() -> None:
             continue
         premium_heatmap(p, agg, corpus_id, corpus_name, order, f"fig-premium-heatmap-{corpus_id}")
         cost_driver_bars(c, agg, corpus_id, corpus_name, order, f"fig-cost-driver-bars-{corpus_id}")
-    print(f"wrote figures to {FIG_DIR}/ (svg + png); columns: {[_label(c) for c in order]}")
+        dollar_cost_bars(c, corpus_name, dollar_order, f"fig-dollar-cost-{corpus_id}")
+    print(f"wrote figures to {FIG_DIR}/ (svg + png)")
+    print(f"  tokenizer columns: {[_label(c) for c in order]}")
+    print(f"  dollar columns:    {[_label(c) for c in dollar_order]}")
 
 
 if __name__ == "__main__":
