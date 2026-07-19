@@ -39,6 +39,13 @@ make test        # correctness gate: reproduce the paper's cl100k premiums (<0.0
 
 **`eval/` file map:** `config.py` (model matrix, pricing, subsample knobs) · `measure.py` (`TokenCounter` + concrete counters) · `corpora.py` (FLORES+/MASSIVE loaders, NFC gate) · `run.py` (driver + carry-forward) · `analyze.py` (premium/cost/inflation) · `figures.py` (deterministic SVG+PNG) · `build_massive.py` (one-time MASSIVE slice builder) · `tests/test_oracle.py` (the paper oracle) · `results/` (committed dataset) · `tiktoken_cache/` (offline BPE ranks).
 
+**Corpora on disk — the two datasets live at different levels, by design.** Both are loaded *only* through `eval/corpora.py`; nothing else in `eval/` reads a corpus path directly (paths are centralized in `config.py`: `FLORES_DIR`, `MASSIVE_DIR`).
+
+- **FLORES+** → `flores200_dataset/` at the **repo root** — the copy *inherited from upstream*, reused (not duplicated) by the eval. It stays at root because upstream's `compute/compute_tokenizations.py` references it by a root-relative path; moving it would break upstream and diff against `upstream`.
+- **MASSIVE** → `eval/massive/` — Aeonic-built (CC BY 4.0 slice), so it lives *with* its owning package.
+
+This root-vs-`eval/` asymmetry is a deliberate consequence of the "leave upstream intact" fork rule, not an inconsistency. If you add a corpus, register its loader + `config` path here and keep Aeonic-authored data under `eval/`.
+
 ## What the upstream code is
 
 Research code + project page for the paper above. It measures how the same text, translated across the FLORES-200 languages, tokenizes into wildly different token counts across ~28 tokenizers — the source of cost/latency/context unfairness between language communities.
