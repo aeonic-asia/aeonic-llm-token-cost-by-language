@@ -69,13 +69,13 @@ massive,llama-4,vie_Latn,Vietnamese,241.21,,unknown,,
 massive,llama-4,zho_Hans,Chinese (Simplified),651.07,,unknown,,
 massive,llama-4,rus_Cyrl,Russian,218.71,,unknown,,
 massive,llama-4,deu_Latn,German,225.33,,unknown,,
-flores,claude-fable-5,eng_Latn,English,315.15,,unknown,,
-flores,claude-fable-5,vie_Latn,Vietnamese,552.33,,unknown,,
-flores,claude-fable-5,zho_Hans,Chinese (Simplified),1097.41,,unknown,,
-flores,claude-fable-5,rus_Cyrl,Russian,388.77,,unknown,,
-flores,claude-fable-5,deu_Latn,German,469.56,,unknown,,
-massive,claude-fable-5,eng_Latn,English,288.55,,unknown,,
-massive,claude-fable-5,vie_Latn,Vietnamese,539.79,,unknown,,
-massive,claude-fable-5,zho_Hans,Chinese (Simplified),1140.84,,unknown,,
-massive,claude-fable-5,rus_Cyrl,Russian,385.08,,unknown,,
-massive,claude-fable-5,deu_Latn,German,411.64,,unknown,,
+flores,claude-fable-5,eng_Latn,English,315.15,10.0,high,0.003152,82.27
+flores,claude-fable-5,vie_Latn,Vietnamese,552.33,10.0,high,0.005523,144.15
+flores,claude-fable-5,zho_Hans,Chinese (Simplified),1097.41,10.0,high,0.010974,286.42
+flores,claude-fable-5,rus_Cyrl,Russian,388.77,10.0,high,0.003888,101.48
+flores,claude-fable-5,deu_Latn,German,469.56,10.0,high,0.004696,122.57
+massive,claude-fable-5,eng_Latn,English,288.55,10.0,high,0.002885,75.3
+massive,claude-fable-5,vie_Latn,Vietnamese,539.79,10.0,high,0.005398,140.89
+massive,claude-fable-5,zho_Hans,Chinese (Simplified),1140.84,10.0,high,0.011408,297.75
+massive,claude-fable-5,rus_Cyrl,Russian,385.08,10.0,high,0.003851,100.51
+massive,claude-fable-5,deu_Latn,German,411.64,10.0,high,0.004116,107.43

@@ -184,9 +184,11 @@ PRICING: dict[str, Price] = {
     "claude-sonnet-5": Price(3.00, PRICING_AS_OF, "high",
                              "Claude Sonnet 5 standard input list price ($3.00/1M in, "
                              "$15.00/1M out); intro $2.00/1M in effect through 2026-08-31"),
-    "claude-fable-5": Price(None, PRICING_AS_OF, "unknown",
-                            "added to verify the shared newer-Claude tokenizer; price "
-                            "not ratified for this run → token-count/premium only"),
+    "claude-fable-5": Price(10.00, "2026-07-19", "high",
+                            "Claude Fable 5 input list price ($10.00/1M in, $50.00/1M out) — "
+                            "2x Opus 4.8; shares Opus 4.8's tokenizer so identical token counts "
+                            "at double the price. Verified 2026-07-19 vs. the Anthropic pricing "
+                            "page + claude-api reference"),
     "gemini-3-pro": Price(2.00, PRICING_AS_OF, "high",
                           "Gemini 3 Pro input list price, <=200K-context tier "
                           "($2.00/1M in; $4.00/1M above 200K — our texts are short)"),
