@@ -15,11 +15,35 @@ Petrov, La Malfa, Torr, Bibi, *Language Model Tokenizers Introduce Unfairness Be
 - **UNK gate (§4.1):** report a (language, tokenizer) pair only when <10% of characters map to UNK. Immaterial for modern byte-level BPE (o200k/cl100k/Claude/Gemini/Llama have no true UNK) but kept for honesty.
 - **Validation oracle (Table 1):** upstream `cl100k_base` (ChatGPT/GPT-4) premiums vs. English — **Vietnamese 2.45, Chinese-Simplified 1.91, German 1.58**. The Aeonic eval reproduces `cl100k_base` offline over the same corpus, so these are the correctness target: if the eval's cl100k premiums don't land on those, the pipeline is wrong.
 
+## The Aeonic eval (`eval/`) — start here
+
+The Aeonic work is a **self-contained `eval/` package**, deliberately separate from the upstream pipeline below (which is left intact). If you're working on the token-cost eval, this is the whole world; ignore the upstream sections except as method reference.
+
+**Run it** (offline, deterministic — full command detail in `README.md`):
+
+```bash
+make setup       # venv + pinned deps (requirements-eval.txt)
+make reproduce   # counters -> premium/cost analysis -> figures
+make test        # correctness gate: reproduce the paper's cl100k premiums (<0.005)
+```
+
+**Where the results are** (this is the canonical, in-repo record — do not restate the numbers elsewhere; read them here):
+
+- `eval/results/summary.json` — headline premiums per corpus/counter, machine-readable, with `dataset_as_of`. **Read this first for the current numbers.**
+- `eval/results/premium_by_language.csv` (per-sentence distribution), `cost_by_language.csv` (USD+VND), `within_vendor_inflation.csv` (the newer-vs-older-Claude hook), `aggregate_counts.csv`, `raw_counts.csv`, `run_manifest.json` (which counters actually ran — nothing is estimated), `figures/`.
+- The **narrative + interpretation** (why the numbers reshaped the thesis, the ratified/parked angle) lives in the *workshop* repo's `epic-5-vietnamese-token-tax.md` decision log — not duplicated here.
+
+**Key architectural difference from upstream.** The `eval/` package hangs off a narrower **`TokenCounter`** contract (`count(text) -> int`) in `eval/measure.py`, **not** upstream's `TokenizerInterface` (encode/decode/alignment). This is load-bearing: closed models (Claude via `count_tokens`) return a *count only*, never token strings — so nothing fakes `encode` on a count-only model. Offline tokenizers and the Anthropic API both satisfy `TokenCounter`.
+
+**Adding a counter or corpus without re-measuring the rest.** Runs are selectable with **carry-forward**: `make reproduce COUNTERS=<id>` re-measures only that counter (and `CORPORA=<name>` only that corpus), preserving every other row **byte-for-byte**. This is what lets the key-gated Claude rows stay fixed while a new offline counter is added. New counters register in `build_counter` (`eval/measure.py`); new corpora load via `eval/corpora.py`.
+
+**`eval/` file map:** `config.py` (model matrix, pricing, subsample knobs) · `measure.py` (`TokenCounter` + concrete counters) · `corpora.py` (FLORES+/MASSIVE loaders, NFC gate) · `run.py` (driver + carry-forward) · `analyze.py` (premium/cost/inflation) · `figures.py` (deterministic SVG+PNG) · `build_massive.py` (one-time MASSIVE slice builder) · `tests/test_oracle.py` (the paper oracle) · `results/` (committed dataset) · `tiktoken_cache/` (offline BPE ranks).
+
 ## What the upstream code is
 
 Research code + project page for the paper above. It measures how the same text, translated across the FLORES-200 languages, tokenizes into wildly different token counts across ~28 tokenizers — the source of cost/latency/context unfairness between language communities.
 
-## Commands
+## Commands (upstream pipeline only — for the Aeonic eval see "The Aeonic eval" above)
 
 ```bash
 pip install -r requirements.txt              # needs a HF login for gated models (Llama-2, Qwen)
@@ -30,9 +54,9 @@ Run from the repo root — `compute_tokenizations.py` uses paths relative to it 
 
 The project page is static: open `index.html` directly or serve the repo root (it fetches `assets/tokenization_lengths_validated.csv` and `assets/examples/*.json`).
 
-## Architecture
+## Upstream architecture (not the Aeonic eval)
 
-The whole pipeline hangs off one abstraction: **`TokenizerInterface`** in `compute/tokenizer_interface.py`. Every tokenizer is a subclass exposing a uniform `encode` / `decode` / `pretty_name` / `count_unknown`. This uniformity is what lets one loop run all tokenizers over all languages.
+The whole upstream pipeline hangs off one abstraction: **`TokenizerInterface`** in `compute/tokenizer_interface.py`. Every tokenizer is a subclass exposing a uniform `encode` / `decode` / `pretty_name` / `count_unknown`. This uniformity is what lets one loop run all tokenizers over all languages.
 
 - **Base + family subclasses** (`tokenizer_interface.py`): `OpenAITokenizer` (tiktoken), `HuggingFaceTokenizer` (transformers `AutoTokenizer`), plus special cases `UTF32_Tokenizer`, `FacebookAI_SeamlessM4T`, and NLLB. Concrete tokenizers are usually a two-line subclass setting `tokenizer` (model id) and `tokenizer_name`. **`ALL_TOKENIZERS` at the bottom of the file is the registry** — the driver iterates exactly this list, so adding a tokenizer means: subclass the right base, set the model id, append to `ALL_TOKENIZERS`.
 - **`count_unknown`** estimates how many tokens map to UNK. Byte/char-level tokenizers (UTF-32, ByT5, CANINE) and tiktoken return 0; HF and Seamless estimate it from length lost after stripping UNK tokens. This drives validation.
@@ -50,7 +74,7 @@ The first language is processed serially before the loop so gated models downloa
 
 **Notebooks** are analysis/figure generation on top of the CSVs, not part of the compute pipeline: `prepare_tables.ipynb` (paper plots/tables), `how_much_will_english_lose.ipynb` (adds `compute/` to `sys.path` and reuses the tokenizer classes for a follow-up analysis).
 
-## Conventions
+## Upstream conventions
 
 - Tokenizer identity everywhere is `pretty_name`, which becomes the CSV column header — keep names stable and unique or you break the CSVs and the page.
 - The FLORES dataset is committed under `flores200_dataset/`; example-sentence selection is by fixed line index, so it's tied to that dataset version.
