@@ -36,10 +36,6 @@ matplotlib.rcParams["svg.hashsalt"] = "aeonic-token-cost-eval"
 # parser off globally rather than escaping each string and hoping the next
 # caption remembers to.
 matplotlib.rcParams["text.parse_math"] = False
-# Hatch separates same-tokenizer SKUs sharing one hue (see _HATCH_BY_COUNTER).
-# Bars are ~20px wide at this figure size, so the default 1.0 stroke reads as a
-# smear; 0.7 keeps the pattern legible without muddying the fill colour.
-matplotlib.rcParams["hatch.linewidth"] = 0.7
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,10 +45,11 @@ from . import config
 
 # ── design tokens ────────────────────────────────────────────────────────────
 # Categorical hues assigned in FIXED slot order and never cycled (provenance and
-# validation notes live with _SLOT_BY_FLAGSHIP below). Three slots (aqua/yellow/
-# magenta) fall below 3:1 against the surface, which obliges "relief" — the
-# committed cost_by_language.csv / premium_by_language.csv are that table view,
-# and the extreme in each group is directly labelled.
+# validation notes live with _SLOT_BY_FLAGSHIP below). Aqua and yellow fall below
+# 3:1 against the surface, which obliges "relief" — the committed
+# cost_by_language.csv / premium_by_language.csv are that table view, and the
+# extreme in each group is directly labelled. (Magenta is also sub-3:1 but is
+# currently unassigned; see _SLOT_BY_FLAGSHIP.)
 _SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
            "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 _SURFACE = "#fcfcfb"     # chart surface
@@ -63,11 +60,12 @@ _GRID = "#e1e0d9"        # hairline gridline, one step off the surface
 _BASELINE = "#c3c2b7"    # baseline / axis rule
 
 
-# Colour follows the TOKENIZER; texture follows the serving SKU.
+# Colour follows the TOKENIZER; the tint STEP within that colour follows the
+# serving SKU.
 #
 # One hue per distinct tokenizer, assigned in the tokenizer figures' canonical
 # order (ascending Vietnamese premium) and never cycled. Models that SHARE a
-# tokenizer share its hue and are separated by hatch instead. Two payoffs:
+# tokenizer share its hue and are separated by lightness instead. Two payoffs:
 #
 #  * A hue means the same thing in EVERY figure. An earlier cut gave the three
 #    dollar-only Claude SKUs their own hues by reusing slots held by counters that
@@ -77,42 +75,85 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 #    prevent. Ten counters reach a chart and the palette holds eight, so
 #    per-counter hues could never have been collision-free anyway.
 #  * The encoding states the argument. The dollar figures exist to show ONE
-#    tokenizer priced several ways; same hue + different texture says that
-#    directly, where distinct hues implied unrelated tokenizers and left the
-#    caption to argue the reader back out of it.
+#    tokenizer priced several ways; same hue + a darker step says that directly,
+#    where distinct hues implied unrelated tokenizers and left the caption to
+#    argue the reader back out of it.
 #
-# Palette provenance: validated as a set for this light surface — all inside the
-# lightness band, all above the chroma floor, worst adjacent CVD ΔE 9.1 (>=8) and
-# worst adjacent normal-vision ΔE 19.6 (>=15), checked on the RENDERED bar order
-# rather than slot order (slot-order checking alone missed a normal-vision ΔE 12.9
-# adjacency failure in an earlier mapping). The tool used was external to this
-# repo and is NOT committed here, so those figures cannot be re-derived from a
-# clean checkout — treat them as recorded provenance, not a reproducible gate, and
-# re-validate with an equivalent CIEDE2000 + CVD-simulation check before changing
-# any hue. Under the current scheme only the seven headline hues need checking;
-# folded members reuse a validated hue and differ by texture.
+# Which hue lands on which tokenizer is chosen for the RENDERED bar orders, not
+# for slot order. The two bar figures order their columns differently — the
+# tokenizer figures ascend by Vietnamese premium (_headline_order), the dollar
+# figures by price (_priced_order) — so a mapping is only safe if BOTH sequences
+# clear the gates. Assigning slots down the tokenizer order alone (the earlier
+# cut) left every priced column drawing from the palette's tail: blue and orange
+# went to Qwen and Llama, which are unpriced and never reach a dollar figure, so
+# the dollar charts were built entirely from aqua/yellow/magenta/green — two of
+# the three sub-3:1 slots plus two greens 15.6 apart, i.e. the weakest four hues
+# in the set carrying the article's headline chart. The mapping below is one of
+# the assignments that passes both orders; among those it was picked to keep the
+# priced tokenizers on the strong hues and to leave magenta out entirely.
+#
+# Palette provenance: validated as a set for this light surface (#fcfcfb) by a
+# CIEDE2000 + CVD-simulation check (the validator in Claude Code's bundled
+# `dataviz` Agent Skill). That tool is NOT in this repo and a clean checkout
+# cannot re-derive these numbers — they are recorded provenance, not a
+# reproducible gate. What IS portable is the gate itself, so any equivalent
+# checker can reproduce the verdict: for each ADJACENT pair in a rendered bar
+# order, OKLab ΔE×100 >= 8 under protanopia/deuteranopia simulation and >= 15
+# unsimulated. Measured, on the surface above:
+#
+#   tokenizer figures (orange,blue,green,yellow,red,violet,aqua):
+#     worst adjacent CVD ΔE 15.3 (>=8), normal-vision ΔE 20.8 (>=15)
+#   dollar figures (violet,green,yellow,violet,red):
+#     worst adjacent CVD ΔE 16.2 (>=8), normal-vision ΔE 30.3 (>=15)
+#
+# Both were 9.1 / 15.6 under the previous mapping — at the floor, not clear of
+# it. Tritan separation on the red-yellow adjacency in the tokenizer figures is
+# 7.6, the one number that did not improve; tritanopia is vanishingly rare and
+# that pair carries a legend, a direct label on the group extreme, and the
+# committed CSVs as the table view, so hue is not doing the work alone.
+# Re-check BOTH rendered orders against the gate above before changing any hue —
+# slot order alone is not the thing that ships. Only the seven headline hues need
+# checking; folded members reuse a validated hue and differ by texture.
 _SLOT_BY_FLAGSHIP: dict[str, int] = {
-    "qwen-3-6": 0, "llama-4": 1, "gemini-3-1-pro": 2, "o200k_base": 3,
-    "claude-new": 4, "claude-old": 5, "cl100k_base": 6,
-    # slot 7 (#e34948) is deliberately unassigned — headroom for one more
-    # tokenizer without disturbing any existing hue.
+    "qwen-3-6": 1, "llama-4": 0, "gemini-3-1-pro": 5, "o200k_base": 3,
+    "claude-new": 7, "claude-old": 6, "cl100k_base": 2,
+    # slot 4 (#e87ba4, magenta) is deliberately unassigned — headroom for one
+    # more tokenizer without disturbing any existing hue. Re-validate both
+    # rendered orders when spending it: it is sub-3:1 on this surface and sits
+    # ΔE 6.1 from aqua under protanopia, so where it lands is not free.
 }
 
-# Texture separates SKUs that share a tokenizer, and therefore a hue. Each
-# group's flagship is solid; every folded member takes an explicit pattern.
-# Explicit rather than derived from matrix position, so reordering MODEL_MATRIX
-# cannot silently repaint a published figure.
-# Patterns are chosen to differ in KIND (lines vs dots vs cross), not merely in
-# angle: at the ~20px bar width these figures render at, "///" and "\\\" are not
-# reliably tellable apart, so opposite diagonals do not count as a distinction.
-_HATCH_BY_COUNTER: dict[str, str] = {
-    "claude-sonnet-5": "///",
-    "claude-fable-5": "...",
-    "claude-haiku-4-5": "///",
-    # Never charted today (unpriced / superseded), but mapped so a future
-    # promotion is distinguishable rather than an exception.
-    "claude-opus-4-8": "xxx",
-    "gemini-3-pro": "...",
+# LIGHTNESS separates SKUs that share a tokenizer, and therefore a hue. Fills
+# are flat — no hatch anywhere. Texture was the previous mechanism and is a
+# documented last resort (it belongs to the accessibility/print/forced-colors
+# path, not to a chart's default look); at ~20px bar width a dense dot or line
+# field also muddies the fill it sits on, which is what made these bars read as
+# washed out rather than coloured.
+#
+# The step is ORDERED BY SERVING PRICE — lighter = cheaper, darker = dearer.
+# That is legitimate where a flat value-ramp on nominal categories would not be:
+# price tier is an ordered variable, and it is NOT what the bar length already
+# encodes (length is price x tokens), so the step adds information instead of
+# restating it. Each family's flagship keeps the base hue, so a headline column
+# is the same colour in the tokenizer figures and the dollar figures.
+#
+# Steps are explicit validated hexes rather than computed at render time: the
+# ramp is a published design decision, and deriving it from matrix position
+# would let a MODEL_MATRIX reorder silently repaint a figure. Generated in OKLCH
+# at fixed hue and chroma, then validated as ordinal ramps (see the provenance
+# note above for the tool and its portability caveat):
+#
+#   red / claude-new    #fe7a73 -> #e34948 -> #b51221   (Sonnet 5 $3, Opus 5 $5, Fable 5 $10)
+#   violet / claude-old #6c62d2 -> #4a3aa7              (Haiku 4.5 $1, Sonnet 4.6 $3)
+#
+# Both pass monotone lightness, adjacent OKLCH ΔL >= 0.06, single hue, and a
+# light end clearing 2:1 on this surface (red 2.48:1, violet 4.74:1). The
+# CROSS-family adjacencies these steps create are validated categorically, like
+# any other neighbouring pair: worst is #4a3aa7 -> #fe7a73 at CVD ΔE 29.2.
+_TINT_BY_COUNTER: dict[str, str] = {
+    "claude-sonnet-5": "#fe7a73",   # $3 — lightest of the newer-Claude family
+    "claude-fable-5": "#b51221",    # $10 — darkest
+    "claude-haiku-4-5": "#6c62d2",  # $1 — lighter of the older-Claude pair
 }
 
 
@@ -127,14 +168,14 @@ def _slot(cid: str) -> int:
     return _SLOT_BY_FLAGSHIP[key]
 
 
-def _series_style(counters: list[str]) -> list[tuple[str, str]]:
-    """(hue, hatch) per counter, guarding that one chart never repeats a pair.
+def _series_style(counters: list[str]) -> list[str]:
+    """Fill colour per counter, guarding that one chart never repeats one.
 
-    Hue identifies the tokenizer, hatch the serving SKU within it. Two counters
-    may legitimately share a hue — that is the whole point — but never a
-    (hue, hatch) pair, which would render them indistinguishable.
+    The family hue identifies the tokenizer; a tint step within it identifies
+    the serving SKU. Counters sharing a tokenizer therefore share a hue — that
+    is the whole point — but must land on different steps of it.
     """
-    styles: list[tuple[str, str]] = []
+    styles: list[str] = []
     for cid in counters:
         s = _slot(cid)
         # Bounds-check per counter, before the duplicate test: a negative index
@@ -145,16 +186,18 @@ def _series_style(counters: list[str]) -> list[tuple[str, str]]:
                 f"slot {s} for {cid!r} is outside the {len(_SERIES)}-slot palette "
                 "— a 9th categorical hue is not distinguishable under CVD; fold "
                 "the tail into 'Other' or facet into small multiples")
-        styles.append((_SERIES[s], _HATCH_BY_COUNTER.get(cid, "")))
+        styles.append(_TINT_BY_COUNTER.get(cid, _SERIES[s]))
     if len(set(styles)) != len(styles):
         dupes = sorted({c for c, st in zip(counters, styles)
                         if styles.count(st) > 1})
         raise ValueError(
-            f"counters {dupes} resolve to the same (colour, hatch) in one chart — "
-            "they would be indistinguishable. Give one a pattern in "
-            "_HATCH_BY_COUNTER; but if this fired because you priced a "
+            f"counters {dupes} resolve to the same fill in one chart — they "
+            "would be indistinguishable. Give one a validated step in "
+            "_TINT_BY_COUNTER; but if this fired because you priced a "
             "same-tokenizer-same-price proxy, read the PRICING note on "
-            "claude-opus-4-8 first — the right fix is to leave it unpriced")
+            "claude-opus-4-8 first — the right fix is to leave it unpriced. "
+            "Two SKUs at one price cannot take ordered steps honestly, because "
+            "the step encodes price")
     return styles
 
 
@@ -205,11 +248,9 @@ def _grouped_bars(ax, groups: list[str], series: list[str],
     x = np.arange(len(groups))
     slot = 0.84 / len(series)
     width = slot * 0.84          # leftover slot = the surface gap
-    for k, (cid, (color, hatch)) in enumerate(zip(series, _series_style(series))):
-        # Hatch is drawn in the edge colour: the surface tone cuts the pattern out
-        # of the fill, so texture reads without adding a second hue or an outline.
+    for k, color in enumerate(_series_style(series)):
         ax.bar(x + k * slot, values[k], width, label=labels[k],
-               color=color, hatch=hatch, edgecolor=_SURFACE, linewidth=0)
+               color=color, linewidth=0)
     for gi in range(len(groups)):
         col = [values[k][gi] for k in range(len(series))]
         top = max(range(len(col)), key=lambda k: col[k])
