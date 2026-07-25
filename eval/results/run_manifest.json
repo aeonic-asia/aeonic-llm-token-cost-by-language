@@ -1,5 +1,5 @@
 {
-  "dataset_as_of": "2026-07-19",
+  "dataset_as_of": "2026-07-25",
   "corpora": {
     "flores": "FLORES+",
     "massive": "MASSIVE"
@@ -18,24 +18,34 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "claude-opus-5",
-    "qwen-3-6"
+    "claude-new",
+    "claude-opus-4-8"
   ],
   "counters_carried_forward": [
     "cl100k_base",
     "claude-fable-5",
     "claude-haiku-4-5",
-    "claude-new",
     "claude-old",
     "claude-sonnet-5",
     "gemini-3-1-pro",
     "gemini-3-pro",
     "llama-4",
-    "o200k_base"
+    "o200k_base",
+    "qwen-3-6"
   ],
   "counters_skipped": [],
   "envelope_tokens_by_counter": {
-    "claude-opus-5": 6,
+    "cl100k_base": 0,
+    "claude-fable-5": 6,
+    "claude-haiku-4-5": 7,
+    "claude-new": 6,
+    "claude-old": 7,
+    "claude-opus-4-8": 6,
+    "claude-sonnet-5": 6,
+    "gemini-3-1-pro": 0,
+    "gemini-3-pro": 0,
+    "llama-4": 0,
+    "o200k_base": 0,
     "qwen-3-6": 0
   },
   "versions": {

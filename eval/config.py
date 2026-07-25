@@ -55,8 +55,14 @@ CORPORA: dict[str, str] = {"flores": "FLORES+", "massive": "MASSIVE"}
 #             gated HF repo needs an HF token).
 # needs_sdk : implemented + plumbed; offline (no key), but skipped until an
 #             optional SDK is installed and its one-time tokenizer asset is
-#             downloaded (Gemini google-genai LocalTokenizer). Kept out of the
-#             lean `requirements-eval.txt` so `make setup` stays minimal.
+#             downloaded — Gemini (google-genai LocalTokenizer) and the *ungated*
+#             HF repos (Qwen 3.6, which needs `transformers` but no credentials).
+#             Kept out of the lean `requirements-eval.txt` so `make setup` stays
+#             minimal.
+# Note `kind="hf"` spans both statuses by design: gated repos (Llama 4) are
+# needs_key because a token is genuinely required; ungated ones (Qwen) are
+# needs_sdk because only the library is missing. Status is manifest metadata
+# only — nothing branches on it; the real gate is `Counter.gated`.
 STATUS_LIVE = "live"
 STATUS_NEEDS_KEY = "needs_key"
 STATUS_NEEDS_SDK = "needs_sdk"
@@ -145,14 +151,16 @@ MODEL_MATRIX: list[Counter] = [
     # once ANTHROPIC_API_KEY is set. Exposes the ~30–41% within-vendor jump.
     # The newer tokenizer is shared by Opus 5 / Opus 4.8 / Sonnet 5 / Fable 5, so
     # it is the flagship column those fold into (verified byte-identical below).
-    # Headline label names the CURRENT flagship (Opus 5); the committed hook
-    # numbers were measured on the claude-opus-4-8 endpoint (spec below), and the
-    # claude-opus-5 fold-proxy confirms in-dataset that Opus 5 counts identically —
-    # so the generational id (release-stable) and the flagship label stay decoupled.
+    # The id stays generational and release-stable; the *spec* and the *label* both
+    # name the current flagship, so the column is measured on the model it claims.
+    # That equality is deliberate: an earlier cut labelled this column "Opus 5"
+    # while measuring the claude-opus-4-8 endpoint, which put the measured model
+    # nowhere in the published figure. Opus 4.8 is now its own fold proxy below, so
+    # the caption names four models and every name is backed by its own measurement.
     Counter("claude-new", "Claude (newer tokenizer)", "Anthropic", "anthropic",
-            STATUS_NEEDS_KEY, generation="claude-new", spec="claude-opus-4-8",
+            STATUS_NEEDS_KEY, generation="claude-new", spec="claude-opus-5",
             stands_in_for="shared newer Claude tokenizer — Opus 5 (current flagship) / "
-                          "Opus 4.8 / Sonnet 5 / Fable 5; measured on the Opus 4.8 endpoint",
+                          "Opus 4.8 / Sonnet 5 / Fable 5; measured on the Opus 5 endpoint",
             headline_display="Claude Opus 5"),
     Counter("claude-old", "Claude (older tokenizer)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-old", spec="claude-sonnet-4-6",
@@ -175,16 +183,18 @@ MODEL_MATRIX: list[Counter] = [
             spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)",
             headline=False, headline_display="Fable 5",
             flagship_group="claude-new", fold_reason="shared"),
-    # Opus 5 (released 2026-07-24) is the current everyday Claude flagship. Docs
-    # place every Claude 4.7+ model on the newer tokenizer, so it is expected to
-    # share Opus 4.8's tokenizer — NOT assumed here but MEASURED via count_tokens
-    # and confirmed byte-identical to claude-new in the coincidence check. Folds
-    # into claude-new; priced $5/1M in (= Opus 4.8), so "same tokens, same price"
-    # as the model the headline column was historically measured on.
-    Counter("claude-opus-5", "Claude Opus 5 (newer, shared — confirm)", "Anthropic",
+    # Opus 4.8 — the prior everyday flagship, and the endpoint this column was
+    # historically measured on. Retained as a fold proxy after claude-new moved to
+    # the Opus 5 endpoint (2026-07-25): keeping it measured is what lets the
+    # caption say "Opus 5 = Opus 4.8 = Sonnet 5 = Fable 5" with every name backed
+    # by its own measurement, rather than asserting the older model's equivalence
+    # from a comment. Same $5.00/1M input price as Opus 5 — see PRICING for why it
+    # is deliberately left unpriced here.
+    Counter("claude-opus-4-8", "Claude Opus 4.8 (newer, shared — confirmed)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
-            spec="claude-opus-5", stands_in_for="current newer-Claude flagship; confirms shared tokenizer",
-            headline=False, headline_display="Opus 5",
+            spec="claude-opus-4-8",
+            stands_in_for="prior newer-Claude flagship; confirms the shared tokenizer spans generations",
+            headline=False, headline_display="Opus 4.8",
             flagship_group="claude-new", fold_reason="shared"),
     # Haiku 4.5 — the cheapest Claude serving tier ($1/1M in). Which tokenizer
     # generation it uses was NOT assumed: measured via count_tokens, it is
@@ -230,11 +240,13 @@ MODEL_MATRIX: list[Counter] = [
             STATUS_NEEDS_KEY, spec="meta-llama/Llama-4-Scout-17B-16E",
             gated=True, headline_display="Llama 4"),
     # Qwen 3.6 (Alibaba, released 2026-04; open-weight, Apache-2.0). A NEW, larger
-    # tokenizer — ~248k vocab vs. Qwen3/2.5's ~152k — so it counts multilingual
-    # text differently and earns its own headline column (the first non-incumbent
-    # vendor in the matrix). Self-host: no single per-token serving list price →
-    # premium-only, like Llama 4. Cite the dense flagship repo; the MoE sibling
-    # shares this tokenizer.
+    # tokenizer — 248,044 vocab entries, counted from the downloaded tokenizer.json,
+    # vs. Qwen3/2.5's published 151,936 — so it counts multilingual text differently
+    # and earns its own headline column (the first non-incumbent vendor in the
+    # matrix). Self-host: no single per-token serving list price → premium-only,
+    # like Llama 4. This is the dense flagship repo; the MoE sibling is *believed*
+    # to share this tokenizer but that is NOT measured here — do not state it as
+    # fact, and add it as a fold proxy if the claim ever needs to be made in print.
     Counter("qwen-3-6", "Qwen 3.6 (open-weight)", "Alibaba", "hf",
             STATUS_NEEDS_SDK, spec="Qwen/Qwen3.6-27B",
             gated=False, headline_display="Qwen 3.6"),
@@ -258,7 +270,7 @@ USD_TO_VND_AS_OF = "2026-07-17"
 # Measurement date of the committed token dataset — kept distinct from
 # PRICING_AS_OF (the $ layer can be re-ratified without re-measuring tokens, and
 # vice versa; stamping one with the other would assert a false provenance date).
-DATASET_AS_OF = "2026-07-19"
+DATASET_AS_OF = "2026-07-25"   # model-currency refresh: Opus 5 endpoint, Opus 4.8 proxy, Qwen 3.6
 
 
 @dataclass(frozen=True)
@@ -287,9 +299,14 @@ PRICING: dict[str, Price] = {
                         "GPT-5.6 tiers (Luna $1.00 / Terra $2.50 / Sol $5.00)"),
     "cl100k_base": Price(None, PRICING_AS_OF, "unknown",
                          "historical baseline tokenizer; not a current serving SKU"),
-    "claude-new": Price(5.00, PRICING_AS_OF, "high",
+    # Dated 2026-07-25, not PRICING_AS_OF: this entry now makes a claim about Opus 5,
+    # which did not exist on the 2026-07-18 as-of date. The price is unchanged ($5.00),
+    # but stamping an Opus 5 claim with a pre-release date would assert a false
+    # provenance — the same error DATASET_AS_OF exists to prevent.
+    "claude-new": Price(5.00, "2026-07-25", "high",
                         "Newer-Claude tokenizer; current flagship Claude Opus 5 and "
-                        "Opus 4.8 share the same $5.00/1M in ($25.00/1M out) input list price"),
+                        "Opus 4.8 share the same $5.00/1M in ($25.00/1M out) input list "
+                        "price. Verified 2026-07-25 vs. the Anthropic pricing page"),
     "claude-old": Price(3.00, PRICING_AS_OF, "high",
                         "Claude Sonnet 4.6 input list price ($3.00/1M in, $15.00/1M out)"),
     "claude-sonnet-5": Price(3.00, PRICING_AS_OF, "high",
@@ -304,20 +321,31 @@ PRICING: dict[str, Price] = {
                               "Claude Haiku 4.5 input list price ($1.00/1M in, $5.00/1M out) — "
                               "the cheapest Claude serving tier. Verified 2026-07-19 vs. the "
                               "claude-api reference"),
-    # Opus 5 is deliberately UNPRICED here — not because the price is unknown
+    # Opus 4.8 is deliberately UNPRICED here — not because the price is unknown
     # ($5.00/1M in, $25.00/1M out, verified 2026-07-25 vs. the Anthropic pricing
     # page) but because it is *identical* to the claude-new headline column this
     # counter folds into, which already carries that $5.00 and is labelled "Claude
     # Opus 5". The dollar figures deliberately do NOT fold shared-tokenizer models,
     # since their whole point is the price split within one tokenizer (Sonnet 5 $3
-    # / Fable 5 $10 / Haiku 4.5 $1 all differ, so all are priced). Opus 5 differs
-    # in neither tokens nor price, so pricing it would draw a duplicate bar at an
-    # identical height. This counter's job is the in-dataset tokenizer
-    # confirmation; the $ story is told once, by claude-new.
-    "claude-opus-5": Price(None, "2026-07-25", "high",
-                           "premium-only by design: same tokenizer AND same $5.00/1M input price as "
-                           "the claude-new headline column it folds into (Claude Opus 5, verified "
-                           "2026-07-25) — priced there, not duplicated here"),
+    # / Fable 5 $10 / Haiku 4.5 $1 all differ, so all are priced). Opus 4.8 differs
+    # in neither tokens nor price, so pricing it would put a second bar at an
+    # identical height beside Opus 5's. This counter's job is the in-dataset
+    # tokenizer confirmation; the $ story is told once, by claude-new.
+    #
+    # ⚠️ If you price it anyway, `figures._series_style` RAISES (Opus 4.8 shares
+    # claude-new's colour slot and its solid texture). That is intentional — but the
+    # error names a colour slot, not this decision, so read this comment first: the
+    # right fix is to leave it unpriced, not to hand it a distinct slot.
+    #
+    # `confidence` is "unknown" to match every other unpriced row (cl100k, llama-4,
+    # qwen-3-6) — the field grades a price, and there is none here. The fact that
+    # the price IS known is stated above and in claude-new, not smuggled into a
+    # confidence grade that lands in cost_by_language.csv as "high" beside an empty
+    # price cell.
+    "claude-opus-4-8": Price(None, "2026-07-25", "unknown",
+                             "premium-only by design: same tokenizer AND same $5.00/1M input price as "
+                             "the claude-new headline column it folds into (Claude Opus 5, verified "
+                             "2026-07-25) — priced there, not duplicated here"),
     "gemini-3-pro": Price(2.00, PRICING_AS_OF, "medium",
                           "Gemini 3.0-generation Pro (gemma3 tokenizer). Priced at the Google "
                           "Pro <=200K tier ($2.00/1M in); the 3.0 preview shares this tier price "

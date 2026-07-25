@@ -180,9 +180,22 @@ def run() -> None:
     carried_corpora: list[str] = []
     carried_counters: list[str] = []
     if ex_raw is not None:
+        # Rows for a counter id that no longer exists in MODEL_MATRIX are dropped
+        # rather than carried. Without this a renamed or retired counter leaves
+        # ghost rows that no pass can ever purge (carry-forward keys on `ran`, and
+        # a counter absent from the matrix can never be in `ran`): they survive
+        # every subsequent run, flow through analyze into the committed CSVs, and
+        # are invisible in the figures because those iterate MODEL_MATRIX. The
+        # matrix is the declaration of what this dataset contains; anything else
+        # is residue.
+        known = {c.id for c in config.MODEL_MATRIX}
+        dropped = sorted(set(ex_agg.counter_id) - known)
+        if dropped:
+            print(f"  purge {', '.join(dropped)} — no longer in MODEL_MATRIX")
+
         def _carry(df):
             measured = df.corpus.isin(selected) & df.counter_id.isin(ran)
-            return df[~measured]
+            return df[~measured & df.counter_id.isin(known)]
         carried_raw, carried_agg = _carry(ex_raw), _carry(ex_agg)
         carried_counters = sorted(set(carried_agg.counter_id) - set(ran))
         carried_corpora = sorted(set(carried_agg.corpus) - set(selected))
@@ -204,6 +217,22 @@ def run() -> None:
     config.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     final_raw.to_csv(raw_path, index=False)
     final_agg.to_csv(agg_path, index=False)
+
+    # Carry the measured message-envelope forward for counters this pass did not
+    # re-measure, exactly like their rows. Without this the map documented every
+    # counter in the dataset but, after a one-counter pass, described only that
+    # counter — so `envelope_tokens_by_counter` silently stopped covering the data
+    # it sits beside, and the CLAUDE.md/README statement that the frame is recorded
+    # there stopped being true for the carried rows. The per-row `envelope_tokens`
+    # column in raw_counts.csv is the source of truth for the carried values.
+    if "envelope_tokens" in final_raw.columns:
+        for cid in carried_counters:
+            if cid in envelope_by_counter:
+                continue
+            vals = final_raw.loc[final_raw.counter_id == cid, "envelope_tokens"].dropna()
+            if not vals.empty:
+                envelope_by_counter[cid] = int(vals.iloc[0])
+    envelope_by_counter = dict(sorted(envelope_by_counter.items()))
 
     import tiktoken
     manifest = {
