@@ -8,10 +8,7 @@
     "flores": 2009,
     "massive": 2033
   },
-  "corpora_carried_forward": [
-    "flores",
-    "massive"
-  ],
+  "corpora_carried_forward": [],
   "languages": {
     "eng_Latn": "English",
     "vie_Latn": "Vietnamese",
@@ -21,11 +18,13 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "claude-haiku-4-5"
+    "claude-opus-5",
+    "qwen-3-6"
   ],
   "counters_carried_forward": [
     "cl100k_base",
     "claude-fable-5",
+    "claude-haiku-4-5",
     "claude-new",
     "claude-old",
     "claude-sonnet-5",
@@ -35,22 +34,14 @@
     "o200k_base"
   ],
   "counters_skipped": [],
+  "envelope_tokens_by_counter": {
+    "claude-opus-5": 6,
+    "qwen-3-6": 0
+  },
   "versions": {
     "tiktoken": "0.13.0",
     "pandas": "3.0.3"
   },
-  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); Llama 4 via HF AutoTokenizer (gated repo, needs HF_TOKEN). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:subsample]), not a random sample.",
-  "api_per_sentence_subsample": 200,
-  "envelope_tokens_by_counter": {
-    "o200k_base": 0,
-    "cl100k_base": 0,
-    "claude-new": 6,
-    "claude-old": 7,
-    "claude-sonnet-5": 6,
-    "gemini-3-pro": 0,
-    "llama-4": 0,
-    "claude-fable-5": 6,
-    "gemini-3-1-pro": 0,
-    "claude-haiku-4-5": 7
-  }
+  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); open-weight via HF AutoTokenizer — Llama 4 (gated, needs HF_TOKEN) and Qwen 3.6 (ungated Apache-2.0, no token). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:api_per_sentence_subsample] of the FLORES+ dev split / MASSIVE), not a random sample — so its percentiles describe that fixed slice; offline counters do the full per-sentence sweep.",
+  "api_per_sentence_subsample": 200
 }

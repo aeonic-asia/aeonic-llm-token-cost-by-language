@@ -66,6 +66,18 @@
         "Chinese (Simplified)": 1.6811,
         "Russian": 1.9318,
         "German": 1.7565
+      },
+      "claude-opus-5": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      },
+      "qwen-3-6": {
+        "Vietnamese": 1.2955,
+        "Chinese (Simplified)": 0.9591,
+        "Russian": 1.3559,
+        "German": 1.3041
       }
     },
     "massive": {
@@ -128,6 +140,18 @@
         "Chinese (Simplified)": 1.7532,
         "Russian": 1.943,
         "German": 1.5508
+      },
+      "claude-opus-5": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      },
+      "qwen-3-6": {
+        "Vietnamese": 1.2351,
+        "Chinese (Simplified)": 0.8863,
+        "Russian": 1.2034,
+        "German": 1.2088
       }
     }
   },
@@ -202,6 +226,10 @@
       ],
       [
         "claude-fable-5",
+        "claude-opus-5"
+      ],
+      [
+        "claude-fable-5",
         "claude-sonnet-5"
       ],
       [
@@ -210,6 +238,14 @@
       ],
       [
         "claude-new",
+        "claude-opus-5"
+      ],
+      [
+        "claude-new",
+        "claude-sonnet-5"
+      ],
+      [
+        "claude-opus-5",
         "claude-sonnet-5"
       ]
     ],
@@ -220,6 +256,10 @@
       ],
       [
         "claude-fable-5",
+        "claude-opus-5"
+      ],
+      [
+        "claude-fable-5",
         "claude-sonnet-5"
       ],
       [
@@ -228,6 +268,14 @@
       ],
       [
         "claude-new",
+        "claude-opus-5"
+      ],
+      [
+        "claude-new",
+        "claude-sonnet-5"
+      ],
+      [
+        "claude-opus-5",
         "claude-sonnet-5"
       ],
       [

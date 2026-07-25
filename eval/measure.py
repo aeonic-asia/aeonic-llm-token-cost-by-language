@@ -132,12 +132,14 @@ class AnthropicCounter(TokenCounter):
 
 
 class HFCounter(TokenCounter):
-    """Open-weight tokenizer via HuggingFace `AutoTokenizer` (e.g. Llama 4).
+    """Open-weight tokenizer via HuggingFace `AutoTokenizer` (e.g. Llama 4, Qwen 3.6).
 
     Offline once the tokenizer files are cached, but the first load downloads
-    them — and the flagship open-weight repos (Meta Llama) are *gated*, so a HF
-    access token must be present (read from the standard `HF_TOKEN` /
-    `HUGGING_FACE_HUB_TOKEN` env vars by `from_pretrained`). Counts *content*
+    them. Some repos are *gated* (Meta Llama) and need an HF access token (read
+    from the standard `HF_TOKEN` / `HUGGING_FACE_HUB_TOKEN` env vars by
+    `from_pretrained`); others are ungated (Apache-2.0 Qwen) and download with no
+    credentials. The counter's `config.Counter.gated` flag says which, so an
+    ungated repo isn't wrongly skipped for a missing token. Counts *content*
     tokens only (`add_special_tokens=False`), matching the tiktoken counters —
     per-sequence BOS/EOS would inflate short-sentence premiums.
     """
@@ -147,13 +149,13 @@ class HFCounter(TokenCounter):
         self._tok = None  # lazy: defer the (network) load until first count
 
     @staticmethod
-    def available() -> tuple[bool, str]:
+    def available(gated: bool) -> tuple[bool, str]:
         try:
             import transformers  # noqa: F401
         except ImportError:
             return False, "transformers not installed (pip install transformers sentencepiece)"
         import os
-        if not (os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")):
+        if gated and not (os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")):
             return False, "HF token unset (gated repo) — set HF_TOKEN and re-run"
         return True, ""
 
@@ -220,7 +222,7 @@ def build_counter(spec: config.Counter) -> tuple[TokenCounter | None, str]:
             return None, "ANTHROPIC_API_KEY unset — run later with a key"
         return AnthropicCounter(spec), ""
     if spec.kind == "hf":
-        ok, reason = HFCounter.available()
+        ok, reason = HFCounter.available(spec.gated)
         return (HFCounter(spec), "") if ok else (None, reason)
     if spec.kind == "gemini_local":
         ok, reason = GeminiLocalCounter.available()
