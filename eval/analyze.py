@@ -32,12 +32,37 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
     # wrapped-message counter (Claude) is comparable to the bare-text offline
     # counters; the fixed frame otherwise compresses short-sentence premiums
     # toward 1.0. Older datasets without the column fall back to raw n_tokens.
-    tok_col = "n_tokens_content" if "n_tokens_content" in raw.columns else "n_tokens"
+    # Choose the column PER ROW, not once for the frame. Testing only for column
+    # presence broke on a mixed-schema carry-forward: rows predating the envelope
+    # work get NaN when concatenated with newer ones, the fallback never fires
+    # because the column exists, every ratio is NaN, and the distribution columns
+    # come out blank — which looks exactly like the legitimate "aggregate-only"
+    # state, so a previously published median vanishes with no warning.
+    if "n_tokens_content" in raw.columns:
+        raw = raw.copy()
+        missing = raw["n_tokens_content"].isna()
+        if missing.any():
+            affected = sorted(raw.loc[missing, "counter_id"].unique())
+            print(f"  NOTE  n_tokens_content absent for {affected} (rows predate the "
+                  "envelope correction) — falling back to raw n_tokens for those.")
+            raw.loc[missing, "n_tokens_content"] = raw.loc[missing, "n_tokens"]
+        tok_col = "n_tokens_content"
+    else:
+        tok_col = "n_tokens"
     for corpus_id in agg["corpus"].unique():
         ac = agg[agg.corpus == corpus_id]
         rc = raw[raw.corpus == corpus_id]
         for counter_id in ac["counter_id"].unique():
             a = ac[ac.counter_id == counter_id].set_index("lang")
+            missing_langs = [l for l in config.LANGUAGES if l not in a.index]
+            if missing_langs or base not in a.index:
+                # A language added to config.LANGUAGES without a full re-measure
+                # used to surface as a bare KeyError from deep in the loop.
+                raise SystemExit(
+                    f"{counter_id} has no rows for {missing_langs or [base]} in "
+                    f"corpus '{corpus_id}'. config.LANGUAGES changed without a "
+                    f"re-measure — run `make reproduce COUNTERS={counter_id}`, or "
+                    "revert the language set.")
             base_tokens_total = a.loc[base, "total_tokens"]
             r = rc[rc.counter_id == counter_id]
             base_per_sent = (r[r.lang == base]
@@ -60,6 +85,16 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
                 if len(ratios):
                     q = ratios.quantile([0.10, 0.25, 0.50, 0.75, 0.90])
                     row.update({
+                        # Sample basis, in the CSV itself. API counters measure a
+                        # deterministic 200-sentence HEAD slice while offline
+                        # counters sweep all 2009/2033 — previously both landed in
+                        # identical percentile columns with nothing to tell them
+                        # apart, and this CSV is the extractable table citers read.
+                        "n_sentences": int(len(ratios)),
+                        "sample_basis": ("full sweep"
+                                         if len(ratios) >= config.API_PER_SENTENCE_SUBSAMPLE * 2
+                                         else f"head slice [:{len(ratios)}], "
+                                              "topically clustered — not a random sample"),
                         "premium_median": round(float(q[0.50]), 4),
                         "premium_p10": round(float(q[0.10]), 4),
                         "premium_p25": round(float(q[0.25]), 4),
@@ -90,6 +125,8 @@ def _within_vendor_inflation(agg: pd.DataFrame) -> pd.DataFrame:
             continue
         p = sub.pivot(index="lang", columns="counter_id", values="total_tokens")
         for lang, name in config.LANGUAGES.items():
+            if lang not in p.index:
+                continue   # language added since the Claude pair was measured
             old, new = int(p.loc[lang, old_id]), int(p.loc[lang, new_id])
             rows.append({
                 "corpus": corpus_id, "lang": lang, "language": name,
@@ -116,22 +153,39 @@ def _cost_table(agg: pd.DataFrame) -> pd.DataFrame:
     aggregate premium, which is built from the same concatenated total.
     """
     n_sent = {c: corpora.corpus_size(c) for c in agg["corpus"].unique()}
+    empty = [c for c, n in n_sent.items() if not n]
+    if empty:
+        raise SystemExit(f"corpus/corpora {empty} report 0 sentences — cannot form "
+                         "a per-sentence denominator. Check the corpus files.")
     rows = []
     for _, row in agg.iterrows():
         cid = row["counter_id"]
+        if not row["total_chars"]:
+            raise SystemExit(f"{cid}/{row['corpus']}/{row['lang']} has total_chars=0 "
+                             "— refusing to divide by zero. The corpus is empty or "
+                             "the row is corrupt; re-run `make reproduce`.")
         tokens_per_1k = row["total_tokens"] / row["total_chars"] * 1000
         tokens_per_sent = row["total_tokens"] / n_sent[row["corpus"]]
         price = config.PRICING.get(cid)
         usd_1k = vnd_1k = usd_sent = vnd_sent = None
         if price and price.input_usd_per_mtok is not None:
             usd_per_token = price.input_usd_per_mtok / 1_000_000
-            usd_1k = round(tokens_per_1k * usd_per_token, 6)
-            vnd_1k = round(usd_1k * config.USD_TO_VND, 2)
-            usd_sent = round(tokens_per_sent * usd_per_token, 8)
-            vnd_sent = round(usd_sent * config.USD_TO_VND, 4)
+            # Round each output once, from the full-precision value. Deriving VND
+            # from the already-rounded USD compounded the quantization — at
+            # $1/Mtok the 6-dp USD rounding is ~0.4% of the value on its own.
+            usd_1k_exact = tokens_per_1k * usd_per_token
+            usd_sent_exact = tokens_per_sent * usd_per_token
+            usd_1k = round(usd_1k_exact, 6)
+            vnd_1k = round(usd_1k_exact * config.USD_TO_VND, 2)
+            usd_sent = round(usd_sent_exact, 8)
+            vnd_sent = round(usd_sent_exact * config.USD_TO_VND, 4)
         rows.append({
             "corpus": row["corpus"], "counter_id": cid, "lang": row["lang"],
-            "language": config.LANGUAGES[row["lang"]],
+            # `.get` with a visible fallback: a language RETIRED from
+            # config.LANGUAGES leaves carried rows behind (carry-forward keys on
+            # counters, not languages), and a bare lookup died with an unhelpful
+            # KeyError naming only the code.
+            "language": config.LANGUAGES.get(row["lang"], f"{row['lang']} (retired)"),
             "tokens_per_1k_chars": round(tokens_per_1k, 2),
             "tokens_per_sentence": round(tokens_per_sent, 2),
             "price_usd_per_mtok": price.input_usd_per_mtok if price else None,
@@ -144,26 +198,86 @@ def _cost_table(agg: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _coincidence_check(agg: pd.DataFrame) -> dict[str, list[list[str]]]:
-    """Per corpus, counter pairs with identical per-language token totals.
+def _coincidence_check(agg: pd.DataFrame) -> dict:
+    """Counter pairs whose per-language token totals coincide.
 
-    A real signal: two models that share a tokenizer produce the exact same
-    counts on every language. The article claims Fable 5 / Opus 4.8 / Sonnet 5
-    share one tokenizer; this verifies it in-dataset. Checked per corpus (a
-    genuine shared tokenizer coincides in *both* registers).
+    Equality is evidence of a shared tokenizer, not proof of one — two genuinely
+    different tokenizers can agree on a corpus that happens not to exercise their
+    differences. So a pair is only reported as `shared` when it coincides in
+    EVERY corpus, which is what this function's contract always said and what the
+    output previously did not enforce: the two Gemini counters agreed on MASSIVE
+    and differed on FLORES (by one HTML-bearing sentence) and were published as a
+    "shared tokenizer pair" on the strength of the register that happened not to
+    contain markup — in the machine-readable file readers are told to cite.
+
+    Pairs that coincide in some corpora but not all are reported separately under
+    `coincident_in_some_corpora`, with the corpora named, so the near-miss is
+    still visible without being labelled an identity.
     """
-    out: dict[str, list[list[str]]] = {}
+    per_corpus: dict[str, set[tuple[str, str]]] = {}
     for corpus_id in agg["corpus"].unique():
         pivot = (agg[agg.corpus == corpus_id]
                  .pivot(index="lang", columns="counter_id", values="total_tokens"))
         cols = list(pivot.columns)
-        shared = []
+        pairs = set()
         for i in range(len(cols)):
             for j in range(i + 1, len(cols)):
                 if (pivot[cols[i]] == pivot[cols[j]]).all():
-                    shared.append([cols[i], cols[j]])
-        out[corpus_id] = shared
-    return out
+                    pairs.add((cols[i], cols[j]))
+        per_corpus[corpus_id] = pairs
+
+    corpora_ids = list(per_corpus)
+    everywhere = set.intersection(*per_corpus.values()) if per_corpus else set()
+    somewhere = set.union(*per_corpus.values()) if per_corpus else set()
+    partial = sorted(somewhere - everywhere)
+    return {
+        "definition": "a pair is 'shared' only if its token totals are identical "
+                      "in every corpus; equality in one register is not identity",
+        "corpora_checked": corpora_ids,
+        "shared_in_all_corpora": [list(p) for p in sorted(everywhere)],
+        "coincident_in_some_corpora": [
+            {"pair": list(p),
+             "corpora": sorted(c for c, s in per_corpus.items() if p in s)}
+            for p in partial],
+        # Retained per corpus for auditability — this is the raw equality result
+        # the `shared` verdict is derived from, not a finding in its own right.
+        "raw_equality_by_corpus": {c: [list(p) for p in sorted(s)]
+                                   for c, s in per_corpus.items()},
+    }
+
+
+def _coverage(agg: pd.DataFrame, oracle: dict) -> dict:
+    """Provenance the headline numbers depend on, carried INTO summary.json.
+
+    summary.json is the file CLAUDE.md points readers at first and the one built
+    to be machine-extracted, yet it used to carry a single `dataset_as_of` and no
+    indication of which counters were actually measured in that pass versus
+    carried forward from an earlier one, nor whether the oracle passed. A citer
+    could read one date and cite a count last measured weeks earlier against a
+    different endpoint. The manifest had the facts; the summary did not read it.
+    """
+    manifest_path = config.RESULTS_DIR / "run_manifest.json"
+    manifest = {}
+    if manifest_path.exists():
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+    # float() the deltas: they arrive as numpy scalars, and a numpy bool_ derived
+    # from them is not JSON-serializable.
+    deltas = [float(abs(o["delta"])) for o in oracle.values() if o.get("delta") is not None]
+    return {
+        "counters_in_dataset": sorted(set(agg.counter_id)),
+        "counters_measured_last_pass": manifest.get("counters_ran", []),
+        "counters_carried_forward": manifest.get("counters_carried_forward", []),
+        "counters_skipped": [s.get("counter") for s in manifest.get("counters_skipped", [])],
+        "measured_on_by_counter": manifest.get("measured_on_by_counter", {}),
+        "versions": manifest.get("versions", {}),
+        "oracle_max_abs_delta": round(max(deltas), 6) if deltas else None,
+        "oracle_tolerance": 0.005,
+        "oracle_passes": bool(max(deltas) < 0.005) if deltas else None,
+        "note": "`counters_carried_forward` were NOT re-measured in the last pass; "
+                "their counts come from an earlier one. Cross-check "
+                "`measured_on_by_counter` before citing a specific counter's date.",
+    }
 
 
 def analyze() -> None:
@@ -216,7 +330,11 @@ def analyze() -> None:
         "headline_premiums_aggregate_by_corpus": headline,
         "within_vendor_claude_inflation_new_over_old_by_corpus": infl,
         "cl100k_oracle_vs_paper_table1_flores": oracle,
-        "shared_tokenizer_pairs_by_corpus": _coincidence_check(agg),
+        # Renamed from `shared_tokenizer_pairs_by_corpus`: the old key promised an
+        # identity finding while holding a per-corpus equality result, and a
+        # machine reading it could not tell the two apart.
+        "tokenizer_coincidence_check": _coincidence_check(agg),
+        "coverage": _coverage(agg, oracle),
         "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION "
                      "(median/p10..p90 in premium_by_language.csv) is measured on "
                      "envelope-stripped content tokens (raw_counts.n_tokens_content): "
@@ -251,11 +369,17 @@ def analyze() -> None:
         for _, r in inflation.iterrows():
             print(f"  [{r['corpus']:7s}] {r['language']:22s} "
                   f"{r['tokens_old']:>7d} -> {r['tokens_new']:>7d}  "
-                  f"= {r['inflation']}x  (+{r['inflation_pct']}%)")
+                  # sign from the value, not hardcoded: deflation printed "(+-3.2%)"
+                  f"= {r['inflation']}x  ({r['inflation_pct']:+}%)")
     print("\ncl100k oracle vs. paper Table 1 (FLORES+):")
     for name, o in oracle.items():
         print(f"  {name:22s} ours {o['ours']}  paper {o['paper']}  Δ {o['delta']}")
-    print(f"\nshared-tokenizer pairs by corpus: {_coincidence_check(agg)}")
+    _coin = _coincidence_check(agg)
+    print(f"\nshared tokenizers (identical in ALL corpora): "
+          f"{_coin['shared_in_all_corpora']}")
+    if _coin["coincident_in_some_corpora"]:
+        print(f"  coincident in some corpora only (NOT an identity): "
+              f"{_coin['coincident_in_some_corpora']}")
     print("wrote premium_by_language.csv, cost_by_language.csv, "
           "within_vendor_inflation.csv, summary.json")
 

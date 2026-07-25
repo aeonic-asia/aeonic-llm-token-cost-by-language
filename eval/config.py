@@ -83,20 +83,44 @@ API_KINDS = {"anthropic"}
 # but material on short sentences (a true 2.0x premium reads ~1.6x when +6 lands
 # on both sides of the ratio). The driver measures this floor per API counter and
 # subtracts it from the per-sentence counts so the distribution is comparable to
-# the offline counters — measured, never assumed. A lone ASCII character is
-# exactly one token in every tokenizer here (BPE never merges a single char), so
-# the floor = count(probe) - 1. Empty content is rejected by the API, hence the
-# single-char probe. The aggregate is left uncorrected (fixed frame is <0.01% of
-# a ~10^5-token concatenated call) and stays the paper-style raw count.
+# the offline counters. Precisely: count(probe) is MEASURED, and the subtrahend
+# below is ASSUMED — a lone ASCII character is one token (byte-level BPE has no
+# merge shorter than a character), which cannot be verified directly against a
+# tokenizer whose vocabulary Anthropic does not publish. So the assumption is
+# tested rather than trusted: measure.py probes several distinct single
+# characters and requires them all to yield the same frame, and bounds the
+# result. Empty content is rejected by the API, hence a single-char probe.
+# The aggregate is left uncorrected (the fixed frame is <0.01% of a ~10^5-token
+# concatenated call) and stays the paper-style raw count.
 ENVELOPE_PROBE = "x"
 ENVELOPE_PROBE_TOKENS = 1
+# Cross-checks for the assumption above. Each must be a single ASCII character
+# that no BPE can split, drawn from different classes (letter / letter / digit)
+# so a class-specific surprise shows up as a disagreement rather than a silent
+# constant shift in every per-sentence count.
+ENVELOPE_PROBE_ALTS = ("q", "7")
+# Sanity bound on the measured frame. Observed: 6 (newer Claude), 7 (older).
+# A value outside this range means the probe measured something other than a
+# turn/role frame — abort rather than record it as "measured".
+ENVELOPE_MAX_PLAUSIBLE = 64
 
 API_PER_SENTENCE_SUBSAMPLE = 200  # per-sentence calls per API counter for the
 # premium *distribution* (median/p10..p90). 0 = aggregate-only. Deterministic
 # head-slice sentences[:N] (no sampling), so re-runs stay byte-identical *with a
-# key*; offline counters always do the full per-sentence sweep. 200 keeps the
-# ~3k free-but-rate-limited count_tokens calls well inside the RPM budget while
-# giving stable percentiles. Note: the slice is FLORES+ dev-split sentences.
+# key*; offline counters always do the full per-sentence sweep.
+#
+# Call volume, stated accurately: 6 Anthropic counters x 2 corpora x 5 languages
+# x (1 aggregate + 200 per-sentence) = ~12,000 calls per full pass, plus envelope
+# probes. `count_tokens` is free, so this is an RPM/latency budget, not cost —
+# but there is no retry, backoff or throttle in the driver, and a single 429
+# discards that counter's whole pass (carry-forward then restores its previous
+# rows, so the run still succeeds with one counter silently stale). Treat a full
+# credentialed pass as something to watch, not to fire and forget.
+#
+# Note the slice is a deterministic HEAD slice of a corpus ordered by source
+# document, so it is topically clustered — fine for a stable percentile, but not
+# a random sample of the corpus. premium_by_language.csv records the sample size
+# per row so a reader can tell these percentiles from the full sweeps.
 
 
 @dataclass(frozen=True)
@@ -135,9 +159,12 @@ class Counter:
     #                           | "superseded" (older flagship, near-identical)
 
 
-# The trimmed flagship matrix. ≈7 counters: one flagship per provider + both
-# Claude tokenizer generations + an open-weight representative + historical
-# OpenAI baselines. Counting is free, so the trim is for table legibility.
+# The trimmed flagship matrix — 11 counters: one column per DISTINCT tokenizer
+# (o200k, cl100k, newer Claude, older Claude, gemma4, Llama 4, Qwen 3.6) plus the
+# fold proxies that prove the sharing in-dataset rather than asserting it. The
+# original scope lock said "≈7 counters"; the proxies and the extra Anthropic
+# price tiers took it to 11, each addition recorded in the workshop decision log.
+# Counting is free, so the trim is for table legibility, not cost.
 MODEL_MATRIX: list[Counter] = [
     # OpenAI — offline via tiktoken, real now.
     Counter("o200k_base", "GPT-5.6 (o200k_base)", "OpenAI", "tiktoken",
@@ -159,8 +186,10 @@ MODEL_MATRIX: list[Counter] = [
     # the caption names four models and every name is backed by its own measurement.
     Counter("claude-new", "Claude (newer tokenizer)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-new", spec="claude-opus-5",
-            stands_in_for="shared newer Claude tokenizer — Opus 5 (current flagship) / "
-                          "Opus 4.8 / Sonnet 5 / Fable 5; measured on the Opus 5 endpoint",
+            stands_in_for="shared newer Claude tokenizer — Opus 5 (Anthropic's recommended "
+                          "default) / Opus 4.8 / Sonnet 5 / Fable 5; measured on the Opus 5 "
+                          "endpoint. Note Anthropic calls Fable 5 its most capable widely "
+                          "released model, so avoid 'flagship' for Opus 5 in print",
             headline_display="Claude Opus 5"),
     Counter("claude-old", "Claude (older tokenizer)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-old", spec="claude-sonnet-4-6",
@@ -177,7 +206,7 @@ MODEL_MATRIX: list[Counter] = [
     # Fable 5 was assumed (source research) to share the newer Claude tokenizer
     # with Opus 4.8 / Sonnet 5; now CONFIRMED in-dataset — the coincidence check
     # finds claude-fable-5 ≡ claude-new ≡ claude-sonnet-5 byte-identical across
-    # all five languages in BOTH corpora (see summary.json shared_tokenizer_pairs).
+    # all five languages in BOTH corpora (see summary.json tokenizer_coincidence_check).
     Counter("claude-fable-5", "Claude Fable 5 (newer, shared — confirmed)", "Anthropic",
             "anthropic", STATUS_NEEDS_KEY, generation="claude-new",
             spec="claude-fable-5", stands_in_for="shared newer Claude tokenizer (confirmed)",
@@ -199,34 +228,50 @@ MODEL_MATRIX: list[Counter] = [
     # Haiku 4.5 — the cheapest Claude serving tier ($1/1M in). Which tokenizer
     # generation it uses was NOT assumed: measured via count_tokens, it is
     # byte-identical to claude-old (Sonnet 4.6) across all five languages in BOTH
-    # corpora (see summary.json shared_tokenizer_pairs). So the *older* Claude
+    # corpora (see summary.json tokenizer_coincidence_check). So the *older* Claude
     # tokenizer spans Sonnet 4.6 + Haiku 4.5 — folds into claude-old, at 1/3 the price.
     Counter("claude-haiku-4-5", "Claude Haiku 4.5", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, generation="claude-old", spec="claude-haiku-4-5",
             stands_in_for="shared older Claude tokenizer (confirmed ≡ Sonnet 4.6); cheapest Claude tier",
             headline=False, headline_display="Haiku 4.5",
             flagship_group="claude-old", fold_reason="shared"),
-    # Gemini — offline LocalTokenizer (google-genai 2.12.1). Google DOES have a
-    # within-vendor tokenizer split, at the 3.0 -> 3.1 boundary (verified against
-    # the SDK's own _local_tokenizer_loader model->tokenizer map):
-    #   gemma3  <- Gemini 2.0 / 2.5 / 3.0 (gemini-3-pro-preview, gemini-3-flash-preview)
-    #   gemma4  <- Gemini 3.1 / 3.5 / 4    (gemini-3.1-pro-preview, gemini-3.5-flash, ...)
-    # Both load offline (gemma3 via a pinned URL; gemma4 via HF google/gemma-4-E4B-it,
-    # unauthenticated download OK). We measure BOTH Pro generations: gemma3 = the 3.0
-    # Pro tokenizer, gemma4 = the CURRENT Pro flagship (3.1 Pro). No key.
-    # gemma3 (3.0-era Pro) is superseded by gemma4 (3.1 Pro, current flagship) and
-    # within ~0.01% of it — it folds into the 3.1 Pro column as "superseded", NOT
-    # "shared" (the two are distinct tokenizers: gemma3≠gemma4 in Vietnamese/FLORES).
-    Counter("gemini-3-pro", "Gemini 3 Pro (gemma3)", "Google", "gemini_local",
-            STATUS_NEEDS_SDK, spec="gemini-3-pro-preview",
-            generation="gemini-gemma3",
-            stands_in_for="Gemini 2.0/2.5/3.0 'gemma3' tokenizer (superseded by gemma4 at 3.1)",
-            headline=False, headline_display="Gemini 3 Pro",
-            flagship_group="gemini-3-1-pro", fold_reason="superseded"),
+    # Gemini — ONE column, offline LocalTokenizer (google-genai). There is no
+    # Google within-vendor tokenizer split to measure, and an earlier cut of this
+    # matrix was wrong to carry two Gemini counters. Three independent lines of
+    # evidence, all checked 2026-07-25:
+    #
+    #  1. The vocabularies are the same. The SDK resolves 2.0/2.5/3.0 to "gemma3"
+    #     (hash-pinned SentencePiece from google/gemma_pytorch) and 3.1/3.5/4 to
+    #     "gemma4" (HF google/gemma-4-E4B-it) — two artifacts, but each holds
+    #     262,144 pieces and the ordered list of all 255,892 real text tokens is
+    #     byte-identical with unchanged ids. Only 19 pieces differ each way and
+    #     ALL of them are angle-bracket control tokens (gemma3's <start_of_turn>/
+    #     <end_of_image>/<unusedNNNN> vs gemma4's <|tool>/<|think|>/<|audio>/...).
+    #  2. Google says so. Gemma 3 tech report §2.2: "the same tokenizer as Gemini
+    #     2.0 ... 262k entries". Gemma 4 tech report (arXiv:2607.02770) §2.4: "the
+    #     same tokenizer as Gemini Team [2025]" — i.e. Gemini 2.5. No published
+    #     tokenization change anywhere from Gemini 2.0 through Gemini 4.
+    #  3. The measured difference was corpus noise. Across 20,210 per-sentence
+    #     comparisons the two counters differed on exactly ONE — FLORES vie_Latn
+    #     429 — and that sentence is the only line in either corpus containing HTML
+    #     (`km<sup>2</sup>`), which SentencePiece keeps as single tokens and the HF
+    #     BPE splits. A markup artifact meeting two loader implementations, not a
+    #     property of Vietnamese.
+    #
+    # Independently, `gemini-3-pro-preview` was SHUT DOWN on 2026-03-09 and now
+    # aliases to gemini-3.1-pro-preview (Google's deprecations page), so the second
+    # column was measuring a retired id against a stale client-side lookup table,
+    # and pricing it put a $2.00 row in the committed CSV for a model Google no
+    # longer lists. Removed on both counts.
+    #
+    # Keep it one column. If a future Gemini genuinely changes tokenization, that
+    # is a new headline column — establish it with a vocabulary diff, not with an
+    # equality test on counts.
     Counter("gemini-3-1-pro", "Gemini 3.1 Pro (gemma4)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3.1-pro-preview",
             generation="gemini-gemma4",
-            stands_in_for="current Google Pro flagship — Gemini 3.1/3.5/4 'gemma4' tokenizer",
+            stands_in_for="Google Pro flagship — Gemini 3.1/3.5/4 'gemma4' tokenizer; "
+                          "text vocabulary unchanged from the gemma3 line (2.0-3.0)",
             headline_display="Gemini 3.1 Pro"),
     # Open-weight representatives — HuggingFace AutoTokenizer. Content-token count
     # (no BOS/EOS), matching the tiktoken counters.
@@ -240,10 +285,13 @@ MODEL_MATRIX: list[Counter] = [
             STATUS_NEEDS_KEY, spec="meta-llama/Llama-4-Scout-17B-16E",
             gated=True, headline_display="Llama 4"),
     # Qwen 3.6 (Alibaba, released 2026-04; open-weight, Apache-2.0). A NEW, larger
-    # tokenizer — 248,044 vocab entries, counted from the downloaded tokenizer.json,
-    # vs. Qwen3/2.5's published 151,936 — so it counts multilingual text differently
-    # and earns its own headline column (the first non-incumbent vendor in the
-    # matrix). Self-host: no single per-token serving list price → premium-only,
+    # tokenizer — 248,044 vocab entries, counted directly from the downloaded
+    # tokenizer.json (reproducible; the only vocab figure here that is measured
+    # rather than cited). Earlier Qwen generations are widely reported at ~152k,
+    # but that is a secondary-source number and is not restated as fact. The size
+    # difference is not the finding anyway — the measured premiums are. Earns its
+    # own headline column as the first non-incumbent vendor in the matrix.
+    # Self-host: no single per-token serving list price → premium-only,
     # like Llama 4. This is the dense flagship repo; the MoE sibling is *believed*
     # to share this tokenizer but that is NOT measured here — do not state it as
     # fact, and add it as a fold proxy if the claim ever needs to be made in print.
@@ -253,6 +301,38 @@ MODEL_MATRIX: list[Counter] = [
 ]
 
 MATRIX_BY_ID = {c.id: c for c in MODEL_MATRIX}
+
+
+def _check_matrix_integrity() -> None:
+    """Fail at import on the mistakes the documented extension path invites.
+
+    Adding a counter means copy-pasting a `Counter(...)`. Forget to change the
+    `id` and MATRIX_BY_ID silently collapses the pair while run.py iterates the
+    *list* and measures both — surfacing much later as
+    "ValueError: Index contains duplicate entries, cannot reshape" from a pivot,
+    naming neither the counter nor the duplication. Likewise a renamed id that
+    misses PRICING drops the model out of both dollar figures AND makes the
+    caption assert it has no serving list price — a false claim in a published
+    asset, produced by a rename.
+    """
+    seen: set[str] = set()
+    dupes = sorted({c.id for c in MODEL_MATRIX if c.id in seen or seen.add(c.id)})
+    if dupes:
+        raise ValueError(f"duplicate counter id(s) in MODEL_MATRIX: {dupes} — "
+                         "each Counter needs a unique id")
+    orphan_prices = sorted(set(PRICING) - set(MATRIX_BY_ID))
+    if orphan_prices:
+        raise ValueError(f"PRICING keys with no counter in MODEL_MATRIX: "
+                         f"{orphan_prices} — a rename left the price behind")
+    unpriced = sorted(set(MATRIX_BY_ID) - set(PRICING))
+    if unpriced:
+        raise ValueError(f"counters with no PRICING entry: {unpriced} — add an "
+                         "explicit Price(None, ..., 'unknown') to state that the "
+                         "omission is deliberate rather than an oversight")
+    bad_folds = sorted(c.id for c in MODEL_MATRIX
+                       if c.flagship_group and c.flagship_group not in MATRIX_BY_ID)
+    if bad_folds:
+        raise ValueError(f"counters folding into a non-existent flagship_group: {bad_folds}")
 
 
 # ── pricing (dated, sourced, confidence-flagged) ─────────────────────────────
@@ -346,14 +426,15 @@ PRICING: dict[str, Price] = {
                              "premium-only by design: same tokenizer AND same $5.00/1M input price as "
                              "the claude-new headline column it folds into (Claude Opus 5, verified "
                              "2026-07-25) — priced there, not duplicated here"),
-    "gemini-3-pro": Price(2.00, PRICING_AS_OF, "medium",
-                          "Gemini 3.0-generation Pro (gemma3 tokenizer). Priced at the Google "
-                          "Pro <=200K tier ($2.00/1M in); the 3.0 preview shares this tier price "
-                          "with 3.1, but 3.0 Pro is superseded — confidence medium on the exact SKU"),
-    "gemini-3-1-pro": Price(2.00, "2026-07-19", "high",
-                            "Gemini 3.1 Pro (CURRENT Google Pro flagship, gemma4 tokenizer) input "
-                            "list price, <=200K-context tier ($2.00/1M in; $4.00/1M above 200K). "
-                            "Verified 2026-07-19 vs. the Anthropic/Google 2026 pricing comparisons"),
+    # The former "gemini-3-pro" entry is gone with its counter: gemini-3-pro-preview
+    # was shut down 2026-03-09 and is absent from Google's pricing page, so its
+    # $2.00 was a price for a model no longer sold.
+    "gemini-3-1-pro": Price(2.00, "2026-07-25", "high",
+                            "Gemini 3.1 Pro — Google's current and newest Pro model, still "
+                            "'preview' status — input list price, <=200K-context tier "
+                            "($2.00/1M in; $4.00/1M above 200K). Verified 2026-07-25 against "
+                            "ai.google.dev/gemini-api/docs/pricing. Note it is a preview SKU, "
+                            "so the price carries less notice than a stable one"),
     "llama-4": Price(None, PRICING_AS_OF, "unknown",
                      "self-host / open-weight; no single per-token list price"),
     "qwen-3-6": Price(None, "2026-07-25", "unknown",
@@ -362,3 +443,7 @@ PRICING: dict[str, Price] = {
                       "~$0.19–1.30/1M in) — different models from this open-weight repo, so NOT "
                       "used as its price. Premium-only, like Llama 4"),
 }
+
+
+# Defined above PRICING but called here, once both are in scope.
+_check_matrix_integrity()

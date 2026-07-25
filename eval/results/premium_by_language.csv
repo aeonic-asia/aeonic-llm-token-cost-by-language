@@ -1,121 +1,111 @@
-corpus,counter_id,lang,language,premium_aggregate,premium_median,premium_p10,premium_p25,premium_p75,premium_p90,premium_mean
-flores,o200k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,o200k_base,vie_Latn,Vietnamese,1.482,1.4737,1.2,1.3226,1.65,1.8276,1.4987
-flores,o200k_base,zho_Hans,Chinese (Simplified),1.2834,1.2222,0.9615,1.0833,1.4118,1.6092,1.2607
-flores,o200k_base,rus_Cyrl,Russian,1.4221,1.4048,1.1333,1.2609,1.5882,1.7692,1.4344
-flores,o200k_base,deu_Latn,German,1.3035,1.3,1.0833,1.1786,1.4286,1.5625,1.3124
-flores,cl100k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,cl100k_base,vie_Latn,Vietnamese,2.4465,2.4412,1.8564,2.119,2.7941,3.1485,2.4743
-flores,cl100k_base,zho_Hans,Chinese (Simplified),1.9143,1.8571,1.4348,1.625,2.1176,2.3915,1.8867
-flores,cl100k_base,rus_Cyrl,Russian,2.4889,2.4545,1.9474,2.1724,2.7895,3.1176,2.5029
-flores,cl100k_base,deu_Latn,German,1.5795,1.5652,1.28,1.4048,1.7609,1.9479,1.5926
-flores,claude-old,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,claude-old,vie_Latn,Vietnamese,2.4217,2.2937,1.7688,2.0,2.6433,3.0587,2.354
-flores,claude-old,zho_Hans,Chinese (Simplified),1.6811,1.75,1.36,1.5608,2.0,2.2368,1.776
-flores,claude-old,rus_Cyrl,Russian,1.9318,1.9545,1.5329,1.7053,2.18,2.4552,1.9864
-flores,claude-old,deu_Latn,German,1.7565,1.6957,1.3588,1.5,1.9084,2.1767,1.7341
-flores,claude-sonnet-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,claude-sonnet-5,vie_Latn,Vietnamese,1.8434,1.7501,1.4335,1.5877,2.0,2.3056,1.8128
-flores,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.1749,1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
-flores,claude-sonnet-5,rus_Cyrl,Russian,1.3432,1.3297,1.1189,1.2231,1.544,1.7097,1.3802
-flores,claude-sonnet-5,deu_Latn,German,1.7384,1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
-flores,gemini-3-pro,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,gemini-3-pro,vie_Latn,Vietnamese,1.3602,1.36,1.1154,1.2222,1.52,1.6842,1.3812
-flores,gemini-3-pro,zho_Hans,Chinese (Simplified),1.1078,1.05,0.8125,0.9167,1.2222,1.4167,1.0873
-flores,gemini-3-pro,rus_Cyrl,Russian,1.3703,1.3611,1.087,1.2143,1.5333,1.7143,1.3837
-flores,gemini-3-pro,deu_Latn,German,1.3189,1.3095,1.0833,1.1852,1.4643,1.6,1.332
-flores,llama-4,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,llama-4,vie_Latn,Vietnamese,1.3241,1.3158,1.0857,1.1923,1.4706,1.6115,1.3387
-flores,llama-4,zho_Hans,Chinese (Simplified),1.094,1.037,0.8092,0.9024,1.2,1.4,1.0737
-flores,llama-4,rus_Cyrl,Russian,1.2362,1.2222,1.0,1.0952,1.3684,1.5338,1.2404
-flores,llama-4,deu_Latn,German,1.2888,1.2821,1.0709,1.1667,1.4138,1.5455,1.2984
-flores,claude-fable-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,claude-fable-5,vie_Latn,Vietnamese,1.8434,1.7501,1.4335,1.5877,2.0,2.3056,1.8128
-flores,claude-fable-5,zho_Hans,Chinese (Simplified),1.1749,1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
-flores,claude-fable-5,rus_Cyrl,Russian,1.3432,1.3297,1.1189,1.2231,1.544,1.7097,1.3802
-flores,claude-fable-5,deu_Latn,German,1.7384,1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
-flores,gemini-3-1-pro,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,gemini-3-1-pro,vie_Latn,Vietnamese,1.3604,1.36,1.1154,1.2222,1.52,1.6842,1.3813
-flores,gemini-3-1-pro,zho_Hans,Chinese (Simplified),1.1078,1.05,0.8125,0.9167,1.2222,1.4167,1.0873
-flores,gemini-3-1-pro,rus_Cyrl,Russian,1.3703,1.3611,1.087,1.2143,1.5333,1.7143,1.3837
-flores,gemini-3-1-pro,deu_Latn,German,1.3189,1.3095,1.0833,1.1852,1.4643,1.6,1.332
-flores,claude-haiku-4-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,claude-haiku-4-5,vie_Latn,Vietnamese,2.4217,2.2937,1.7688,2.0,2.6433,3.0587,2.354
-flores,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1.6811,1.75,1.36,1.5608,2.0,2.2368,1.776
-flores,claude-haiku-4-5,rus_Cyrl,Russian,1.9318,1.9545,1.5329,1.7053,2.18,2.4552,1.9864
-flores,claude-haiku-4-5,deu_Latn,German,1.7565,1.6957,1.3588,1.5,1.9084,2.1767,1.7341
-flores,qwen-3-6,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,qwen-3-6,vie_Latn,Vietnamese,1.2955,1.2963,1.0735,1.1786,1.4516,1.5928,1.322
-flores,qwen-3-6,zho_Hans,Chinese (Simplified),0.9591,0.875,0.6774,0.7692,1.0294,1.2072,0.9158
-flores,qwen-3-6,rus_Cyrl,Russian,1.3559,1.3548,1.0809,1.2051,1.5417,1.7143,1.3819
-flores,qwen-3-6,deu_Latn,German,1.3041,1.3056,1.087,1.1818,1.4348,1.5793,1.3194
-flores,claude-new,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,claude-new,vie_Latn,Vietnamese,1.8434,1.7501,1.4335,1.5877,2.0,2.3056,1.8128
-flores,claude-new,zho_Hans,Chinese (Simplified),1.1749,1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
-flores,claude-new,rus_Cyrl,Russian,1.3432,1.3297,1.1189,1.2231,1.544,1.7097,1.3802
-flores,claude-new,deu_Latn,German,1.7384,1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
-flores,claude-opus-4-8,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-flores,claude-opus-4-8,vie_Latn,Vietnamese,1.8434,1.7501,1.4335,1.5877,2.0,2.3056,1.8128
-flores,claude-opus-4-8,zho_Hans,Chinese (Simplified),1.1749,1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
-flores,claude-opus-4-8,rus_Cyrl,Russian,1.3432,1.3297,1.1189,1.2231,1.544,1.7097,1.3802
-flores,claude-opus-4-8,deu_Latn,German,1.7384,1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
-massive,o200k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,o200k_base,vie_Latn,Vietnamese,1.398,1.5,1.0714,1.2778,1.8333,2.2,1.5933
-massive,o200k_base,zho_Hans,Chinese (Simplified),1.154,1.0769,0.75,0.8889,1.3333,1.6,1.1297
-massive,o200k_base,rus_Cyrl,Russian,1.2773,1.375,1.0,1.1429,1.6667,2.0,1.4482
-massive,o200k_base,deu_Latn,German,1.2041,1.25,0.9,1.0,1.5,1.7143,1.2937
-massive,cl100k_base,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,cl100k_base,vie_Latn,Vietnamese,2.4526,2.5,1.6667,2.0,3.0,3.6583,2.601
-massive,cl100k_base,zho_Hans,Chinese (Simplified),1.8073,1.7143,1.1429,1.4,2.0,2.5,1.7827
-massive,cl100k_base,rus_Cyrl,Russian,2.2923,2.35,1.625,2.0,2.875,3.5,2.4641
-massive,cl100k_base,deu_Latn,German,1.3787,1.4167,1.0,1.2,1.6667,2.0,1.4866
-massive,claude-old,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,claude-old,vie_Latn,Vietnamese,2.544,2.5917,1.624,2.0,3.1146,3.7583,2.6688
-massive,claude-old,zho_Hans,Chinese (Simplified),1.7532,1.75,1.13,1.4286,2.25,2.6714,1.8446
-massive,claude-old,rus_Cyrl,Russian,1.943,1.875,1.2857,1.5,2.25,2.675,1.9683
-massive,claude-old,deu_Latn,German,1.5508,1.5,1.0,1.25,1.8,2.0,1.5952
-massive,claude-sonnet-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,claude-sonnet-5,vie_Latn,Vietnamese,2.0013,2.0,1.3636,1.75,2.5,3.0,2.1182
-massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.2636,1.1667,0.7773,0.9215,1.5,1.8,1.2156
-massive,claude-sonnet-5,rus_Cyrl,Russian,1.406,1.3604,0.9091,1.1429,1.6278,2.0,1.4402
-massive,claude-sonnet-5,deu_Latn,German,1.6031,1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
-massive,gemini-3-pro,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,gemini-3-pro,vie_Latn,Vietnamese,1.2738,1.4,1.0,1.1667,1.6667,2.0,1.4783
-massive,gemini-3-pro,zho_Hans,Chinese (Simplified),0.9784,1.0,0.625,0.75,1.1429,1.3333,0.9673
-massive,gemini-3-pro,rus_Cyrl,Russian,1.2126,1.3,0.875,1.0714,1.6,2.0,1.3763
-massive,gemini-3-pro,deu_Latn,German,1.2072,1.25,0.9,1.0,1.5,1.75,1.3044
-massive,llama-4,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,llama-4,vie_Latn,Vietnamese,1.2524,1.375,1.0,1.1667,1.6667,2.0,1.4483
-massive,llama-4,zho_Hans,Chinese (Simplified),1.0099,1.0,0.6273,0.8,1.1667,1.4,0.9985
-massive,llama-4,rus_Cyrl,Russian,1.1183,1.2,0.8333,1.0,1.5,1.75,1.2694
-massive,llama-4,deu_Latn,German,1.2289,1.25,1.0,1.0833,1.5,1.75,1.3126
-massive,claude-fable-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,claude-fable-5,vie_Latn,Vietnamese,2.0013,2.0,1.3636,1.75,2.5,3.0,2.1182
-massive,claude-fable-5,zho_Hans,Chinese (Simplified),1.2636,1.1667,0.7773,0.9215,1.5,1.8,1.2156
-massive,claude-fable-5,rus_Cyrl,Russian,1.406,1.3604,0.9091,1.1429,1.6278,2.0,1.4402
-massive,claude-fable-5,deu_Latn,German,1.6031,1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
-massive,gemini-3-1-pro,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,gemini-3-1-pro,vie_Latn,Vietnamese,1.2738,1.4,1.0,1.1667,1.6667,2.0,1.4783
-massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),0.9784,1.0,0.625,0.75,1.1429,1.3333,0.9673
-massive,gemini-3-1-pro,rus_Cyrl,Russian,1.2126,1.3,0.875,1.0714,1.6,2.0,1.3763
-massive,gemini-3-1-pro,deu_Latn,German,1.2072,1.25,0.9,1.0,1.5,1.75,1.3044
-massive,claude-haiku-4-5,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,claude-haiku-4-5,vie_Latn,Vietnamese,2.544,2.5917,1.624,2.0,3.1146,3.7583,2.6688
-massive,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1.7532,1.75,1.13,1.4286,2.25,2.6714,1.8446
-massive,claude-haiku-4-5,rus_Cyrl,Russian,1.943,1.875,1.2857,1.5,2.25,2.675,1.9683
-massive,claude-haiku-4-5,deu_Latn,German,1.5508,1.5,1.0,1.25,1.8,2.0,1.5952
-massive,qwen-3-6,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,qwen-3-6,vie_Latn,Vietnamese,1.2351,1.3636,1.0,1.1429,1.6667,2.0,1.4284
-massive,qwen-3-6,zho_Hans,Chinese (Simplified),0.8863,0.75,0.5,0.625,1.0,1.0,0.7913
-massive,qwen-3-6,rus_Cyrl,Russian,1.2034,1.3333,0.875,1.0,1.6,2.0,1.38
-massive,qwen-3-6,deu_Latn,German,1.2088,1.25,0.9,1.0,1.5,1.75,1.303
-massive,claude-new,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,claude-new,vie_Latn,Vietnamese,2.0013,2.0,1.3636,1.75,2.5,3.0,2.1182
-massive,claude-new,zho_Hans,Chinese (Simplified),1.2636,1.1667,0.7773,0.9215,1.5,1.8,1.2156
-massive,claude-new,rus_Cyrl,Russian,1.406,1.3604,0.9091,1.1429,1.6278,2.0,1.4402
-massive,claude-new,deu_Latn,German,1.6031,1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
-massive,claude-opus-4-8,eng_Latn,English,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-massive,claude-opus-4-8,vie_Latn,Vietnamese,2.0013,2.0,1.3636,1.75,2.5,3.0,2.1182
-massive,claude-opus-4-8,zho_Hans,Chinese (Simplified),1.2636,1.1667,0.7773,0.9215,1.5,1.8,1.2156
-massive,claude-opus-4-8,rus_Cyrl,Russian,1.406,1.3604,0.9091,1.1429,1.6278,2.0,1.4402
-massive,claude-opus-4-8,deu_Latn,German,1.6031,1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
+corpus,counter_id,lang,language,premium_aggregate,n_sentences,sample_basis,premium_median,premium_p10,premium_p25,premium_p75,premium_p90,premium_mean
+flores,cl100k_base,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,cl100k_base,vie_Latn,Vietnamese,2.4465,2009,full sweep,2.4412,1.8564,2.119,2.7941,3.1485,2.4743
+flores,cl100k_base,zho_Hans,Chinese (Simplified),1.9143,2009,full sweep,1.8571,1.4348,1.625,2.1176,2.3915,1.8867
+flores,cl100k_base,rus_Cyrl,Russian,2.4889,2009,full sweep,2.4545,1.9474,2.1724,2.7895,3.1176,2.5029
+flores,cl100k_base,deu_Latn,German,1.5795,2009,full sweep,1.5652,1.28,1.4048,1.7609,1.9479,1.5926
+flores,claude-fable-5,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-fable-5,vie_Latn,Vietnamese,1.8434,200,"head slice [:200], topically clustered — not a random sample",1.7501,1.4335,1.5877,2.0,2.3056,1.8128
+flores,claude-fable-5,zho_Hans,Chinese (Simplified),1.1749,200,"head slice [:200], topically clustered — not a random sample",1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
+flores,claude-fable-5,rus_Cyrl,Russian,1.3432,200,"head slice [:200], topically clustered — not a random sample",1.3297,1.1189,1.2231,1.544,1.7097,1.3802
+flores,claude-fable-5,deu_Latn,German,1.7384,200,"head slice [:200], topically clustered — not a random sample",1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
+flores,claude-haiku-4-5,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-haiku-4-5,vie_Latn,Vietnamese,2.4217,200,"head slice [:200], topically clustered — not a random sample",2.2937,1.7688,2.0,2.6433,3.0587,2.354
+flores,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1.6811,200,"head slice [:200], topically clustered — not a random sample",1.75,1.36,1.5608,2.0,2.2368,1.776
+flores,claude-haiku-4-5,rus_Cyrl,Russian,1.9318,200,"head slice [:200], topically clustered — not a random sample",1.9545,1.5329,1.7053,2.18,2.4552,1.9864
+flores,claude-haiku-4-5,deu_Latn,German,1.7565,200,"head slice [:200], topically clustered — not a random sample",1.6957,1.3588,1.5,1.9084,2.1767,1.7341
+flores,claude-new,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-new,vie_Latn,Vietnamese,1.8434,200,"head slice [:200], topically clustered — not a random sample",1.7501,1.4335,1.5877,2.0,2.3056,1.8128
+flores,claude-new,zho_Hans,Chinese (Simplified),1.1749,200,"head slice [:200], topically clustered — not a random sample",1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
+flores,claude-new,rus_Cyrl,Russian,1.3432,200,"head slice [:200], topically clustered — not a random sample",1.3297,1.1189,1.2231,1.544,1.7097,1.3802
+flores,claude-new,deu_Latn,German,1.7384,200,"head slice [:200], topically clustered — not a random sample",1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
+flores,claude-old,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-old,vie_Latn,Vietnamese,2.4217,200,"head slice [:200], topically clustered — not a random sample",2.2937,1.7688,2.0,2.6433,3.0587,2.354
+flores,claude-old,zho_Hans,Chinese (Simplified),1.6811,200,"head slice [:200], topically clustered — not a random sample",1.75,1.36,1.5608,2.0,2.2368,1.776
+flores,claude-old,rus_Cyrl,Russian,1.9318,200,"head slice [:200], topically clustered — not a random sample",1.9545,1.5329,1.7053,2.18,2.4552,1.9864
+flores,claude-old,deu_Latn,German,1.7565,200,"head slice [:200], topically clustered — not a random sample",1.6957,1.3588,1.5,1.9084,2.1767,1.7341
+flores,claude-opus-4-8,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-opus-4-8,vie_Latn,Vietnamese,1.8434,200,"head slice [:200], topically clustered — not a random sample",1.7501,1.4335,1.5877,2.0,2.3056,1.8128
+flores,claude-opus-4-8,zho_Hans,Chinese (Simplified),1.1749,200,"head slice [:200], topically clustered — not a random sample",1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
+flores,claude-opus-4-8,rus_Cyrl,Russian,1.3432,200,"head slice [:200], topically clustered — not a random sample",1.3297,1.1189,1.2231,1.544,1.7097,1.3802
+flores,claude-opus-4-8,deu_Latn,German,1.7384,200,"head slice [:200], topically clustered — not a random sample",1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
+flores,claude-sonnet-5,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+flores,claude-sonnet-5,vie_Latn,Vietnamese,1.8434,200,"head slice [:200], topically clustered — not a random sample",1.7501,1.4335,1.5877,2.0,2.3056,1.8128
+flores,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.1749,200,"head slice [:200], topically clustered — not a random sample",1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
+flores,claude-sonnet-5,rus_Cyrl,Russian,1.3432,200,"head slice [:200], topically clustered — not a random sample",1.3297,1.1189,1.2231,1.544,1.7097,1.3802
+flores,claude-sonnet-5,deu_Latn,German,1.7384,200,"head slice [:200], topically clustered — not a random sample",1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
+flores,gemini-3-1-pro,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,gemini-3-1-pro,vie_Latn,Vietnamese,1.3604,2009,full sweep,1.36,1.1154,1.2222,1.52,1.6842,1.3813
+flores,gemini-3-1-pro,zho_Hans,Chinese (Simplified),1.1078,2009,full sweep,1.05,0.8125,0.9167,1.2222,1.4167,1.0873
+flores,gemini-3-1-pro,rus_Cyrl,Russian,1.3703,2009,full sweep,1.3611,1.087,1.2143,1.5333,1.7143,1.3837
+flores,gemini-3-1-pro,deu_Latn,German,1.3189,2009,full sweep,1.3095,1.0833,1.1852,1.4643,1.6,1.332
+flores,llama-4,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,llama-4,vie_Latn,Vietnamese,1.3241,2009,full sweep,1.3158,1.0857,1.1923,1.4706,1.6115,1.3387
+flores,llama-4,zho_Hans,Chinese (Simplified),1.094,2009,full sweep,1.037,0.8092,0.9024,1.2,1.4,1.0737
+flores,llama-4,rus_Cyrl,Russian,1.2362,2009,full sweep,1.2222,1.0,1.0952,1.3684,1.5338,1.2404
+flores,llama-4,deu_Latn,German,1.2888,2009,full sweep,1.2821,1.0709,1.1667,1.4138,1.5455,1.2984
+flores,o200k_base,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,o200k_base,vie_Latn,Vietnamese,1.482,2009,full sweep,1.4737,1.2,1.3226,1.65,1.8276,1.4987
+flores,o200k_base,zho_Hans,Chinese (Simplified),1.2834,2009,full sweep,1.2222,0.9615,1.0833,1.4118,1.6092,1.2607
+flores,o200k_base,rus_Cyrl,Russian,1.4221,2009,full sweep,1.4048,1.1333,1.2609,1.5882,1.7692,1.4344
+flores,o200k_base,deu_Latn,German,1.3035,2009,full sweep,1.3,1.0833,1.1786,1.4286,1.5625,1.3124
+flores,qwen-3-6,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,qwen-3-6,vie_Latn,Vietnamese,1.2955,2009,full sweep,1.2963,1.0735,1.1786,1.4516,1.5928,1.322
+flores,qwen-3-6,zho_Hans,Chinese (Simplified),0.9591,2009,full sweep,0.875,0.6774,0.7692,1.0294,1.2072,0.9158
+flores,qwen-3-6,rus_Cyrl,Russian,1.3559,2009,full sweep,1.3548,1.0809,1.2051,1.5417,1.7143,1.3819
+flores,qwen-3-6,deu_Latn,German,1.3041,2009,full sweep,1.3056,1.087,1.1818,1.4348,1.5793,1.3194
+massive,cl100k_base,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,cl100k_base,vie_Latn,Vietnamese,2.4526,2033,full sweep,2.5,1.6667,2.0,3.0,3.6583,2.601
+massive,cl100k_base,zho_Hans,Chinese (Simplified),1.8073,2033,full sweep,1.7143,1.1429,1.4,2.0,2.5,1.7827
+massive,cl100k_base,rus_Cyrl,Russian,2.2923,2033,full sweep,2.35,1.625,2.0,2.875,3.5,2.4641
+massive,cl100k_base,deu_Latn,German,1.3787,2033,full sweep,1.4167,1.0,1.2,1.6667,2.0,1.4866
+massive,claude-fable-5,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-fable-5,vie_Latn,Vietnamese,2.0013,200,"head slice [:200], topically clustered — not a random sample",2.0,1.3636,1.75,2.5,3.0,2.1182
+massive,claude-fable-5,zho_Hans,Chinese (Simplified),1.2636,200,"head slice [:200], topically clustered — not a random sample",1.1667,0.7773,0.9215,1.5,1.8,1.2156
+massive,claude-fable-5,rus_Cyrl,Russian,1.406,200,"head slice [:200], topically clustered — not a random sample",1.3604,0.9091,1.1429,1.6278,2.0,1.4402
+massive,claude-fable-5,deu_Latn,German,1.6031,200,"head slice [:200], topically clustered — not a random sample",1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
+massive,claude-haiku-4-5,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-haiku-4-5,vie_Latn,Vietnamese,2.544,200,"head slice [:200], topically clustered — not a random sample",2.5917,1.624,2.0,3.1146,3.7583,2.6688
+massive,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1.7532,200,"head slice [:200], topically clustered — not a random sample",1.75,1.13,1.4286,2.25,2.6714,1.8446
+massive,claude-haiku-4-5,rus_Cyrl,Russian,1.943,200,"head slice [:200], topically clustered — not a random sample",1.875,1.2857,1.5,2.25,2.675,1.9683
+massive,claude-haiku-4-5,deu_Latn,German,1.5508,200,"head slice [:200], topically clustered — not a random sample",1.5,1.0,1.25,1.8,2.0,1.5952
+massive,claude-new,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-new,vie_Latn,Vietnamese,2.0013,200,"head slice [:200], topically clustered — not a random sample",2.0,1.3636,1.75,2.5,3.0,2.1182
+massive,claude-new,zho_Hans,Chinese (Simplified),1.2636,200,"head slice [:200], topically clustered — not a random sample",1.1667,0.7773,0.9215,1.5,1.8,1.2156
+massive,claude-new,rus_Cyrl,Russian,1.406,200,"head slice [:200], topically clustered — not a random sample",1.3604,0.9091,1.1429,1.6278,2.0,1.4402
+massive,claude-new,deu_Latn,German,1.6031,200,"head slice [:200], topically clustered — not a random sample",1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
+massive,claude-old,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-old,vie_Latn,Vietnamese,2.544,200,"head slice [:200], topically clustered — not a random sample",2.5917,1.624,2.0,3.1146,3.7583,2.6688
+massive,claude-old,zho_Hans,Chinese (Simplified),1.7532,200,"head slice [:200], topically clustered — not a random sample",1.75,1.13,1.4286,2.25,2.6714,1.8446
+massive,claude-old,rus_Cyrl,Russian,1.943,200,"head slice [:200], topically clustered — not a random sample",1.875,1.2857,1.5,2.25,2.675,1.9683
+massive,claude-old,deu_Latn,German,1.5508,200,"head slice [:200], topically clustered — not a random sample",1.5,1.0,1.25,1.8,2.0,1.5952
+massive,claude-opus-4-8,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-opus-4-8,vie_Latn,Vietnamese,2.0013,200,"head slice [:200], topically clustered — not a random sample",2.0,1.3636,1.75,2.5,3.0,2.1182
+massive,claude-opus-4-8,zho_Hans,Chinese (Simplified),1.2636,200,"head slice [:200], topically clustered — not a random sample",1.1667,0.7773,0.9215,1.5,1.8,1.2156
+massive,claude-opus-4-8,rus_Cyrl,Russian,1.406,200,"head slice [:200], topically clustered — not a random sample",1.3604,0.9091,1.1429,1.6278,2.0,1.4402
+massive,claude-opus-4-8,deu_Latn,German,1.6031,200,"head slice [:200], topically clustered — not a random sample",1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
+massive,claude-sonnet-5,eng_Latn,English,1.0,200,"head slice [:200], topically clustered — not a random sample",1.0,1.0,1.0,1.0,1.0,1.0
+massive,claude-sonnet-5,vie_Latn,Vietnamese,2.0013,200,"head slice [:200], topically clustered — not a random sample",2.0,1.3636,1.75,2.5,3.0,2.1182
+massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.2636,200,"head slice [:200], topically clustered — not a random sample",1.1667,0.7773,0.9215,1.5,1.8,1.2156
+massive,claude-sonnet-5,rus_Cyrl,Russian,1.406,200,"head slice [:200], topically clustered — not a random sample",1.3604,0.9091,1.1429,1.6278,2.0,1.4402
+massive,claude-sonnet-5,deu_Latn,German,1.6031,200,"head slice [:200], topically clustered — not a random sample",1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
+massive,gemini-3-1-pro,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,gemini-3-1-pro,vie_Latn,Vietnamese,1.2738,2033,full sweep,1.4,1.0,1.1667,1.6667,2.0,1.4783
+massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),0.9784,2033,full sweep,1.0,0.625,0.75,1.1429,1.3333,0.9673
+massive,gemini-3-1-pro,rus_Cyrl,Russian,1.2126,2033,full sweep,1.3,0.875,1.0714,1.6,2.0,1.3763
+massive,gemini-3-1-pro,deu_Latn,German,1.2072,2033,full sweep,1.25,0.9,1.0,1.5,1.75,1.3044
+massive,llama-4,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,llama-4,vie_Latn,Vietnamese,1.2524,2033,full sweep,1.375,1.0,1.1667,1.6667,2.0,1.4483
+massive,llama-4,zho_Hans,Chinese (Simplified),1.0099,2033,full sweep,1.0,0.6273,0.8,1.1667,1.4,0.9985
+massive,llama-4,rus_Cyrl,Russian,1.1183,2033,full sweep,1.2,0.8333,1.0,1.5,1.75,1.2694
+massive,llama-4,deu_Latn,German,1.2289,2033,full sweep,1.25,1.0,1.0833,1.5,1.75,1.3126
+massive,o200k_base,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,o200k_base,vie_Latn,Vietnamese,1.398,2033,full sweep,1.5,1.0714,1.2778,1.8333,2.2,1.5933
+massive,o200k_base,zho_Hans,Chinese (Simplified),1.154,2033,full sweep,1.0769,0.75,0.8889,1.3333,1.6,1.1297
+massive,o200k_base,rus_Cyrl,Russian,1.2773,2033,full sweep,1.375,1.0,1.1429,1.6667,2.0,1.4482
+massive,o200k_base,deu_Latn,German,1.2041,2033,full sweep,1.25,0.9,1.0,1.5,1.7143,1.2937
+massive,qwen-3-6,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,qwen-3-6,vie_Latn,Vietnamese,1.2351,2033,full sweep,1.3636,1.0,1.1429,1.6667,2.0,1.4284
+massive,qwen-3-6,zho_Hans,Chinese (Simplified),0.8863,2033,full sweep,0.75,0.5,0.625,1.0,1.0,0.7913
+massive,qwen-3-6,rus_Cyrl,Russian,1.2034,2033,full sweep,1.3333,0.875,1.0,1.6,2.0,1.38
+massive,qwen-3-6,deu_Latn,German,1.2088,2033,full sweep,1.25,0.9,1.0,1.5,1.75,1.303

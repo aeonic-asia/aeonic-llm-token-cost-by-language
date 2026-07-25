@@ -7,17 +7,29 @@
   },
   "headline_premiums_aggregate_by_corpus": {
     "flores": {
-      "o200k_base": {
-        "Vietnamese": 1.482,
-        "Chinese (Simplified)": 1.2834,
-        "Russian": 1.4221,
-        "German": 1.3035
-      },
       "cl100k_base": {
         "Vietnamese": 2.4465,
         "Chinese (Simplified)": 1.9143,
         "Russian": 2.4889,
         "German": 1.5795
+      },
+      "claude-fable-5": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
+      },
+      "claude-haiku-4-5": {
+        "Vietnamese": 2.4217,
+        "Chinese (Simplified)": 1.6811,
+        "Russian": 1.9318,
+        "German": 1.7565
+      },
+      "claude-new": {
+        "Vietnamese": 1.8434,
+        "Chinese (Simplified)": 1.1749,
+        "Russian": 1.3432,
+        "German": 1.7384
       },
       "claude-old": {
         "Vietnamese": 2.4217,
@@ -25,25 +37,13 @@
         "Russian": 1.9318,
         "German": 1.7565
       },
-      "claude-sonnet-5": {
+      "claude-opus-4-8": {
         "Vietnamese": 1.8434,
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
         "German": 1.7384
       },
-      "gemini-3-pro": {
-        "Vietnamese": 1.3602,
-        "Chinese (Simplified)": 1.1078,
-        "Russian": 1.3703,
-        "German": 1.3189
-      },
-      "llama-4": {
-        "Vietnamese": 1.3241,
-        "Chinese (Simplified)": 1.094,
-        "Russian": 1.2362,
-        "German": 1.2888
-      },
-      "claude-fable-5": {
+      "claude-sonnet-5": {
         "Vietnamese": 1.8434,
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
@@ -55,43 +55,49 @@
         "Russian": 1.3703,
         "German": 1.3189
       },
-      "claude-haiku-4-5": {
-        "Vietnamese": 2.4217,
-        "Chinese (Simplified)": 1.6811,
-        "Russian": 1.9318,
-        "German": 1.7565
+      "llama-4": {
+        "Vietnamese": 1.3241,
+        "Chinese (Simplified)": 1.094,
+        "Russian": 1.2362,
+        "German": 1.2888
+      },
+      "o200k_base": {
+        "Vietnamese": 1.482,
+        "Chinese (Simplified)": 1.2834,
+        "Russian": 1.4221,
+        "German": 1.3035
       },
       "qwen-3-6": {
         "Vietnamese": 1.2955,
         "Chinese (Simplified)": 0.9591,
         "Russian": 1.3559,
         "German": 1.3041
-      },
-      "claude-new": {
-        "Vietnamese": 1.8434,
-        "Chinese (Simplified)": 1.1749,
-        "Russian": 1.3432,
-        "German": 1.7384
-      },
-      "claude-opus-4-8": {
-        "Vietnamese": 1.8434,
-        "Chinese (Simplified)": 1.1749,
-        "Russian": 1.3432,
-        "German": 1.7384
       }
     },
     "massive": {
-      "o200k_base": {
-        "Vietnamese": 1.398,
-        "Chinese (Simplified)": 1.154,
-        "Russian": 1.2773,
-        "German": 1.2041
-      },
       "cl100k_base": {
         "Vietnamese": 2.4526,
         "Chinese (Simplified)": 1.8073,
         "Russian": 2.2923,
         "German": 1.3787
+      },
+      "claude-fable-5": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
+      },
+      "claude-haiku-4-5": {
+        "Vietnamese": 2.544,
+        "Chinese (Simplified)": 1.7532,
+        "Russian": 1.943,
+        "German": 1.5508
+      },
+      "claude-new": {
+        "Vietnamese": 2.0013,
+        "Chinese (Simplified)": 1.2636,
+        "Russian": 1.406,
+        "German": 1.6031
       },
       "claude-old": {
         "Vietnamese": 2.544,
@@ -99,25 +105,13 @@
         "Russian": 1.943,
         "German": 1.5508
       },
-      "claude-sonnet-5": {
+      "claude-opus-4-8": {
         "Vietnamese": 2.0013,
         "Chinese (Simplified)": 1.2636,
         "Russian": 1.406,
         "German": 1.6031
       },
-      "gemini-3-pro": {
-        "Vietnamese": 1.2738,
-        "Chinese (Simplified)": 0.9784,
-        "Russian": 1.2126,
-        "German": 1.2072
-      },
-      "llama-4": {
-        "Vietnamese": 1.2524,
-        "Chinese (Simplified)": 1.0099,
-        "Russian": 1.1183,
-        "German": 1.2289
-      },
-      "claude-fable-5": {
+      "claude-sonnet-5": {
         "Vietnamese": 2.0013,
         "Chinese (Simplified)": 1.2636,
         "Russian": 1.406,
@@ -129,29 +123,23 @@
         "Russian": 1.2126,
         "German": 1.2072
       },
-      "claude-haiku-4-5": {
-        "Vietnamese": 2.544,
-        "Chinese (Simplified)": 1.7532,
-        "Russian": 1.943,
-        "German": 1.5508
+      "llama-4": {
+        "Vietnamese": 1.2524,
+        "Chinese (Simplified)": 1.0099,
+        "Russian": 1.1183,
+        "German": 1.2289
+      },
+      "o200k_base": {
+        "Vietnamese": 1.398,
+        "Chinese (Simplified)": 1.154,
+        "Russian": 1.2773,
+        "German": 1.2041
       },
       "qwen-3-6": {
         "Vietnamese": 1.2351,
         "Chinese (Simplified)": 0.8863,
         "Russian": 1.2034,
         "German": 1.2088
-      },
-      "claude-new": {
-        "Vietnamese": 2.0013,
-        "Chinese (Simplified)": 1.2636,
-        "Russian": 1.406,
-        "German": 1.6031
-      },
-      "claude-opus-4-8": {
-        "Vietnamese": 2.0013,
-        "Chinese (Simplified)": 1.2636,
-        "Russian": 1.406,
-        "German": 1.6031
       }
     }
   },
@@ -218,8 +206,13 @@
       "delta": -0.0005
     }
   },
-  "shared_tokenizer_pairs_by_corpus": {
-    "flores": [
+  "tokenizer_coincidence_check": {
+    "definition": "a pair is 'shared' only if its token totals are identical in every corpus; equality in one register is not identity",
+    "corpora_checked": [
+      "flores",
+      "massive"
+    ],
+    "shared_in_all_corpora": [
       [
         "claude-fable-5",
         "claude-new"
@@ -249,40 +242,120 @@
         "claude-sonnet-5"
       ]
     ],
-    "massive": [
-      [
-        "claude-fable-5",
-        "claude-new"
+    "coincident_in_some_corpora": [],
+    "raw_equality_by_corpus": {
+      "flores": [
+        [
+          "claude-fable-5",
+          "claude-new"
+        ],
+        [
+          "claude-fable-5",
+          "claude-opus-4-8"
+        ],
+        [
+          "claude-fable-5",
+          "claude-sonnet-5"
+        ],
+        [
+          "claude-haiku-4-5",
+          "claude-old"
+        ],
+        [
+          "claude-new",
+          "claude-opus-4-8"
+        ],
+        [
+          "claude-new",
+          "claude-sonnet-5"
+        ],
+        [
+          "claude-opus-4-8",
+          "claude-sonnet-5"
+        ]
       ],
-      [
-        "claude-fable-5",
-        "claude-opus-4-8"
-      ],
-      [
-        "claude-fable-5",
-        "claude-sonnet-5"
-      ],
-      [
-        "claude-haiku-4-5",
-        "claude-old"
-      ],
-      [
-        "claude-new",
-        "claude-opus-4-8"
-      ],
-      [
-        "claude-new",
-        "claude-sonnet-5"
-      ],
-      [
-        "claude-opus-4-8",
-        "claude-sonnet-5"
-      ],
-      [
-        "gemini-3-1-pro",
-        "gemini-3-pro"
+      "massive": [
+        [
+          "claude-fable-5",
+          "claude-new"
+        ],
+        [
+          "claude-fable-5",
+          "claude-opus-4-8"
+        ],
+        [
+          "claude-fable-5",
+          "claude-sonnet-5"
+        ],
+        [
+          "claude-haiku-4-5",
+          "claude-old"
+        ],
+        [
+          "claude-new",
+          "claude-opus-4-8"
+        ],
+        [
+          "claude-new",
+          "claude-sonnet-5"
+        ],
+        [
+          "claude-opus-4-8",
+          "claude-sonnet-5"
+        ]
       ]
-    ]
+    }
+  },
+  "coverage": {
+    "counters_in_dataset": [
+      "cl100k_base",
+      "claude-fable-5",
+      "claude-haiku-4-5",
+      "claude-new",
+      "claude-old",
+      "claude-opus-4-8",
+      "claude-sonnet-5",
+      "gemini-3-1-pro",
+      "llama-4",
+      "o200k_base",
+      "qwen-3-6"
+    ],
+    "counters_measured_last_pass": [],
+    "counters_carried_forward": [
+      "cl100k_base",
+      "claude-fable-5",
+      "claude-haiku-4-5",
+      "claude-new",
+      "claude-old",
+      "claude-opus-4-8",
+      "claude-sonnet-5",
+      "gemini-3-1-pro",
+      "llama-4",
+      "o200k_base",
+      "qwen-3-6"
+    ],
+    "counters_skipped": [],
+    "measured_on_by_counter": {
+      "cl100k_base": "unrecorded",
+      "claude-fable-5": "unrecorded",
+      "claude-haiku-4-5": "unrecorded",
+      "claude-new": "unrecorded",
+      "claude-old": "unrecorded",
+      "claude-opus-4-8": "unrecorded",
+      "claude-sonnet-5": "unrecorded",
+      "gemini-3-1-pro": "unrecorded",
+      "llama-4": "unrecorded",
+      "o200k_base": "unrecorded",
+      "qwen-3-6": "unrecorded"
+    },
+    "versions": {
+      "tiktoken": "0.13.0",
+      "pandas": "3.0.3"
+    },
+    "oracle_max_abs_delta": 0.0043,
+    "oracle_tolerance": 0.005,
+    "oracle_passes": true,
+    "note": "`counters_carried_forward` were NOT re-measured in the last pass; their counts come from an earlier one. Cross-check `measured_on_by_counter` before citing a specific counter's date."
   },
   "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): Anthropic count_tokens counts a wrapped chat message, so a fixed frame (see run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count (frame negligible over ~10^5 tokens), so aggregate and median premia are on consistent bare-text bases.",
   "pricing_as_of": "2026-07-18",
