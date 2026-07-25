@@ -95,7 +95,15 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
     for flag in shown:
         folded = [c for c in config.MODEL_MATRIX if c.flagship_group == flag]
         shared = [m for m in folded
-                  if m.fold_reason == "shared" and _identical(agg, corpus_id, m.id, flag)]
+                  if m.fold_reason == "shared" and _identical(agg, corpus_id, m.id, flag)
+                  # Skip a proxy that names the SAME model as the column itself.
+                  # A headline column is labelled with its current flagship, and
+                  # that flagship may also have its own counter (measured directly
+                  # to confirm the fold). Listing both would render the model twice
+                  # in one equality chain ("Claude Opus 5 = ... = Opus 5"), which
+                  # reads as a bug. The confirmation still happens — it is just not
+                  # restated in a caption that already carries the model's name.
+                  and _label(m.id).lower() not in _label(flag).lower()]
         superseded = [m for m in folded if m.fold_reason == "superseded"]
         if shared:
             names = " = ".join([_label(flag)] + [_label(m.id) for m in shared])
