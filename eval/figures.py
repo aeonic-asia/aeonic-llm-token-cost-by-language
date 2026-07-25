@@ -40,6 +40,13 @@ FIG_DIR = config.RESULTS_DIR / "figures"
 CONTRAST = [l for l in config.LANGUAGES if l != config.BASELINE_LANG]
 LEAD_LANG = "vie_Latn"  # article lead; canonical column order sorts by its premium
 
+# Shared caption line for BOTH dollar figures: the shared-tokenizer models that
+# cost different amounts to serve (same tokens, different price). Kept in one
+# place so the two figures can't drift apart.
+_SAME_TOKENS_DIFF_PRICE = (
+    "Same tokens, different price: Opus 5 $5 / Opus 4.8 $5 / Sonnet 5 $3 / "
+    "Fable 5 $10; Sonnet 4.6 $3 / Haiku 4.5 $1 (per 1M tokens)")
+
 
 def _label(cid: str) -> str:
     c = config.MATRIX_BY_ID[cid]
@@ -177,9 +184,8 @@ def _cost_legend_lines() -> list[str]:
     return [
         f"USD to serve 1,000,000 input characters — input list price "
         f"({config.PRICING_AS_OF}); VND = USD × {int(config.USD_TO_VND):,}",
-        "Same tokens, different price: Opus 4.8 $5 / Sonnet 5 $3 / Fable 5 $10; "
-        "Sonnet 4.6 $3 / Haiku 4.5 $1 (per 1M tokens)",
-        "Llama 4 (self-host) and cl100k (2023) omitted — no serving list price",
+        _SAME_TOKENS_DIFF_PRICE,
+        "Llama 4 and Qwen 3.6 (self-host) and cl100k (2023) omitted — no serving list price",
     ]
 
 
@@ -222,8 +228,7 @@ def _cost_per_sentence_legend_lines(corpus_id: str) -> list[str]:
         f"Read against the per-character chart: a dense script (Chinese) needs "
         f"few characters, so per-character overstates its cost; per {unit} it "
         f"ranks far lower.",
-        "Same tokens, different price: Opus 4.8 $5 / Sonnet 5 $3 / Fable 5 $10; "
-        "Sonnet 4.6 $3 / Haiku 4.5 $1 (per 1M tokens)",
+        _SAME_TOKENS_DIFF_PRICE,
     ]
 
 

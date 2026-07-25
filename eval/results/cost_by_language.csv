@@ -99,3 +99,23 @@ massive,claude-haiku-4-5,vie_Latn,Vietnamese,494.12,18.92,1.0,high,0.000494,12.9
 massive,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1139.85,13.04,1.0,high,0.00114,29.98,1.304e-05,0.3429
 massive,claude-haiku-4-5,rus_Cyrl,Russian,383.22,14.45,1.0,high,0.000383,10.07,1.445e-05,0.38
 massive,claude-haiku-4-5,deu_Latn,German,286.76,11.53,1.0,high,0.000287,7.55,1.153e-05,0.3032
+flores,claude-opus-5,eng_Latn,English,315.15,40.66,,high,,,,
+flores,claude-opus-5,vie_Latn,Vietnamese,552.33,74.94,,high,,,,
+flores,claude-opus-5,zho_Hans,Chinese (Simplified),1097.41,47.77,,high,,,,
+flores,claude-opus-5,rus_Cyrl,Russian,388.77,54.61,,high,,,,
+flores,claude-opus-5,deu_Latn,German,469.56,70.67,,high,,,,
+massive,claude-opus-5,eng_Latn,English,288.55,10.33,,high,,,,
+massive,claude-opus-5,vie_Latn,Vietnamese,539.79,20.67,,high,,,,
+massive,claude-opus-5,zho_Hans,Chinese (Simplified),1140.84,13.05,,high,,,,
+massive,claude-opus-5,rus_Cyrl,Russian,385.08,14.52,,high,,,,
+massive,claude-opus-5,deu_Latn,German,411.64,16.56,,high,,,,
+flores,qwen-3-6,eng_Latn,English,206.59,26.65,,unknown,,,,
+flores,qwen-3-6,vie_Latn,Vietnamese,254.46,34.53,,unknown,,,,
+flores,qwen-3-6,zho_Hans,Chinese (Simplified),587.24,25.56,,unknown,,,,
+flores,qwen-3-6,rus_Cyrl,Russian,257.24,36.14,,unknown,,,,
+flores,qwen-3-6,deu_Latn,German,230.92,34.76,,unknown,,,,
+massive,qwen-3-6,eng_Latn,English,206.33,7.38,,unknown,,,,
+massive,qwen-3-6,vie_Latn,Vietnamese,238.2,9.12,,unknown,,,,
+massive,qwen-3-6,zho_Hans,Chinese (Simplified),572.2,6.55,,unknown,,,,
+massive,qwen-3-6,rus_Cyrl,Russian,235.69,8.89,,unknown,,,,
+massive,qwen-3-6,deu_Latn,German,221.95,8.93,,unknown,,,,
