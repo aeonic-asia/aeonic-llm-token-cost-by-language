@@ -27,6 +27,11 @@ def _lines(text: str, src: str) -> list[str]:
     same-count shift. So we do NOT filter: strip a single trailing newline's empty
     tail (a real file ends in "\\n"), tolerate CRLF checkouts, and treat any
     remaining blank line as corruption (a hard error naming the offending index).
+
+    Files are read as utf-8-sig, the companion to the CRLF tolerance above: an
+    editor re-save on Windows can prepend a BOM, and U+FEFF is not whitespace to
+    Python — so under plain utf-8 it survives the blank-line guard and is counted
+    and tokenized as the first character of sentence 0.
     """
     lines = text.split("\n")
     if lines and lines[-1] == "":
@@ -47,7 +52,7 @@ def load_flores(lang: str) -> list[str]:
     sentences: list[str] = []
     for split, ext in (("dev", "dev"), ("devtest", "devtest")):
         path = config.FLORES_DIR / split / f"{lang}.{ext}"
-        sentences.extend(nfc(ln) for ln in _lines(path.read_text(encoding="utf-8"), str(path)))
+        sentences.extend(nfc(ln) for ln in _lines(path.read_text(encoding="utf-8-sig"), str(path)))
     return sentences
 
 
@@ -56,7 +61,7 @@ def load_massive(lang: str) -> list[str]:
     from .measure import nfc
 
     path = config.MASSIVE_DIR / f"{lang}.txt"
-    return [nfc(ln) for ln in _lines(path.read_text(encoding="utf-8"), str(path))]
+    return [nfc(ln) for ln in _lines(path.read_text(encoding="utf-8-sig"), str(path))]
 
 
 _LOADERS: dict[str, Callable[[str], list[str]]] = {
@@ -65,9 +70,27 @@ _LOADERS: dict[str, Callable[[str], list[str]]] = {
 }
 
 
+def _loader(corpus: str) -> Callable[[str], list[str]]:
+    """Resolve a corpus id to its loader, naming the registry on a miss.
+
+    `config.CORPORA` and `_LOADERS` are two independent registries. A corpus in
+    one but not the other used to die with a bare KeyError from deep inside the
+    load — and a corpus *removed* from config while its rows remain in the
+    committed CSVs hits the same path via corpus_size() during analyze.
+    """
+    try:
+        return _LOADERS[corpus]
+    except KeyError:
+        raise KeyError(
+            f"no loader registered for corpus '{corpus}' (known: "
+            f"{sorted(_LOADERS)}). If it was retired, its rows may still be in "
+            "eval/results/ — re-run `make reproduce` to purge them; if it is new, "
+            "register a loader here and a path in config.") from None
+
+
 def load_corpus(corpus: str, langs: list[str]) -> dict[str, list[str]]:
     """Load one corpus for several languages; assert line-alignment (equal length)."""
-    loader = _LOADERS[corpus]
+    loader = _loader(corpus)
     data = {lang: loader(lang) for lang in langs}
     lengths = {lang: len(s) for lang, s in data.items()}
     if len(set(lengths.values())) != 1:
@@ -89,4 +112,4 @@ def corpus_size(corpus: str) -> int:
     distinct from the per-character one: a dense script says the same thing in far
     fewer characters, so the two denominators rank the languages differently.
     """
-    return len(_LOADERS[corpus](config.BASELINE_LANG))
+    return len(_loader(corpus)(config.BASELINE_LANG))

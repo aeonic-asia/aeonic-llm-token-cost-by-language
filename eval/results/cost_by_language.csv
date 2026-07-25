@@ -1,121 +1,111 @@
 corpus,counter_id,lang,language,tokens_per_1k_chars,tokens_per_sentence,price_usd_per_mtok,price_confidence,cost_usd_per_1k_chars,cost_vnd_per_1k_chars,cost_usd_per_sentence,cost_vnd_per_sentence
-flores,o200k_base,eng_Latn,English,201.71,26.02,5.0,medium,0.001009,26.53,0.00013011,3.4212
-flores,o200k_base,vie_Latn,Vietnamese,284.21,38.56,5.0,medium,0.001421,37.37,0.00019282,5.0702
-flores,o200k_base,zho_Hans,Chinese (Simplified),767.29,33.4,5.0,medium,0.003836,100.87,0.00016698,4.3907
-flores,o200k_base,rus_Cyrl,Russian,263.44,37.0,5.0,medium,0.001317,34.63,0.00018502,4.8651
-flores,o200k_base,deu_Latn,German,225.37,33.92,5.0,medium,0.001127,29.63,0.0001696,4.4596
-flores,cl100k_base,eng_Latn,English,203.86,26.3,,unknown,,,,
-flores,cl100k_base,vie_Latn,Vietnamese,474.17,64.34,,unknown,,,,
-flores,cl100k_base,zho_Hans,Chinese (Simplified),1156.59,50.34,,unknown,,,,
-flores,cl100k_base,rus_Cyrl,Russian,465.95,65.45,,unknown,,,,
-flores,cl100k_base,deu_Latn,German,275.98,41.54,,unknown,,,,
-flores,claude-old,eng_Latn,English,218.08,28.13,3.0,high,0.000654,17.2,8.44e-05,2.2193
-flores,claude-old,vie_Latn,Vietnamese,502.12,68.13,3.0,high,0.001506,39.6,0.00020439,5.3744
-flores,claude-old,zho_Hans,Chinese (Simplified),1086.62,47.3,3.0,high,0.00326,85.72,0.00014189,3.731
-flores,claude-old,rus_Cyrl,Russian,386.91,54.35,3.0,high,0.001161,30.53,0.00016305,4.2874
-flores,claude-old,deu_Latn,German,328.33,49.42,3.0,high,0.000985,25.9,0.00014825,3.8982
-flores,claude-sonnet-5,eng_Latn,English,315.15,40.66,3.0,high,0.000945,24.85,0.00012197,3.2072
-flores,claude-sonnet-5,vie_Latn,Vietnamese,552.33,74.94,3.0,high,0.001657,43.57,0.00022483,5.9119
-flores,claude-sonnet-5,zho_Hans,Chinese (Simplified),1097.41,47.77,3.0,high,0.003292,86.56,0.0001433,3.7681
-flores,claude-sonnet-5,rus_Cyrl,Russian,388.77,54.61,3.0,high,0.001166,30.66,0.00016383,4.3079
-flores,claude-sonnet-5,deu_Latn,German,469.56,70.67,3.0,high,0.001409,37.05,0.00021202,5.5751
-massive,o200k_base,eng_Latn,English,203.54,7.28,5.0,medium,0.001018,26.77,3.642e-05,0.9577
-massive,o200k_base,vie_Latn,Vietnamese,265.97,10.18,5.0,medium,0.00133,34.97,5.092e-05,1.3389
-massive,o200k_base,zho_Hans,Chinese (Simplified),734.93,8.41,5.0,medium,0.003675,96.63,4.203e-05,1.1052
-massive,o200k_base,rus_Cyrl,Russian,246.78,9.3,5.0,medium,0.001234,32.45,4.652e-05,1.2232
-massive,o200k_base,deu_Latn,German,218.09,8.77,5.0,medium,0.00109,28.66,4.386e-05,1.1533
-massive,cl100k_base,eng_Latn,English,206.77,7.4,,unknown,,,,
-massive,cl100k_base,vie_Latn,Vietnamese,474.04,18.15,,unknown,,,,
-massive,cl100k_base,zho_Hans,Chinese (Simplified),1169.3,13.37,,unknown,,,,
-massive,cl100k_base,rus_Cyrl,Russian,449.91,16.96,,unknown,,,,
-massive,cl100k_base,deu_Latn,German,253.69,10.2,,unknown,,,,
-massive,claude-old,eng_Latn,English,207.79,7.44,3.0,high,0.000623,16.38,2.231e-05,0.5866
-massive,claude-old,vie_Latn,Vietnamese,494.12,18.92,3.0,high,0.001482,38.97,5.676e-05,1.4925
-massive,claude-old,zho_Hans,Chinese (Simplified),1139.85,13.04,3.0,high,0.00342,89.93,3.911e-05,1.0284
-massive,claude-old,rus_Cyrl,Russian,383.22,14.45,3.0,high,0.00115,30.24,4.335e-05,1.1399
-massive,claude-old,deu_Latn,German,286.76,11.53,3.0,high,0.00086,22.61,3.46e-05,0.9098
-massive,claude-sonnet-5,eng_Latn,English,288.55,10.33,3.0,high,0.000866,22.77,3.098e-05,0.8146
-massive,claude-sonnet-5,vie_Latn,Vietnamese,539.79,20.67,3.0,high,0.001619,42.57,6.2e-05,1.6303
-massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1140.84,13.05,3.0,high,0.003423,90.01,3.915e-05,1.0294
-massive,claude-sonnet-5,rus_Cyrl,Russian,385.08,14.52,3.0,high,0.001155,30.37,4.356e-05,1.1454
-massive,claude-sonnet-5,deu_Latn,German,411.64,16.56,3.0,high,0.001235,32.47,4.967e-05,1.3061
-flores,gemini-3-pro,eng_Latn,English,203.96,26.31,2.0,medium,0.000408,10.73,5.262e-05,1.3836
-flores,gemini-3-pro,vie_Latn,Vietnamese,263.77,35.79,2.0,medium,0.000528,13.88,7.158e-05,1.8822
-flores,gemini-3-pro,zho_Hans,Chinese (Simplified),669.72,29.15,2.0,medium,0.001339,35.21,5.83e-05,1.533
-flores,gemini-3-pro,rus_Cyrl,Russian,256.68,36.06,2.0,medium,0.000513,13.49,7.211e-05,1.8961
-flores,gemini-3-pro,deu_Latn,German,230.56,34.7,2.0,medium,0.000461,12.12,6.94e-05,1.8249
-massive,gemini-3-pro,eng_Latn,English,205.85,7.37,2.0,medium,0.000412,10.83,1.473e-05,0.3873
-massive,gemini-3-pro,vie_Latn,Vietnamese,245.1,9.38,2.0,medium,0.00049,12.88,1.877e-05,0.4936
-massive,gemini-3-pro,zho_Hans,Chinese (Simplified),630.17,7.21,2.0,medium,0.00126,33.13,1.442e-05,0.3792
-massive,gemini-3-pro,rus_Cyrl,Russian,236.93,8.93,2.0,medium,0.000474,12.46,1.787e-05,0.4699
-massive,gemini-3-pro,deu_Latn,German,221.13,8.89,2.0,medium,0.000442,11.62,1.779e-05,0.4678
-flores,llama-4,eng_Latn,English,202.9,26.17,,unknown,,,,
-flores,llama-4,vie_Latn,Vietnamese,255.42,34.66,,unknown,,,,
-flores,llama-4,zho_Hans,Chinese (Simplified),657.91,28.64,,unknown,,,,
-flores,llama-4,rus_Cyrl,Russian,230.35,32.36,,unknown,,,,
-flores,llama-4,deu_Latn,German,224.13,33.73,,unknown,,,,
-massive,llama-4,eng_Latn,English,206.04,7.37,,unknown,,,,
-massive,llama-4,vie_Latn,Vietnamese,241.21,9.24,,unknown,,,,
-massive,llama-4,zho_Hans,Chinese (Simplified),651.07,7.45,,unknown,,,,
-massive,llama-4,rus_Cyrl,Russian,218.71,8.25,,unknown,,,,
-massive,llama-4,deu_Latn,German,225.33,9.06,,unknown,,,,
-flores,claude-fable-5,eng_Latn,English,315.15,40.66,10.0,high,0.003152,82.88,0.00040656,10.6905
-flores,claude-fable-5,vie_Latn,Vietnamese,552.33,74.94,10.0,high,0.005523,145.23,0.00074943,19.7063
-flores,claude-fable-5,zho_Hans,Chinese (Simplified),1097.41,47.77,10.0,high,0.010974,288.56,0.00047766,12.5601
-flores,claude-fable-5,rus_Cyrl,Russian,388.77,54.61,10.0,high,0.003888,102.23,0.0005461,14.3597
-flores,claude-fable-5,deu_Latn,German,469.56,70.67,10.0,high,0.004696,123.48,0.00070674,18.5837
-massive,claude-fable-5,eng_Latn,English,288.55,10.33,10.0,high,0.002885,75.86,0.00010327,2.7155
-massive,claude-fable-5,vie_Latn,Vietnamese,539.79,20.67,10.0,high,0.005398,141.94,0.00020668,5.4347
-massive,claude-fable-5,zho_Hans,Chinese (Simplified),1140.84,13.05,10.0,high,0.011408,299.97,0.00013049,3.4312
-massive,claude-fable-5,rus_Cyrl,Russian,385.08,14.52,10.0,high,0.003851,101.26,0.00014519,3.8178
-massive,claude-fable-5,deu_Latn,German,411.64,16.56,10.0,high,0.004116,108.23,0.00016556,4.3534
-flores,gemini-3-1-pro,eng_Latn,English,203.96,26.31,2.0,high,0.000408,10.73,5.262e-05,1.3836
-flores,gemini-3-1-pro,vie_Latn,Vietnamese,263.8,35.79,2.0,high,0.000528,13.88,7.159e-05,1.8825
-flores,gemini-3-1-pro,zho_Hans,Chinese (Simplified),669.72,29.15,2.0,high,0.001339,35.21,5.83e-05,1.533
-flores,gemini-3-1-pro,rus_Cyrl,Russian,256.68,36.06,2.0,high,0.000513,13.49,7.211e-05,1.8961
-flores,gemini-3-1-pro,deu_Latn,German,230.56,34.7,2.0,high,0.000461,12.12,6.94e-05,1.8249
-massive,gemini-3-1-pro,eng_Latn,English,205.85,7.37,2.0,high,0.000412,10.83,1.473e-05,0.3873
-massive,gemini-3-1-pro,vie_Latn,Vietnamese,245.1,9.38,2.0,high,0.00049,12.88,1.877e-05,0.4936
-massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),630.17,7.21,2.0,high,0.00126,33.13,1.442e-05,0.3792
-massive,gemini-3-1-pro,rus_Cyrl,Russian,236.93,8.93,2.0,high,0.000474,12.46,1.787e-05,0.4699
-massive,gemini-3-1-pro,deu_Latn,German,221.13,8.89,2.0,high,0.000442,11.62,1.779e-05,0.4678
-flores,claude-haiku-4-5,eng_Latn,English,218.08,28.13,1.0,high,0.000218,5.73,2.813e-05,0.7397
-flores,claude-haiku-4-5,vie_Latn,Vietnamese,502.12,68.13,1.0,high,0.000502,13.2,6.813e-05,1.7915
-flores,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1086.62,47.3,1.0,high,0.001087,28.58,4.73e-05,1.2438
-flores,claude-haiku-4-5,rus_Cyrl,Russian,386.91,54.35,1.0,high,0.000387,10.18,5.435e-05,1.4291
-flores,claude-haiku-4-5,deu_Latn,German,328.33,49.42,1.0,high,0.000328,8.62,4.942e-05,1.2995
-massive,claude-haiku-4-5,eng_Latn,English,207.79,7.44,1.0,high,0.000208,5.47,7.44e-06,0.1956
-massive,claude-haiku-4-5,vie_Latn,Vietnamese,494.12,18.92,1.0,high,0.000494,12.99,1.892e-05,0.4975
-massive,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1139.85,13.04,1.0,high,0.00114,29.98,1.304e-05,0.3429
-massive,claude-haiku-4-5,rus_Cyrl,Russian,383.22,14.45,1.0,high,0.000383,10.07,1.445e-05,0.38
-massive,claude-haiku-4-5,deu_Latn,German,286.76,11.53,1.0,high,0.000287,7.55,1.153e-05,0.3032
-flores,qwen-3-6,eng_Latn,English,206.59,26.65,,unknown,,,,
-flores,qwen-3-6,vie_Latn,Vietnamese,254.46,34.53,,unknown,,,,
-flores,qwen-3-6,zho_Hans,Chinese (Simplified),587.24,25.56,,unknown,,,,
-flores,qwen-3-6,rus_Cyrl,Russian,257.24,36.14,,unknown,,,,
-flores,qwen-3-6,deu_Latn,German,230.92,34.76,,unknown,,,,
-massive,qwen-3-6,eng_Latn,English,206.33,7.38,,unknown,,,,
-massive,qwen-3-6,vie_Latn,Vietnamese,238.2,9.12,,unknown,,,,
-massive,qwen-3-6,zho_Hans,Chinese (Simplified),572.2,6.55,,unknown,,,,
-massive,qwen-3-6,rus_Cyrl,Russian,235.69,8.89,,unknown,,,,
-massive,qwen-3-6,deu_Latn,German,221.95,8.93,,unknown,,,,
-flores,claude-new,eng_Latn,English,315.15,40.66,5.0,high,0.001576,41.44,0.00020328,5.3452
-flores,claude-new,vie_Latn,Vietnamese,552.33,74.94,5.0,high,0.002762,72.63,0.00037472,9.8533
-flores,claude-new,zho_Hans,Chinese (Simplified),1097.41,47.77,5.0,high,0.005487,144.28,0.00023883,6.28
-flores,claude-new,rus_Cyrl,Russian,388.77,54.61,5.0,high,0.001944,51.12,0.00027305,7.1798
-flores,claude-new,deu_Latn,German,469.56,70.67,5.0,high,0.002348,61.74,0.00035337,9.2919
-massive,claude-new,eng_Latn,English,288.55,10.33,5.0,high,0.001443,37.94,5.164e-05,1.3579
-massive,claude-new,vie_Latn,Vietnamese,539.79,20.67,5.0,high,0.002699,70.97,0.00010334,2.7173
-massive,claude-new,zho_Hans,Chinese (Simplified),1140.84,13.05,5.0,high,0.005704,149.99,6.525e-05,1.7157
-massive,claude-new,rus_Cyrl,Russian,385.08,14.52,5.0,high,0.001925,50.62,7.26e-05,1.909
-massive,claude-new,deu_Latn,German,411.64,16.56,5.0,high,0.002058,54.12,8.278e-05,2.1767
-flores,claude-opus-4-8,eng_Latn,English,315.15,40.66,,unknown,,,,
-flores,claude-opus-4-8,vie_Latn,Vietnamese,552.33,74.94,,unknown,,,,
-flores,claude-opus-4-8,zho_Hans,Chinese (Simplified),1097.41,47.77,,unknown,,,,
-flores,claude-opus-4-8,rus_Cyrl,Russian,388.77,54.61,,unknown,,,,
-flores,claude-opus-4-8,deu_Latn,German,469.56,70.67,,unknown,,,,
-massive,claude-opus-4-8,eng_Latn,English,288.55,10.33,,unknown,,,,
-massive,claude-opus-4-8,vie_Latn,Vietnamese,539.79,20.67,,unknown,,,,
-massive,claude-opus-4-8,zho_Hans,Chinese (Simplified),1140.84,13.05,,unknown,,,,
-massive,claude-opus-4-8,rus_Cyrl,Russian,385.08,14.52,,unknown,,,,
-massive,claude-opus-4-8,deu_Latn,German,411.64,16.56,,unknown,,,,
+flores,cl100k_base,deu_Latn,German,277.82,41.54,,unknown,,,,
+flores,cl100k_base,eng_Latn,English,205.45,26.3,,unknown,,,,
+flores,cl100k_base,rus_Cyrl,Russian,469.29,65.45,,unknown,,,,
+flores,cl100k_base,vie_Latn,Vietnamese,477.69,64.34,,unknown,,,,
+flores,cl100k_base,zho_Hans,Chinese (Simplified),1183.78,50.34,,unknown,,,,
+flores,claude-fable-5,deu_Latn,German,472.7,70.67,10.0,high,0.004727,124.3,0.00070674,18.5837
+flores,claude-fable-5,eng_Latn,English,317.61,40.66,10.0,high,0.003176,83.52,0.00040656,10.6904
+flores,claude-fable-5,rus_Cyrl,Russian,391.55,54.61,10.0,high,0.003916,102.96,0.0005461,14.3598
+flores,claude-fable-5,vie_Latn,Vietnamese,556.43,74.94,10.0,high,0.005564,146.31,0.00074943,19.7063
+flores,claude-fable-5,zho_Hans,Chinese (Simplified),1123.2,47.77,10.0,high,0.011232,295.35,0.00047766,12.56
+flores,claude-haiku-4-5,deu_Latn,German,330.53,49.42,1.0,high,0.000331,8.69,4.942e-05,1.2994
+flores,claude-haiku-4-5,eng_Latn,English,219.79,28.13,1.0,high,0.00022,5.78,2.813e-05,0.7398
+flores,claude-haiku-4-5,rus_Cyrl,Russian,389.68,54.35,1.0,high,0.00039,10.25,5.435e-05,1.4291
+flores,claude-haiku-4-5,vie_Latn,Vietnamese,505.85,68.13,1.0,high,0.000506,13.3,6.813e-05,1.7915
+flores,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1112.16,47.3,1.0,high,0.001112,29.24,4.73e-05,1.2436
+flores,claude-new,deu_Latn,German,472.7,70.67,5.0,high,0.002364,62.15,0.00035337,9.2919
+flores,claude-new,eng_Latn,English,317.61,40.66,5.0,high,0.001588,41.76,0.00020328,5.3452
+flores,claude-new,rus_Cyrl,Russian,391.55,54.61,5.0,high,0.001958,51.48,0.00027305,7.1799
+flores,claude-new,vie_Latn,Vietnamese,556.43,74.94,5.0,high,0.002782,73.16,0.00037472,9.8532
+flores,claude-new,zho_Hans,Chinese (Simplified),1123.2,47.77,5.0,high,0.005616,147.67,0.00023883,6.28
+flores,claude-old,deu_Latn,German,330.53,49.42,3.0,high,0.000992,26.07,0.00014825,3.8983
+flores,claude-old,eng_Latn,English,219.79,28.13,3.0,high,0.000659,17.34,8.44e-05,2.2193
+flores,claude-old,rus_Cyrl,Russian,389.68,54.35,3.0,high,0.001169,30.74,0.00016305,4.2874
+flores,claude-old,vie_Latn,Vietnamese,505.85,68.13,3.0,high,0.001518,39.9,0.00020439,5.3745
+flores,claude-old,zho_Hans,Chinese (Simplified),1112.16,47.3,3.0,high,0.003336,87.73,0.00014189,3.7309
+flores,claude-opus-4-8,deu_Latn,German,472.7,70.67,,unknown,,,,
+flores,claude-opus-4-8,eng_Latn,English,317.61,40.66,,unknown,,,,
+flores,claude-opus-4-8,rus_Cyrl,Russian,391.55,54.61,,unknown,,,,
+flores,claude-opus-4-8,vie_Latn,Vietnamese,556.43,74.94,,unknown,,,,
+flores,claude-opus-4-8,zho_Hans,Chinese (Simplified),1123.2,47.77,,unknown,,,,
+flores,claude-sonnet-5,deu_Latn,German,472.7,70.67,3.0,high,0.001418,37.29,0.00021202,5.5751
+flores,claude-sonnet-5,eng_Latn,English,317.61,40.66,3.0,high,0.000953,25.05,0.00012197,3.2071
+flores,claude-sonnet-5,rus_Cyrl,Russian,391.55,54.61,3.0,high,0.001175,30.89,0.00016383,4.3079
+flores,claude-sonnet-5,vie_Latn,Vietnamese,556.43,74.94,3.0,high,0.001669,43.89,0.00022483,5.9119
+flores,claude-sonnet-5,zho_Hans,Chinese (Simplified),1123.2,47.77,3.0,high,0.00337,88.6,0.0001433,3.768
+flores,gemini-3-1-pro,deu_Latn,German,232.1,34.7,2.0,high,0.000464,12.21,6.94e-05,1.825
+flores,gemini-3-1-pro,eng_Latn,English,205.56,26.31,2.0,high,0.000411,10.81,5.262e-05,1.3838
+flores,gemini-3-1-pro,rus_Cyrl,Russian,258.52,36.06,2.0,high,0.000517,13.6,7.211e-05,1.8962
+flores,gemini-3-1-pro,vie_Latn,Vietnamese,265.76,35.79,2.0,high,0.000532,13.98,7.159e-05,1.8824
+flores,gemini-3-1-pro,zho_Hans,Chinese (Simplified),685.46,29.15,2.0,high,0.001371,36.05,5.83e-05,1.533
+flores,llama-4,deu_Latn,German,225.63,33.73,,unknown,,,,
+flores,llama-4,eng_Latn,English,204.48,26.17,,unknown,,,,
+flores,llama-4,rus_Cyrl,Russian,232.0,32.36,,unknown,,,,
+flores,llama-4,vie_Latn,Vietnamese,257.32,34.66,,unknown,,,,
+flores,llama-4,zho_Hans,Chinese (Simplified),673.38,28.64,,unknown,,,,
+flores,o200k_base,deu_Latn,German,226.87,33.92,5.0,medium,0.001134,29.83,0.0001696,4.4596
+flores,o200k_base,eng_Latn,English,203.29,26.02,5.0,medium,0.001016,26.73,0.00013011,3.4212
+flores,o200k_base,rus_Cyrl,Russian,265.32,37.0,5.0,medium,0.001327,34.88,0.00018502,4.8652
+flores,o200k_base,vie_Latn,Vietnamese,286.32,38.56,5.0,medium,0.001432,37.64,0.00019282,5.0702
+flores,o200k_base,zho_Hans,Chinese (Simplified),785.32,33.4,5.0,medium,0.003927,103.25,0.00016698,4.3908
+flores,qwen-3-6,deu_Latn,German,232.46,34.76,,unknown,,,,
+flores,qwen-3-6,eng_Latn,English,208.2,26.65,,unknown,,,,
+flores,qwen-3-6,rus_Cyrl,Russian,259.09,36.14,,unknown,,,,
+flores,qwen-3-6,vie_Latn,Vietnamese,256.35,34.53,,unknown,,,,
+flores,qwen-3-6,zho_Hans,Chinese (Simplified),601.04,25.56,,unknown,,,,
+massive,cl100k_base,deu_Latn,German,260.15,10.2,,unknown,,,,
+massive,cl100k_base,eng_Latn,English,212.71,7.4,,unknown,,,,
+massive,cl100k_base,rus_Cyrl,Russian,462.16,16.96,,unknown,,,,
+massive,cl100k_base,vie_Latn,Vietnamese,486.74,18.15,,unknown,,,,
+massive,cl100k_base,zho_Hans,Chinese (Simplified),1281.26,13.37,,unknown,,,,
+massive,claude-fable-5,deu_Latn,German,422.13,16.56,10.0,high,0.004221,111.0,0.00016556,4.3534
+massive,claude-fable-5,eng_Latn,English,296.84,10.33,10.0,high,0.002968,78.05,0.00010327,2.7155
+massive,claude-fable-5,rus_Cyrl,Russian,395.56,14.52,10.0,high,0.003956,104.01,0.00014519,3.8179
+massive,claude-fable-5,vie_Latn,Vietnamese,554.25,20.67,10.0,high,0.005543,145.74,0.00020668,5.4346
+massive,claude-fable-5,zho_Hans,Chinese (Simplified),1250.07,13.05,10.0,high,0.012501,328.71,0.00013049,3.4313
+massive,claude-haiku-4-5,deu_Latn,German,294.07,11.53,1.0,high,0.000294,7.73,1.153e-05,0.3033
+massive,claude-haiku-4-5,eng_Latn,English,213.76,7.44,1.0,high,0.000214,5.62,7.44e-06,0.1956
+massive,claude-haiku-4-5,rus_Cyrl,Russian,393.66,14.45,1.0,high,0.000394,10.35,1.445e-05,0.38
+massive,claude-haiku-4-5,vie_Latn,Vietnamese,507.36,18.92,1.0,high,0.000507,13.34,1.892e-05,0.4975
+massive,claude-haiku-4-5,zho_Hans,Chinese (Simplified),1248.99,13.04,1.0,high,0.001249,32.84,1.304e-05,0.3428
+massive,claude-new,deu_Latn,German,422.13,16.56,5.0,high,0.002111,55.5,8.278e-05,2.1767
+massive,claude-new,eng_Latn,English,296.84,10.33,5.0,high,0.001484,39.03,5.164e-05,1.3578
+massive,claude-new,rus_Cyrl,Russian,395.56,14.52,5.0,high,0.001978,52.01,7.26e-05,1.9089
+massive,claude-new,vie_Latn,Vietnamese,554.25,20.67,5.0,high,0.002771,72.87,0.00010334,2.7173
+massive,claude-new,zho_Hans,Chinese (Simplified),1250.07,13.05,5.0,high,0.00625,164.35,6.525e-05,1.7156
+massive,claude-old,deu_Latn,German,294.07,11.53,3.0,high,0.000882,23.2,3.46e-05,0.9098
+massive,claude-old,eng_Latn,English,213.76,7.44,3.0,high,0.000641,16.86,2.231e-05,0.5867
+massive,claude-old,rus_Cyrl,Russian,393.66,14.45,3.0,high,0.001181,31.05,4.335e-05,1.1399
+massive,claude-old,vie_Latn,Vietnamese,507.36,18.92,3.0,high,0.001522,40.02,5.676e-05,1.4925
+massive,claude-old,zho_Hans,Chinese (Simplified),1248.99,13.04,3.0,high,0.003747,98.53,3.911e-05,1.0285
+massive,claude-opus-4-8,deu_Latn,German,422.13,16.56,,unknown,,,,
+massive,claude-opus-4-8,eng_Latn,English,296.84,10.33,,unknown,,,,
+massive,claude-opus-4-8,rus_Cyrl,Russian,395.56,14.52,,unknown,,,,
+massive,claude-opus-4-8,vie_Latn,Vietnamese,554.25,20.67,,unknown,,,,
+massive,claude-opus-4-8,zho_Hans,Chinese (Simplified),1250.07,13.05,,unknown,,,,
+massive,claude-sonnet-5,deu_Latn,German,422.13,16.56,3.0,high,0.001266,33.3,4.967e-05,1.306
+massive,claude-sonnet-5,eng_Latn,English,296.84,10.33,3.0,high,0.000891,23.42,3.098e-05,0.8147
+massive,claude-sonnet-5,rus_Cyrl,Russian,395.56,14.52,3.0,high,0.001187,31.2,4.356e-05,1.1454
+massive,claude-sonnet-5,vie_Latn,Vietnamese,554.25,20.67,3.0,high,0.001663,43.72,6.2e-05,1.6304
+massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1250.07,13.05,3.0,high,0.00375,98.61,3.915e-05,1.0294
+massive,gemini-3-1-pro,deu_Latn,German,226.77,8.89,2.0,high,0.000454,11.93,1.779e-05,0.4677
+massive,gemini-3-1-pro,eng_Latn,English,211.77,7.37,2.0,high,0.000424,11.14,1.473e-05,0.3875
+massive,gemini-3-1-pro,rus_Cyrl,Russian,243.38,8.93,2.0,high,0.000487,12.8,1.787e-05,0.4698
+massive,gemini-3-1-pro,vie_Latn,Vietnamese,251.67,9.38,2.0,high,0.000503,13.24,1.877e-05,0.4935
+massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),690.51,7.21,2.0,high,0.001381,36.31,1.442e-05,0.3791
+massive,llama-4,deu_Latn,German,231.07,9.06,,unknown,,,,
+massive,llama-4,eng_Latn,English,211.96,7.37,,unknown,,,,
+massive,llama-4,rus_Cyrl,Russian,224.66,8.25,,unknown,,,,
+massive,llama-4,vie_Latn,Vietnamese,247.67,9.24,,unknown,,,,
+massive,llama-4,zho_Hans,Chinese (Simplified),713.41,7.45,,unknown,,,,
+massive,o200k_base,deu_Latn,German,223.64,8.77,5.0,medium,0.001118,29.4,4.386e-05,1.1532
+massive,o200k_base,eng_Latn,English,209.39,7.28,5.0,medium,0.001047,27.53,3.642e-05,0.9578
+massive,o200k_base,rus_Cyrl,Russian,253.5,9.3,5.0,medium,0.001268,33.33,4.652e-05,1.2234
+massive,o200k_base,vie_Latn,Vietnamese,273.1,10.18,5.0,medium,0.001366,35.91,5.092e-05,1.3389
+massive,o200k_base,zho_Hans,Chinese (Simplified),805.3,8.41,5.0,medium,0.004026,105.88,4.203e-05,1.1052
+massive,qwen-3-6,deu_Latn,German,227.61,8.93,,unknown,,,,
+massive,qwen-3-6,eng_Latn,English,212.26,7.38,,unknown,,,,
+massive,qwen-3-6,rus_Cyrl,Russian,242.11,8.89,,unknown,,,,
+massive,qwen-3-6,vie_Latn,Vietnamese,244.59,9.12,,unknown,,,,
+massive,qwen-3-6,zho_Hans,Chinese (Simplified),626.99,6.55,,unknown,,,,

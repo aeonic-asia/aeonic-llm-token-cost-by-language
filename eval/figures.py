@@ -103,17 +103,28 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 #
 #   tokenizer figures (orange,blue,green,yellow,red,violet,aqua):
 #     worst adjacent CVD ΔE 15.3 (>=8), normal-vision ΔE 20.8 (>=15)
-#   dollar figures (violet,green,yellow,violet,red):
-#     worst adjacent CVD ΔE 16.2 (>=8), normal-vision ΔE 30.3 (>=15)
+#     Both were 9.1 / 15.6 under the previous mapping — at the floor, not clear
+#     of it. Tritan separation on the red-yellow adjacency is 7.6, the one number
+#     that did not improve; tritanopia is vanishingly rare and that pair carries a
+#     legend, a direct label on the group extreme, and the committed CSVs as the
+#     table view, so hue is not doing the work alone.
 #
-# Both were 9.1 / 15.6 under the previous mapping — at the floor, not clear of
-# it. Tritan separation on the red-yellow adjacency in the tokenizer figures is
-# 7.6, the one number that did not improve; tritanopia is vanishingly rare and
-# that pair carries a legend, a direct label on the group extreme, and the
-# committed CSVs as the table view, so hue is not doing the work alone.
+#   dollar figures: the HUE figures above no longer describe this chart. It draws
+#     seven flat fills — three of them tint steps, not palette slots — in price
+#     order: #6c62d2 (Haiku 4.5) . #008300 (Gemini 3.1 Pro) . #eda100 (GPT-5.6) .
+#     #4a3aa7 (Sonnet 4.6) . #fe7a73 (Sonnet 5) . #e34948 (Opus 5) . #b51221
+#     (Fable 5). The older "(violet,green,yellow,violet,red)" sequence and its
+#     ΔE 16.2 / 30.3 were measured before the tint steps replaced hatch, so they
+#     describe a chart that is no longer rendered and are not restated here as if
+#     they were. What IS validated for this chart is below: each family's steps as
+#     an ordinal ramp, and the cross-family adjacencies the steps create as
+#     categorical pairs (worst #4a3aa7 -> #fe7a73, CVD ΔE 29.2). A full re-run of
+#     the adjacent-pair gate over this seven-fill order is outstanding.
+#
 # Re-check BOTH rendered orders against the gate above before changing any hue —
-# slot order alone is not the thing that ships. Only the seven headline hues need
-# checking; folded members reuse a validated hue and differ by texture.
+# slot order alone is not the thing that ships. Folded members reuse a validated
+# hue and differ by a LIGHTNESS STEP (see _TINT_BY_COUNTER); texture was the
+# previous mechanism and is gone.
 _SLOT_BY_FLAGSHIP: dict[str, int] = {
     "qwen-3-6": 1, "llama-4": 0, "gemini-3-1-pro": 5, "o200k_base": 3,
     "claude-new": 7, "claude-old": 6, "cl100k_base": 2,
@@ -245,6 +256,17 @@ def _grouped_bars(ax, groups: list[str], series: list[str],
     if not series:
         raise ValueError("no counters to plot — the caller filtered every series "
                          "out; check the corpus slice reached this figure")
+    # NaN must not reach the renderer: it annotates a literal "nan" on the chart,
+    # and because every NaN comparison is False the group-extreme search below
+    # returns the FIRST bar rather than the tallest — so the single value label
+    # the chart carries can point at the wrong bar even when the rest are valid.
+    nan_at = [(labels[k], groups[gi]) for k in range(len(series))
+              for gi in range(len(groups)) if not np.isfinite(values[k][gi])]
+    if nan_at:
+        raise ValueError(
+            f"non-finite value(s) for {nan_at} — refusing to render. A NaN prints "
+            "as 'nan' on the bar and misplaces the group-extreme label; fix the "
+            "upstream data instead.")
     x = np.arange(len(groups))
     slot = 0.84 / len(series)
     width = slot * 0.84          # leftover slot = the surface gap
@@ -399,10 +421,23 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
         if shared:
             names = " = ".join([_label(flag)] + [_label(m.id) for m in shared])
             note = f"{names} — one shared tokenizer, identical counts (verified here)"
-            # same tokens, different serving price — name the cheapest in the group
-            cheapest = {"claude-new": "Sonnet 5", "claude-old": "Haiku 4.5"}.get(flag)
-            if cheapest:
-                note += f"; prices differ ({cheapest} cheapest)"
+            # Same tokens, different serving price: name the cheapest member from
+            # PRICING and from the models actually in this equality chain. This was
+            # a hardcoded {"claude-new": "Sonnet 5", ...} keyed on the flagship id
+            # alone — so it printed "prices differ (Sonnet 5 cheapest)" even when
+            # Sonnet 5 had no bar and no measurement in the corpus, and it could not
+            # track a price change (Sonnet 5's intro price reverts 2026-09-01). Same
+            # defect, and same fix, as _same_tokens_diff_price above.
+            priced = [(config.PRICING[c].input_usd_per_mtok, c)
+                      for c in [flag] + [m.id for m in shared]
+                      if config.PRICING.get(c)
+                      and config.PRICING[c].input_usd_per_mtok is not None]
+            if len(priced) > 1:
+                lo = min(priced)[0]
+                if sum(1 for p, _ in priced if p == lo) == 1:
+                    note += f"; prices differ ({_label(min(priced)[1])} cheapest)"
+                else:
+                    note += "; prices differ"
             lines.append(note)
         for m in superseded:
             div = _max_rel_divergence(agg, corpus_id, m.id, flag)
@@ -455,18 +490,43 @@ def _save(fig, stem: str) -> None:
 def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
                     corpus_id: str, corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(premium.counter_id)]
+    if not counters:
+        raise ValueError(
+            "premium_heatmap: no headline counters present for corpus "
+            f"'{corpus_id}'. Nothing to draw — check that the run measured at "
+            "least one headline counter, or that _headline_order is not filtering "
+            "everything out.")
     langs = CONTRAST
     mat = np.array([[premium[(premium.counter_id == c) & (premium.lang == l)]
                      ["premium_aggregate"].iloc[0] for c in counters] for l in langs])
+    if np.isnan(mat).any():
+        bad = [(config.LANGUAGES[langs[i]], counters[j])
+               for i, j in zip(*np.where(np.isnan(mat)))]
+        raise ValueError(
+            f"premium_heatmap: NaN premium for {bad}. Drawing these prints a "
+            "literal 'nan×' in the cell and, because every NaN comparison is "
+            "False, silently selects the wrong colour scale for the whole chart. "
+            "Fix the data rather than rendering it.")
 
     fig, ax = plt.subplots(figsize=(1.6 + 1.3 * len(counters), 0.7 + 0.6 * len(langs)))
     # Parity (1.0×) is the meaningful midpoint, not the floor. A sequential scale
     # clamped at vmin=1.0 painted every sub-parity cell the same as parity — which
     # flattened exactly the cells that carry the finding (Qwen ZH 0.89–0.96×,
-    # Gemini ZH 0.98× on MASSIVE). A diverging scale centred on parity makes
-    # "cheaper than English" visible as its own direction.
+    # Gemini ZH 0.98× on MASSIVE).
+    #
+    # The diverging scale is SYMMETRIC IN LOG about parity, not linear. A linear
+    # TwoSlopeNorm splits the colormap evenly by ramp, not by data span: with a
+    # real slice (min ~0.89, max ~2.6) it packed 0.11 of range into half the ramp
+    # and spread 1.6 into the other, ~14x more colour per unit below parity — so a
+    # 0.89x saving rendered as visually extreme as a 2.6x penalty. Premium is a
+    # ratio, so the honest mapping is multiplicative: 2x dearer and 2x cheaper sit
+    # equally far from parity, in opposite directions.
     if mat.min() < 1.0 < mat.max():
-        norm = mcolors.TwoSlopeNorm(vmin=mat.min(), vcenter=1.0, vmax=mat.max())
+        span = max(abs(np.log(mat.min())), abs(np.log(mat.max())))
+        norm = mcolors.FuncNorm(
+            (lambda v: 0.5 + np.log(np.clip(v, 1e-9, None)) / (2 * span),
+             lambda t: np.exp((np.asarray(t) - 0.5) * 2 * span)),
+            vmin=float(np.exp(-span)), vmax=float(np.exp(span)))
         cmap, mid = "RdBu_r", None
     else:                       # degenerate slice: no sub-parity cell to show
         norm, cmap, mid = None, "OrRd", 1.0
@@ -549,7 +609,8 @@ def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
 _SENTENCE_UNIT = {"flores": "sentence", "massive": "message"}
 
 
-def _cost_per_sentence_legend_lines(corpus_id: str, counters: list[str]) -> list[str]:
+def _cost_per_sentence_legend_lines(cost: pd.DataFrame, corpus_id: str,
+                                    counters: list[str]) -> list[str]:
     unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
     return [
         f"USD to serve 1,000 {unit}s — parallel corpus, so the SAME content "
@@ -559,6 +620,10 @@ def _cost_per_sentence_legend_lines(corpus_id: str, counters: list[str]) -> list
         f"few characters, so per-character overstates its cost; per {unit} it "
         f"ranks far lower.",
         *_same_tokens_diff_price(counters),
+        # Both dollar figures drop the same measured-but-unpriced counters, but
+        # only the per-character one said so. Qwen 3.6 — the mildest Vietnamese
+        # tax in the matrix — silently vanished from this chart with no note.
+        *_unpriced_line(cost, counters),
     ]
 
 
@@ -578,7 +643,7 @@ def dollar_cost_per_sentence_bars(cost: pd.DataFrame, corpus_id: str,
                  f"(price × tokens per {unit}; lower = cheaper)",
                  fontsize=11.5, color=_INK, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
-    _caption(fig, _cost_per_sentence_legend_lines(corpus_id, counters), ax)
+    _caption(fig, _cost_per_sentence_legend_lines(cost, corpus_id, counters), ax)
     _save(fig, stem)
 
 

@@ -5,11 +5,20 @@
 # dependency in the upstream requirements.txt is not on this path at all —
 # `make reproduce` is fully reproducible from these pins alone.
 #
-# The gated counters bring their own deps — kept out of the default install to
-# stay lean, but PINNED here (not vague hints) so the full matrix is exactly
-# reproducible. google-genai's version is load-bearing: its LocalTokenizer
-# model->tokenizer map (the gemma3-vs-gemma4 split) is what the Gemini finding
-# rests on. Enable a counter by installing its line:
+# Reproducibility scope, stated honestly: these four are pinned exactly, but
+# their TRANSITIVE dependencies are not pinned and not hashed. Pillow governs
+# matplotlib's PNG encoding, so the byte-identical-figures property that
+# figures.py works to secure (svg.hashsalt, stripped <dc:date>) is not pinned
+# end-to-end — a clean `make setup` months from now can produce differing PNG
+# bytes. run_manifest.json records the versions actually used for each pass.
+#
+# The optional counters bring their own deps. They are pinned here as text but
+# NOT installed by `pip install -r` (they sit in this comment block deliberately,
+# to keep the default install lean) — so `make setup` alone cannot run the full
+# matrix; install the line for each counter you want. google-genai's version is
+# load-bearing for the Gemini column: the counter resolves its model id through
+# the SDK's own model->tokenizer map, which is a client-side table that drifts
+# from the live API. Enable a counter by installing its line:
 #   Anthropic count_tokens  ->  pip install 'anthropic==0.117.0'                   (needs ANTHROPIC_API_KEY)
 #   Gemini LocalTokenizer   ->  pip install 'google-genai[local-tokenizer]==2.12.1' (offline; no key)
 #   open-weight (Llama 4, Qwen 3.6) -> pip install 'transformers==5.14.1' 'sentencepiece==0.2.2'

@@ -2,7 +2,8 @@
 #
 #   make setup       create the eval venv and install pinned deps
 #   make reproduce   run counters -> analysis -> figures (offline)
-#   make test        reproduce the paper's cl100k oracle (correctness gate)
+#   make test        correctness gates: the paper's cl100k oracle + the
+#                    carry-forward invariant (committed rows are never lost)
 #   make clean       remove generated results (keeps the committed dataset in git)
 #
 # Offline: the tiktoken BPE ranks are committed under eval/tiktoken_cache/, so
@@ -26,7 +27,7 @@ check-venv:
 
 # CORPORA / COUNTERS (optional): comma-separated subsets to (re)measure, e.g.
 #   make reproduce CORPORA=massive
-#   make reproduce COUNTERS=gemini-3-pro         # add one counter, keep the rest
+#   make reproduce COUNTERS=gemini-3-1-pro       # add one counter, keep the rest
 # Cells outside the selected (corpus × counter) grid are carried forward verbatim
 # from the committed dataset. Empty (default) = full rebuild of everything.
 CORPORA ?=
@@ -36,11 +37,19 @@ reproduce: check-venv
 	$(PY) -m eval.analyze
 	$(PY) -m eval.figures
 
+# Guard the DATA precondition, not just the venv: `make clean` removes exactly
+# the two CSVs figures reads, so `make clean && make figures` — both documented
+# targets — used to die with a bare FileNotFoundError.
 figures: check-venv
+	@test -f eval/results/premium_by_language.csv -a -f eval/results/cost_by_language.csv \
+	  || { echo "analysis outputs missing (removed by 'make clean'?) — run 'make reproduce' first"; exit 1; }
 	$(PY) -m eval.figures
 
+# Two gates: the oracle checks the measurement core against the paper; the
+# carry-forward suite checks the plumbing that decides which measurements survive
+# a pass. The second is the one that has actually broken.
 test: check-venv
-	$(PY) -m unittest eval.tests.test_oracle -v
+	$(PY) -m unittest discover -s eval/tests -t . -v
 
 # Removes every GENERATED analysis artifact (keeps raw_counts/aggregate_counts —
 # the committed measured dataset — in git). Lists each generated file so a new
@@ -48,4 +57,5 @@ test: check-venv
 clean:
 	rm -rf eval/results/figures
 	rm -f eval/results/summary.json eval/results/premium_by_language.csv \
-	      eval/results/cost_by_language.csv eval/results/within_vendor_inflation.csv
+	      eval/results/cost_by_language.csv eval/results/within_vendor_inflation.csv \
+	      eval/results/run_manifest.json

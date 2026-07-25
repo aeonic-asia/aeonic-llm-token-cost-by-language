@@ -17,18 +17,16 @@
     "deu_Latn": "German"
   },
   "baseline_language": "eng_Latn",
-  "counters_ran": [
-    "claude-new",
-    "claude-opus-4-8"
-  ],
+  "counters_ran": [],
   "counters_carried_forward": [
     "cl100k_base",
     "claude-fable-5",
     "claude-haiku-4-5",
+    "claude-new",
     "claude-old",
+    "claude-opus-4-8",
     "claude-sonnet-5",
     "gemini-3-1-pro",
-    "gemini-3-pro",
     "llama-4",
     "o200k_base",
     "qwen-3-6"
@@ -43,7 +41,6 @@
     "claude-opus-4-8": 6,
     "claude-sonnet-5": 6,
     "gemini-3-1-pro": 0,
-    "gemini-3-pro": 0,
     "llama-4": 0,
     "o200k_base": 0,
     "qwen-3-6": 0
@@ -53,5 +50,19 @@
     "pandas": "3.0.3"
   },
   "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); open-weight via HF AutoTokenizer — Llama 4 (gated, needs HF_TOKEN) and Qwen 3.6 (ungated Apache-2.0, no token). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:api_per_sentence_subsample] of the FLORES+ dev split / MASSIVE), not a random sample — so its percentiles describe that fixed slice; offline counters do the full per-sentence sweep.",
-  "api_per_sentence_subsample": 200
+  "api_per_sentence_subsample": 200,
+  "measured_on_by_counter": {
+    "cl100k_base": "unrecorded",
+    "claude-fable-5": "unrecorded",
+    "claude-haiku-4-5": "unrecorded",
+    "claude-new": "unrecorded",
+    "claude-old": "unrecorded",
+    "claude-opus-4-8": "unrecorded",
+    "claude-sonnet-5": "unrecorded",
+    "gemini-3-1-pro": "unrecorded",
+    "llama-4": "unrecorded",
+    "o200k_base": "unrecorded",
+    "qwen-3-6": "unrecorded"
+  },
+  "migration_2026_07_25": "No tokens were re-measured in this pass. Two deterministic transforms were applied to the committed dataset: (a) the retired gemini-3-pro counter was purged (its model id was shut down 2026-03-09 and its tokenizer's text vocabulary is identical to gemma4's); (b) total_chars had the n-1 synthetic ' '.join spaces removed, verified row-by-row (120/120) against a direct sum of per-sentence NFC character counts. Token counts are byte-identical to the prior dataset. A credentialed full `make reproduce` should confirm."
 }

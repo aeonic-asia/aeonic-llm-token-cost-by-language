@@ -119,16 +119,41 @@ class AnthropicCounter(TokenCounter):
         return resp.input_tokens
 
     def envelope_tokens(self) -> int:
-        """Measured turn/role frame `count_tokens` wraps around the content.
+        """Turn/role frame `count_tokens` wraps around the content.
 
         `count_tokens` counts the fully-rendered prompt, so every call carries a
-        fixed frame on top of the content tokens. Measure it directly with a
-        single-token probe (never estimated): count(probe) minus the probe's
-        known content-token count. A lone ASCII char is exactly one token, so
-        this isolates the frame (6 for the newer Claude tokenizer, 7 for the
-        older). Deterministic — a fixed probe, so re-runs are byte-identical.
+        fixed frame on top of the content tokens. `count(probe)` is measured; the
+        frame is then `count(probe) - ENVELOPE_PROBE_TOKENS`.
+
+        Be precise about what is measured and what is assumed. The subtrahend
+        rests on one assumption — that a lone ASCII character is exactly one
+        token — which cannot be verified directly against a closed tokenizer that
+        publishes no vocabulary. It is not arbitrary (byte-level BPE has no merge
+        shorter than one character), but it is an assumption, so it is *tested*
+        rather than trusted: several independent single-character probes must all
+        yield the same frame. If they disagree, at least one probe is not
+        one token and the assumption is unsafe here — so we fail loudly rather
+        than silently shifting every per-sentence count by a constant.
+
+        Deterministic: fixed probes, so re-runs are byte-identical.
         """
-        return self.count(config.ENVELOPE_PROBE) - config.ENVELOPE_PROBE_TOKENS
+        probes = (config.ENVELOPE_PROBE, *config.ENVELOPE_PROBE_ALTS)
+        frames = {p: self.count(p) - config.ENVELOPE_PROBE_TOKENS for p in probes}
+        distinct = set(frames.values())
+        if len(distinct) != 1:
+            raise RuntimeError(
+                f"{self.spec.id}: envelope probes disagree ({frames}) — the "
+                "'one ASCII char == one token' assumption behind the frame "
+                "measurement does not hold for this endpoint, so per-sentence "
+                "counts cannot be corrected safely. Investigate before publishing.")
+        envelope = distinct.pop()
+        if not 0 <= envelope <= config.ENVELOPE_MAX_PLAUSIBLE:
+            raise RuntimeError(
+                f"{self.spec.id}: measured envelope {envelope} is outside the "
+                f"plausible range 0..{config.ENVELOPE_MAX_PLAUSIBLE}. A wrong "
+                "frame shifts the entire per-sentence premium distribution, so "
+                "this aborts rather than recording it as 'measured'.")
+        return envelope
 
 
 class HFCounter(TokenCounter):
@@ -166,7 +191,10 @@ class HFCounter(TokenCounter):
                 self._tok = AutoTokenizer.from_pretrained(self.spec.spec)
             except Exception as exc:  # concise, truthful reason for the manifest
                 msg = str(exc)
-                if any(k in msg for k in ("gated repo", "restricted", "403")):
+                # 401 included: an ungated repo that HuggingFace later gates
+                # answers 401, not 403, and would otherwise land a raw traceback
+                # in the manifest instead of the actionable instruction.
+                if any(k in msg for k in ("gated repo", "restricted", "403", "401")):
                     raise RuntimeError(
                         f"gated repo {self.spec.spec}: token lacks access — "
                         "accept the model's license on its HF page, then re-run"
@@ -181,10 +209,19 @@ class HFCounter(TokenCounter):
 class GeminiLocalCounter(TokenCounter):
     """Gemini token counts via the google-genai offline `LocalTokenizer`.
 
-    No API key: the SDK downloads the Gemma sentencepiece model once (~30MB),
-    then counts fully offline. The Gemini 3 family shares the "gemma4" tokenizer
-    with the open Gemma models. `count_tokens(text).total_tokens` is the count;
-    only text is measured (the SDK ignores non-text parts anyway).
+    No API key: the SDK downloads the Gemma tokenizer once (~30MB), then counts
+    fully offline. `count_tokens(text).total_tokens` is the count; only text is
+    measured (the SDK ignores non-text parts anyway).
+
+    Which tokenizer a model resolves to is the SDK's own lookup table, and it
+    splits by minor version, not by family: Gemini 2.0/2.5/3.0 map to "gemma3"
+    (a hash-pinned SentencePiece download), while 3.1/3.5/4 map to "gemma4" (a
+    HuggingFace tokenizer). For counting natural-language text the distinction is
+    immaterial — the two ship the same 262,144-entry text vocabulary with
+    identical token ids, differing only in chat-control tokens, and Google's
+    Gemma 3 and Gemma 4 technical reports both state the tokenizer is unchanged
+    from Gemini 2.0. Note also that the map is a client-side table that drifts
+    from the live API: it still lists model ids Google has since retired.
     """
 
     def __init__(self, spec: config.Counter):
@@ -216,7 +253,17 @@ def build_counter(spec: config.Counter) -> tuple[TokenCounter | None, str]:
     its prerequisites are actually present. Nothing is faked in its place.
     """
     if spec.kind == "tiktoken":
-        return TiktokenCounter(spec), ""
+        # Guarded like every other kind. Construction resolves the encoding and
+        # can raise (typo'd spec, an encoding absent from the committed cache, a
+        # corrupt blob, a cache miss with no network) — and this call sits outside
+        # the driver's per-counter try, so an unguarded raise killed the entire
+        # pass: no manifest, no CSVs, no carry-forward.
+        try:
+            return TiktokenCounter(spec), ""
+        except Exception as exc:  # noqa: BLE001 — one bad counter must not kill the run
+            return None, (f"tiktoken encoding '{spec.spec}' unavailable "
+                          f"({type(exc).__name__}) — check the name and that it is "
+                          "present in eval/tiktoken_cache/")
     if spec.kind == "anthropic":
         if not AnthropicCounter.available():
             return None, "ANTHROPIC_API_KEY unset — run later with a key"
