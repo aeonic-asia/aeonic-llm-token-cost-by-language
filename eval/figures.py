@@ -30,11 +30,156 @@ matplotlib.use("Agg")
 # <dc:date> is stripped per-save below. Together these keep `make reproduce` from
 # churning the committed figures when only the timestamp/ids would differ.
 matplotlib.rcParams["svg.hashsalt"] = "aeonic-token-cost-eval"
+# Render "$5" literally. Matplotlib parses $...$ as LaTeX math, so a caption
+# listing two prices ("Opus 5 $5 / Sonnet 5 $3") silently ate both dollar signs
+# and italicised everything between them. Nothing here wants math, so turn the
+# parser off globally rather than escaping each string and hoping the next
+# caption remembers to.
+matplotlib.rcParams["text.parse_math"] = False
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 from . import config
+
+# ── design tokens ────────────────────────────────────────────────────────────
+# Categorical hues assigned in FIXED slot order and never cycled, so a counter
+# keeps its colour as the series set changes. Validated as a set for the light
+# chart surface: all inside the lightness band, all above the chroma floor,
+# worst adjacent CVD ΔE 9.1 (>=8) and worst adjacent normal-vision ΔE 19.6
+# (>=15). Three slots (aqua/yellow/magenta) fall below 3:1 against the surface,
+# which obliges "relief" — the committed cost_by_language.csv / premium_by_language.csv
+# are that table view, and the extreme in each group is directly labelled.
+_SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+           "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
+_SURFACE = "#fcfcfb"     # chart surface
+_INK = "#0b0b0b"         # primary ink (titles)
+_INK_2 = "#52514e"       # secondary ink (legend, axis titles)
+_INK_MUTED = "#898781"   # muted ink (tick labels, captions)
+_GRID = "#e1e0d9"        # hairline gridline, one step off the surface
+_BASELINE = "#c3c2b7"    # baseline / axis rule
+
+
+# Colour follows the COUNTER, not its position in whichever chart is being
+# drawn. Assigning by list index repainted models between figures — Claude Opus 5
+# came out green in the dollar chart and magenta in the cost-driver chart — so a
+# reader who learned a colour in one figure was misled by the next.
+#
+# Slots are read off the tokenizer figures' canonical order (ascending Vietnamese
+# premium), which fixes the four counters that appear in BOTH figure families
+# (Gemini, GPT-5.6, and the two Claude generations) — those keep one identity
+# everywhere. The three that appear ONLY in the dollar figures then reuse the
+# slots of three that appear only in the tokenizer figures; `_colors` asserts no
+# single chart ever draws one slot twice, so the reuse cannot silently collide.
+_SLOT_BY_COUNTER: dict[str, int] = {
+    # tokenizer figures, in canonical (ascending Vietnamese premium) order
+    "qwen-3-6": 0, "llama-4": 1, "gemini-3-1-pro": 2, "o200k_base": 3,
+    "claude-new": 4, "claude-old": 5, "cl100k_base": 6,
+    # Dollar-only counters reuse the slots of counters that never appear beside
+    # them (Qwen, Llama and cl100k are all unpriced, so they never reach a dollar
+    # figure). The specific assignment is not free: the dollar figures render in
+    # ascending-cost order, and the validator rejected the obvious mapping —
+    # Fable 5 on orange landed it next to Opus 5's magenta at normal-vision
+    # ΔE 12.9, under the 15 floor. Moving Fable 5 to violet and Haiku to orange
+    # clears every hard gate on the order these bars are actually drawn in.
+    # Re-run scripts/validate_palette.js on the RENDERED order before changing
+    # these — slot-order validation alone would not have caught it.
+    "claude-sonnet-5": 0, "claude-fable-5": 6, "claude-haiku-4-5": 1,
+    # superseded/duplicate proxies never reach a chart, but keep them mapped so
+    # a future promotion doesn't KeyError.
+    "gemini-3-pro": 2, "claude-opus-5": 4,
+}
+
+
+def _colors(counters: list[str]) -> list[str]:
+    """Stable hue per counter, and a guard that one chart never repeats a slot.
+
+    Never cycles past the palette: a 9th categorical hue is indistinguishable
+    under CVD, so fail loudly and let the caller fold the tail or facet instead.
+    """
+    missing = [c for c in counters if c not in _SLOT_BY_COUNTER]
+    if missing:
+        raise ValueError(f"no colour slot assigned for {missing} — add them to "
+                         "_SLOT_BY_COUNTER (see the reuse rule above)")
+    slots = [_SLOT_BY_COUNTER[c] for c in counters]
+    if len(set(slots)) != len(slots):
+        dupes = sorted({c for c, s in zip(counters, slots)
+                        if slots.count(s) > 1})
+        raise ValueError(
+            f"counters {dupes} share a colour slot in one chart — the slot-reuse "
+            "assumption no longer holds; give them distinct slots")
+    if max(slots) >= len(_SERIES):
+        raise ValueError(
+            f"slot {max(slots)} exceeds the {len(_SERIES)}-slot categorical "
+            "palette — fold the tail into 'Other' or facet into small multiples")
+    return [_SERIES[s] for s in slots]
+
+
+def _style_axes(ax, ylabel: str) -> None:
+    """Recessive chrome: the data is the only thing allowed to be loud.
+
+    Hairline horizontal grid behind the bars, no top/right/left frame, muted
+    tick text, and a single quiet baseline for the bars to grow from.
+    """
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(True, color=_GRID, linewidth=0.8, linestyle="-")
+    ax.xaxis.grid(False)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(_BASELINE)
+    ax.spines["bottom"].set_linewidth(0.8)
+    ax.tick_params(colors=_INK_MUTED, labelsize=9, length=0)
+    ax.set_ylabel(ylabel, fontsize=9, color=_INK_2)
+
+
+def _legend_above(ax, ncol: int) -> None:
+    """Legend outside the plot, above it — never floating over the bars.
+
+    Identity is never colour-alone, so the legend is always present for >=2
+    series; its text wears secondary ink while the swatch beside it carries the
+    series colour.
+    """
+    leg = ax.legend(loc="lower left", bbox_to_anchor=(0, 1.01), ncol=ncol,
+                    frameon=False, fontsize=8.5, labelcolor=_INK_2,
+                    handlelength=0.85, handleheight=0.85, borderpad=0,
+                    columnspacing=1.5, handletextpad=0.5)
+    return leg
+
+
+def _grouped_bars(ax, groups: list[str], series: list[str],
+                  values, labels: list[str]):
+    """Grouped bars with air between them, and a value on the group's extreme.
+
+    Bar thickness is capped below the slot width so the leftover reads as the
+    separator — white doing the work, rather than a stroke drawn around each
+    bar. Only the tallest bar per group is labelled: a number on all 35 marks
+    is chaos and goes unread, while the extreme is the one the reader is
+    scanning for.
+    """
+    x = np.arange(len(groups))
+    slot = 0.84 / len(series)
+    width = slot * 0.84          # leftover slot = the surface gap
+    for k, (cid, color) in enumerate(zip(series, _colors(series))):
+        ax.bar(x + k * slot, values[k], width, label=labels[k],
+               color=color, linewidth=0)
+    for gi in range(len(groups)):
+        col = [values[k][gi] for k in range(len(series))]
+        top = max(range(len(col)), key=lambda k: col[k])
+        ax.annotate(_fmt(col[top]), (x[gi] + top * slot, col[top]),
+                    textcoords="offset points", xytext=(0, 3),
+                    ha="center", va="bottom", fontsize=7.5, color=_INK_2)
+    ax.set_xticks(x + slot * (len(series) - 1) / 2)
+    ax.set_xticklabels([config.LANGUAGES[l] for l in groups], fontsize=9)
+    ax.set_xlim(-0.5 * slot - 0.12, len(groups) - 1 + slot * len(series) + 0.02)
+
+
+def _fmt(v: float) -> str:
+    """Compact tick/label text: no trailing noise on round numbers."""
+    if v >= 100:
+        return f"{v:,.0f}"
+    if v >= 10:
+        return f"{v:,.1f}"
+    return f"{v:,.2f}"
 
 FIG_DIR = config.RESULTS_DIR / "figures"
 CONTRAST = [l for l in config.LANGUAGES if l != config.BASELINE_LANG]
@@ -126,13 +271,21 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
     return lines
 
 
-def _caption(fig, lines: list[str]) -> None:
+def _caption(fig, lines: list[str], ax=None) -> None:
+    """Footnotes under the plot, anchored to the axes rather than the figure.
+
+    Anchoring to the axes (in offset points below its bottom-left) lets the
+    tight bounding box grow to exactly fit the text. The previous version
+    reserved a fixed fraction of figure height, which — combined with the tight
+    bbox at save time — left a large empty band under every chart.
+    """
     if not lines:
         return
-    fig.text(0.01, 0.005, "\n".join(lines), ha="left", va="bottom",
-             fontsize=7.5, color="#555", linespacing=1.4)
-    # reserve room so the caption doesn't collide with the x-axis labels
-    fig.subplots_adjust(bottom=0.30 + 0.03 * len(lines))
+    target = ax if ax is not None else fig.axes[0]
+    target.annotate("\n".join(lines), xy=(0, 0), xycoords="axes fraction",
+                    xytext=(0, -46), textcoords="offset points",
+                    ha="left", va="top", fontsize=7.5, color=_INK_MUTED,
+                    linespacing=1.6, annotation_clip=False)
 
 
 def _save(fig, stem: str) -> None:
@@ -163,7 +316,7 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
                     color="black" if mat[i, j] < mat.max() * 0.75 else "white", fontsize=9)
     ax.set_title(f"Token premium vs. English ({corpus_name})", fontsize=11)
     fig.colorbar(im, ax=ax, label="× English tokens")
-    _caption(fig, _legend_lines(agg, corpus_id, counters))
+    _caption(fig, _legend_lines(agg, corpus_id, counters), ax)
     _save(fig, stem)
 
 
@@ -201,21 +354,18 @@ def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
                      order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
     langs = list(config.LANGUAGES)
-    x = np.arange(len(langs))
-    width = 0.8 / len(counters)
+    vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
+             ["cost_usd_per_1k_chars"].iloc[0] * 1000 for l in langs]  # USD / 1M chars
+            for c in counters]
 
-    fig, ax = plt.subplots(figsize=(11, 5.5))
-    for k, c in enumerate(counters):
-        vals = [cost[(cost.counter_id == c) & (cost.lang == l)]
-                ["cost_usd_per_1k_chars"].iloc[0] * 1000 for l in langs]  # USD / 1M chars
-        ax.bar(x + k * width, vals, width, label=_label(c))
-    ax.set_xticks(x + width * (len(counters) - 1) / 2)
-    ax.set_xticklabels([config.LANGUAGES[l] for l in langs], rotation=15, ha="right")
-    ax.set_ylabel("USD per 1,000,000 input characters")
+    fig, ax = plt.subplots(figsize=(11, 4.8))
+    _style_axes(ax, "USD per 1,000,000 input characters")
+    _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
     ax.set_title(f"Serving cost: USD per 1M input characters — {corpus_name} "
-                 f"(price × tokens; lower = cheaper)")
-    ax.legend(fontsize=8, ncol=3)
-    _caption(fig, _cost_legend_lines())
+                 f"(price × tokens; lower = cheaper)",
+                 fontsize=11.5, color=_INK, pad=30, loc="left")
+    _legend_above(ax, ncol=min(len(counters), 7))
+    _caption(fig, _cost_legend_lines(), ax)
     _save(fig, stem)
 
 
@@ -244,22 +394,19 @@ def dollar_cost_per_sentence_bars(cost: pd.DataFrame, corpus_id: str,
                                   corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
     langs = list(config.LANGUAGES)
-    x = np.arange(len(langs))
-    width = 0.8 / len(counters)
     unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
+    vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
+             ["cost_usd_per_sentence"].iloc[0] * 1000 for l in langs]  # USD / 1000 units
+            for c in counters]
 
-    fig, ax = plt.subplots(figsize=(11, 5.5))
-    for k, c in enumerate(counters):
-        vals = [cost[(cost.counter_id == c) & (cost.lang == l)]
-                ["cost_usd_per_sentence"].iloc[0] * 1000 for l in langs]  # USD / 1000 units
-        ax.bar(x + k * width, vals, width, label=_label(c))
-    ax.set_xticks(x + width * (len(counters) - 1) / 2)
-    ax.set_xticklabels([config.LANGUAGES[l] for l in langs], rotation=15, ha="right")
-    ax.set_ylabel(f"USD per 1,000 {unit}s")
+    fig, ax = plt.subplots(figsize=(11, 4.8))
+    _style_axes(ax, f"USD per 1,000 {unit}s")
+    _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
     ax.set_title(f"Serving cost: USD per 1,000 {unit}s — {corpus_name} "
-                 f"(price × tokens per {unit}; lower = cheaper)")
-    ax.legend(fontsize=8, ncol=3)
-    _caption(fig, _cost_per_sentence_legend_lines(corpus_id))
+                 f"(price × tokens per {unit}; lower = cheaper)",
+                 fontsize=11.5, color=_INK, pad=30, loc="left")
+    _legend_above(ax, ncol=min(len(counters), 7))
+    _caption(fig, _cost_per_sentence_legend_lines(corpus_id), ax)
     _save(fig, stem)
 
 
@@ -267,20 +414,17 @@ def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
                      corpus_id: str, corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
     langs = list(config.LANGUAGES)
-    x = np.arange(len(langs))
-    width = 0.8 / len(counters)
+    vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
+             ["tokens_per_1k_chars"].iloc[0] for l in langs] for c in counters]
 
-    fig, ax = plt.subplots(figsize=(9, 5))
-    for k, c in enumerate(counters):
-        vals = [cost[(cost.counter_id == c) & (cost.lang == l)]
-                ["tokens_per_1k_chars"].iloc[0] for l in langs]
-        ax.bar(x + k * width, vals, width, label=_label(c))
-    ax.set_xticks(x + width * (len(counters) - 1) / 2)
-    ax.set_xticklabels([config.LANGUAGES[l] for l in langs], rotation=15, ha="right")
-    ax.set_ylabel("Tokens per 1,000 NFC characters")
-    ax.set_title(f"Cost driver: tokens per 1,000 characters — {corpus_name} (lower = cheaper)")
-    ax.legend(fontsize=9, ncol=2)
-    _caption(fig, _legend_lines(agg, corpus_id, counters))
+    fig, ax = plt.subplots(figsize=(11, 4.8))
+    _style_axes(ax, "Tokens per 1,000 NFC characters")
+    _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
+    ax.set_title(f"Cost driver: tokens per 1,000 characters — {corpus_name} "
+                 f"(lower = cheaper)",
+                 fontsize=11.5, color=_INK, pad=30, loc="left")
+    _legend_above(ax, ncol=min(len(counters), 7))
+    _caption(fig, _legend_lines(agg, corpus_id, counters), ax)
     _save(fig, stem)
 
 
