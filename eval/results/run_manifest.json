@@ -9,6 +9,16 @@
     "massive": 2033
   },
   "corpora_carried_forward": [],
+  "corpora_fingerprint": {
+    "flores": {
+      "n_sentences": 2009,
+      "sha256": "c8e6fc85405140c95fdb38d2e4e52b8e0d76e7bfda71e3c18bfbdec4deb6ce62"
+    },
+    "massive": {
+      "n_sentences": 2033,
+      "sha256": "9022cf2a7d24000e0246d79b82af1b89fc3fc00e44994710ca6c8be651cd445d"
+    }
+  },
   "languages": {
     "eng_Latn": "English",
     "vie_Latn": "Vietnamese",
@@ -17,21 +27,47 @@
     "deu_Latn": "German"
   },
   "baseline_language": "eng_Latn",
-  "counters_ran": [],
-  "counters_carried_forward": [
+  "counters_ran": [
+    "o200k_base",
     "cl100k_base",
-    "claude-fable-5",
-    "claude-haiku-4-5",
     "claude-new",
-    "claude-old",
-    "claude-opus-4-8",
     "claude-sonnet-5",
+    "claude-fable-5",
+    "claude-opus-4-8",
     "gemini-3-1-pro",
     "llama-4",
-    "o200k_base",
     "qwen-3-6"
   ],
-  "counters_skipped": [],
+  "counters_carried_forward": [
+    "claude-haiku-4-5",
+    "claude-old"
+  ],
+  "counters_skipped": [
+    {
+      "counter": "claude-old",
+      "status": "needs_key",
+      "reason": "errored at run: RuntimeError (see console output for detail)"
+    },
+    {
+      "counter": "claude-haiku-4-5",
+      "status": "needs_key",
+      "reason": "errored at run: RuntimeError (see console output for detail)"
+    }
+  ],
+  "measured_on_by_counter": {
+    "cl100k_base": "2026-07-26",
+    "claude-fable-5": "2026-07-26",
+    "claude-haiku-4-5": "unrecorded",
+    "claude-new": "2026-07-26",
+    "claude-old": "unrecorded",
+    "claude-opus-4-8": "2026-07-26",
+    "claude-sonnet-5": "2026-07-26",
+    "gemini-3-1-pro": "2026-07-26",
+    "llama-4": "2026-07-26",
+    "o200k_base": "2026-07-26",
+    "qwen-3-6": "2026-07-26"
+  },
+  "counters_without_per_sentence_rows": [],
   "envelope_tokens_by_counter": {
     "cl100k_base": 0,
     "claude-fable-5": 6,
@@ -47,22 +83,14 @@
   },
   "versions": {
     "tiktoken": "0.13.0",
-    "pandas": "3.0.3"
+    "pandas": "3.0.3",
+    "numpy": "2.5.1",
+    "matplotlib": "3.11.1",
+    "anthropic": "0.117.0",
+    "google-genai": "2.12.1",
+    "transformers": "5.14.1",
+    "sentencepiece": "0.2.2"
   },
   "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); open-weight via HF AutoTokenizer — Llama 4 (gated, needs HF_TOKEN) and Qwen 3.6 (ungated Apache-2.0, no token). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:api_per_sentence_subsample] of the FLORES+ dev split / MASSIVE), not a random sample — so its percentiles describe that fixed slice; offline counters do the full per-sentence sweep.",
-  "api_per_sentence_subsample": 200,
-  "measured_on_by_counter": {
-    "cl100k_base": "unrecorded",
-    "claude-fable-5": "unrecorded",
-    "claude-haiku-4-5": "unrecorded",
-    "claude-new": "unrecorded",
-    "claude-old": "unrecorded",
-    "claude-opus-4-8": "unrecorded",
-    "claude-sonnet-5": "unrecorded",
-    "gemini-3-1-pro": "unrecorded",
-    "llama-4": "unrecorded",
-    "o200k_base": "unrecorded",
-    "qwen-3-6": "unrecorded"
-  },
-  "migration_2026_07_25": "No tokens were re-measured in this pass. Two deterministic transforms were applied to the committed dataset: (a) the retired gemini-3-pro counter was purged (its model id was shut down 2026-03-09 and its tokenizer's text vocabulary is identical to gemma4's); (b) total_chars had the n-1 synthetic ' '.join spaces removed, verified row-by-row (120/120) against a direct sum of per-sentence NFC character counts. Token counts are byte-identical to the prior dataset. A credentialed full `make reproduce` should confirm."
+  "api_per_sentence_subsample": 200
 }
