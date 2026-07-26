@@ -105,11 +105,28 @@ API_KINDS = {"anthropic"}
 # as "consistent bare-text bases".
 ENVELOPE_PROBE = "x"
 ENVELOPE_PROBE_TOKENS = 1
-# Cross-checks for the assumption above. Each must be a single ASCII character
-# that no BPE can split, drawn from different classes (letter / letter / digit)
-# so a class-specific surprise shows up as a disagreement rather than a silent
-# constant shift in every per-sentence count.
-ENVELOPE_PROBE_ALTS = ("q", "7")
+# Cross-checks for the assumption above, deliberately spanning character classes
+# (lowercase / uppercase / digit / punctuation / non-ASCII). A single character
+# is never *fewer* than one token in a byte-level BPE, so a probe that is worth
+# two tokens can only push its apparent frame UP, never down. That asymmetry is
+# what makes the floor (see measure.envelope_tokens) the right estimator and an
+# outlier a finding rather than an abort.
+#
+# Both classes of surprise are represented on purpose, because both are real and
+# were measured on 2026-07-26:
+#   older tokenizer (claude-sonnet-4-6, claude-haiku-4-5): every DIGIT costs two
+#     tokens; 'x' 'q' 'a' 'Z' '#' 'é' cost one. Frame 7.
+#   newer tokenizer (claude-opus-5 and the counters folded into it): digits cost
+#     one, but uppercase 'Z' costs two. Frame 6.
+# An earlier three-probe set of ('x', 'q', '7') required unanimity, so the older
+# tokenizer aborted on the digit — while the newer one passed only because the
+# set happened to exclude 'Z'. Keeping a known outlier for each generation in the
+# set means the outlier path stays exercised instead of latent.
+ENVELOPE_PROBE_ALTS = ("q", "a", "Z", "#", "é", "7", "0")
+# How many probes must agree on the floor before it is trusted as the frame. The
+# floor being supported by a single probe would mean nearly every character is
+# multi-token on that endpoint, which is not a tokenizer this method can measure.
+ENVELOPE_MIN_AGREEING = 4
 # Sanity bound on the measured frame. Observed: 6 (newer Claude), 7 (older).
 # A value outside this range means the probe measured something other than a
 # turn/role frame — abort rather than record it as "measured".

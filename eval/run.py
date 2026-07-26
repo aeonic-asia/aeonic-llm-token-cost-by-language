@@ -234,6 +234,7 @@ def run() -> None:
     aggregate: list[dict] = []
     ran: list[str] = []
     envelope_by_counter: dict[str, int] = {}
+    probe_frames_by_counter: dict[str, dict[str, int]] = {}
 
     for spec, counter in built:
         ran.append(spec.id)
@@ -248,6 +249,15 @@ def run() -> None:
             # comparable to the offline counters. Measured once per counter.
             envelope = counter.envelope_tokens()
             envelope_by_counter[spec.id] = envelope
+            # Per-probe frames, not just the chosen one. The frame is the FLOOR
+            # across a diverse probe set, so any probe above it is a multi-token
+            # character on this endpoint — a measured fact about the tokenizer
+            # that would otherwise be computed and thrown away. Recording it is
+            # what lets a reader see which classes the endpoint splits (digits on
+            # the older Claude tokenizer, uppercase 'Z' on the newer) instead of
+            # taking the frame on trust.
+            if counter.envelope_probe_frames:
+                probe_frames_by_counter[spec.id] = dict(counter.envelope_probe_frames)
             for cid, corpus in corpora.items():
                 max_per_sentence = (config.API_PER_SENTENCE_SUBSAMPLE
                                     if is_api else n_by_corpus[cid])
@@ -295,6 +305,7 @@ def run() -> None:
             aggregate[:] = [r for r in aggregate if r["counter_id"] != spec.id]
             per_sentence[:] = [r for r in per_sentence if r["counter_id"] != spec.id]
             envelope_by_counter.pop(spec.id, None)
+            probe_frames_by_counter.pop(spec.id, None)
             ran.remove(spec.id)
             # Only the exception TYPE goes into the committed manifest. SDK error
             # strings routinely embed request URLs, response bodies and header
@@ -535,6 +546,14 @@ def run() -> None:
         # design". Recorded so summary.json can distinguish the two.
         "counters_without_per_sentence_rows": lost,
         "envelope_tokens_by_counter": envelope_by_counter,
+        # Per-probe evidence behind the frame above, for counters measured this
+        # pass. The frame is the floor across the probe set; a probe reported
+        # above it is a multi-token character on that endpoint. Only counters
+        # re-measured this pass appear — unlike the frame itself, this is not
+        # carried forward, because the committed CSVs record the frame per row
+        # and have never recorded the probes.
+        "envelope_probe_frames_by_counter": {
+            k: probe_frames_by_counter[k] for k in sorted(probe_frames_by_counter)},
         # Record every library that can move a number or a committed byte, not just
         # the two direct imports: matplotlib determines the figure bytes, and
         # anthropic / transformers / google-genai determine the counts themselves.

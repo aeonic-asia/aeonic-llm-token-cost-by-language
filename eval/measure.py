@@ -49,6 +49,12 @@ class TokenCounter(ABC):
     #: config.Counter this instance was built from (metadata, status, spec).
     spec: config.Counter
 
+    #: Per-probe frame measured by envelope_tokens(), for counters that probe.
+    #: Empty for bare-text counters, which have no frame to measure. Always
+    #: REPLACED with a fresh dict, never mutated in place — this class-level
+    #: default is shared by every instance that does not probe.
+    envelope_probe_frames: dict[str, int] = {}
+
     @abstractmethod
     def count(self, text: str) -> int:
         """Return the number of input tokens for `text` (after NFC)."""
@@ -137,27 +143,48 @@ class AnthropicCounter(TokenCounter):
         frame is then `count(probe) - ENVELOPE_PROBE_TOKENS`.
 
         Be precise about what is measured and what is assumed. The subtrahend
-        rests on one assumption — that a lone ASCII character is exactly one
-        token — which cannot be verified directly against a closed tokenizer that
+        rests on one assumption — that a lone character is exactly one token —
+        which cannot be verified directly against a closed tokenizer that
         publishes no vocabulary. It is not arbitrary (byte-level BPE has no merge
         shorter than one character), but it is an assumption, so it is *tested*
-        rather than trusted: several independent single-character probes must all
-        yield the same frame. If they disagree, at least one probe is not
-        one token and the assumption is unsafe here — so we fail loudly rather
-        than silently shifting every per-sentence count by a constant.
+        rather than trusted, across probes spanning several character classes.
+
+        The test is a floor, not unanimity, and the asymmetry is what justifies
+        that. A single character can never be worth *fewer* than one token, so a
+        probe worth two tokens reports a frame one too HIGH and can never report
+        one too low. The minimum across a diverse probe set is therefore the best
+        estimator of the frame, and a probe above it is a multi-token character —
+        a fact about that character, not evidence the frame is wrong. Requiring
+        unanimity instead treats those two cases identically and aborts on the
+        first character class the endpoint happens to tokenize differently, which
+        is exactly what a digit does on the older Claude tokenizer and uppercase
+        'Z' does on the newer one.
+
+        What still aborts is genuine ambiguity: too few probes agreeing on the
+        floor means most characters are multi-token on this endpoint, and there is
+        no longer a defensible one-token anchor to subtract from.
+
+        Outlier probes are recorded on the instance (`envelope_probe_frames`) so
+        the driver can commit them to the manifest — they are evidence about the
+        tokenizer, and discarding them would repeat the mistake of measuring
+        something and not saying so.
 
         Deterministic: fixed probes, so re-runs are byte-identical.
         """
         probes = (config.ENVELOPE_PROBE, *config.ENVELOPE_PROBE_ALTS)
         frames = {p: self.count(p) - config.ENVELOPE_PROBE_TOKENS for p in probes}
-        distinct = set(frames.values())
-        if len(distinct) != 1:
+        self.envelope_probe_frames = dict(frames)
+        floor = min(frames.values())
+        agreeing = sorted(p for p, f in frames.items() if f == floor)
+        if len(agreeing) < config.ENVELOPE_MIN_AGREEING:
             raise RuntimeError(
-                f"{self.spec.id}: envelope probes disagree ({frames}) — the "
-                "'one ASCII char == one token' assumption behind the frame "
-                "measurement does not hold for this endpoint, so per-sentence "
-                "counts cannot be corrected safely. Investigate before publishing.")
-        envelope = distinct.pop()
+                f"{self.spec.id}: only {len(agreeing)} of {len(frames)} envelope "
+                f"probes agree on the floor ({frames}), below the required "
+                f"{config.ENVELOPE_MIN_AGREEING}. That means most single "
+                "characters are multi-token on this endpoint, so there is no "
+                "one-token anchor to subtract and per-sentence counts cannot be "
+                "corrected safely. Investigate before publishing.")
+        envelope = floor
         if not 0 <= envelope <= config.ENVELOPE_MAX_PLAUSIBLE:
             raise RuntimeError(
                 f"{self.spec.id}: measured envelope {envelope} is outside the "
