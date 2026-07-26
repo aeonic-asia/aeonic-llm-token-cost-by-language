@@ -571,6 +571,40 @@ def run() -> None:
           f"carried counters: {carried_counters or 'none'}; skipped {len(skipped)}")
     print(f"  wrote {config.RESULTS_DIR}/raw_counts.csv, aggregate_counts.csv, run_manifest.json")
 
+    # Exhausted-counter guard. Sibling of the "aggregate rows but no per-sentence
+    # rows" refusal above, and the reason a credentialed pass can be trusted at all.
+    #
+    # `built` is every counter whose preconditions were satisfied: selected,
+    # constructible, credential present. A counter in `built` but not in `ran` was
+    # measurable and produced nothing anyway — its per-counter rollback fired,
+    # carry-forward restored its previous rows, and without this the pass would end
+    # indistinguishably from a clean one. That is the silent-staleness failure this
+    # repo keeps rediscovering, and on a pass that HELD the credential it is a
+    # failure, not a recovery.
+    #
+    # What separates this from the keyless case is the pass's INTENT, not its
+    # outcome. On a keyless pass the Claude counters never reach `built` at all
+    # (build_counter returns (None, reason) on the availability check), so
+    # carry-forward stays correct and silent there — preserving rows it cannot
+    # re-measure is the whole point of it. Nothing above is weakened.
+    #
+    # Unlike its sibling this fires AFTER the write, deliberately. The rows are not
+    # the problem — carry-forward preserved them, and the counters that DID succeed
+    # cost thousands of sequential API calls that must not be discarded to make a
+    # point. What must not happen is exiting 0.
+    exhausted = sorted({spec.id for spec, _ in built} - set(ran))
+    if exhausted:
+        raise SystemExit(
+            f"counter(s) {exhausted} were selected and available but produced no "
+            "rows. Their committed rows were carried forward, so the dataset is "
+            "intact — but it is STALE for them, and a credentialed pass that "
+            "quietly republishes an old measurement must not report success. The "
+            "cause is in the console errors above (a rate limit outlasting the "
+            "retry budget looks exactly like this). Re-measure with "
+            f"`make reproduce COUNTERS={','.join(exhausted)}`. Note eval.analyze "
+            "and eval.figures did NOT run, so the derived artifacts in "
+            "eval/results/ are one pass behind until they do.")
+
 
 if __name__ == "__main__":
     run()
