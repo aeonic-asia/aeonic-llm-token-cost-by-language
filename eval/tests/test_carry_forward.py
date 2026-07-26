@@ -8,6 +8,12 @@ them; and carry-forward being gated on the *joint* existence of the two CSVs, so
 one missing file discarded the other. Each was a one-line condition, each was
 invisible until `git diff`, and each would have shipped wrong numbers.
 
+Carry-forward also has an inverse failure, and it is guarded here too: rows that
+are correctly preserved, on a pass that had every credential it needed and simply
+failed to re-measure them. Nothing is lost, but the run exits 0 and the stale
+counter is indistinguishable from a freshly measured one. Preserving rows is right
+when the pass could not measure them and wrong when it could.
+
 The oracle test guards the measurement core. This guards the plumbing around it —
 the part more likely to be wrong, because nothing about a dropped row looks wrong
 in the output.
@@ -98,12 +104,22 @@ class CarryForwardTest(unittest.TestCase):
             before[before.counter_id == "beta"].reset_index(drop=True),
             obj="carried rows must be preserved verbatim")
 
-    def test_errored_counter_keeps_its_committed_rows(self):
-        """A failure part-way through measuring must roll back to committed rows.
+    def test_errored_counter_keeps_its_rows_but_fails_the_pass(self):
+        """A failure part-way through measuring must roll back to committed rows
+        AND stop the pass reporting success.
 
-        The realistic case is a transient 429 at sentence 1,900 of 2,000: the
-        counter has produced thousands of good rows and then dies. It used to end
-        up with neither those nor its committed ones.
+        The realistic case is a rate limit that outlasts the retry budget at
+        sentence 1,900 of 2,000: the counter has produced thousands of good rows
+        and then dies. It used to end up with neither those nor its committed ones;
+        once that was fixed it swung the other way — carry-forward restored the old
+        rows and the run exited 0, so a credentialed pass could republish a stale
+        counter and look exactly like a clean one.
+
+        Both halves are asserted here because fixing either one alone reintroduces
+        the other. The counter WAS available (it built), so this is the
+        credentialed-pass case; the keyless case is
+        test_unavailable_counter_keeps_its_committed_rows, which must still
+        return normally.
         """
         run_mod.run()
         before = self._agg()
@@ -122,11 +138,19 @@ class CarryForwardTest(unittest.TestCase):
                 return _Flaky(spec), ""
             return _FakeCounter(spec, self._built[spec.id]), ""
         run_mod.build_counter = _build
-        run_mod.run()
+        with self.assertRaises(SystemExit) as cm:
+            run_mod.run()
+        self.assertNotEqual(cm.exception.code, 0,
+                            "an available counter that measured nothing must not exit 0")
+        self.assertIn("beta", str(cm.exception), "the failing counter must be named")
         pd.testing.assert_frame_equal(
             self._agg()[lambda d: d.counter_id == "beta"].reset_index(drop=True),
             before[before.counter_id == "beta"].reset_index(drop=True),
             obj="an errored counter must fall back to its committed rows")
+        pd.testing.assert_frame_equal(
+            self._agg()[lambda d: d.counter_id == "alpha"].reset_index(drop=True),
+            before[before.counter_id == "alpha"].reset_index(drop=True),
+            obj="the counters that succeeded must still be written, not discarded")
 
     def test_a_counter_that_fails_to_construct_does_not_kill_the_pass(self):
         """build_counter is contracted to return (None, reason); if it raises
