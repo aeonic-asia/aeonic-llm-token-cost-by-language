@@ -122,16 +122,41 @@ API_PER_SENTENCE_SUBSAMPLE = 200  # per-sentence calls per API counter for the
 #
 # Call volume, stated accurately: 6 Anthropic counters x 2 corpora x 5 languages
 # x (1 aggregate + 200 per-sentence) = ~12,000 calls per full pass, plus envelope
-# probes. `count_tokens` is free, so this is an RPM/latency budget, not cost —
-# but there is no retry, backoff or throttle in the driver, and a single 429
-# discards that counter's whole pass (carry-forward then restores its previous
-# rows, so the run still succeeds with one counter silently stale). Treat a full
-# credentialed pass as something to watch, not to fire and forget.
+# probes. `count_tokens` is free, so this is an RPM/latency budget, not cost.
+#
+# The calls ARE retried. measure.py hands the SDK an explicit retry budget and
+# per-request timeout (below); the SDK retries 408/409/429/5xx and connection
+# errors with exponential backoff and obeys a `retry-after` header when the
+# server sends one. What the driver does NOT do is throttle: it issues the
+# ~12,000 calls back to back and relies on backoff to absorb a limit. If the
+# budget is exhausted anyway, that counter's whole pass is rolled back and
+# carry-forward restores its previous rows — but run.py then refuses to exit 0
+# (see the exhausted-counter guard there), so a silently stale counter can no
+# longer pass for a clean credentialed pass. Treat a full pass as something to
+# watch, not to fire and forget.
 #
 # Note the slice is a deterministic HEAD slice of a corpus ordered by source
 # document, so it is topically clustered — fine for a stable percentile, but not
 # a random sample of the corpus. premium_by_language.csv records the sample size
 # per row so a reader can tell these percentiles from the full sweeps.
+
+# Retry budget and per-request timeout for the Anthropic client
+# (measure.py:_ensure_client). The SDK defaults — max_retries=2 and a 10-minute
+# timeout — are the wrong shape for this workload in both directions:
+#
+#  * Two retries buy ~1.5s of cumulative backoff. The SDK sleeps
+#    min(0.5 * 2^n, 8) seconds, jittered, so the first two waits are ~0.5s and
+#    ~1s. That absorbs a blip, not a sustained limit across ~12,000 sequential
+#    calls. Eight retries give ~40s of cumulative backoff (0.5+1+2+4+8+8+8+8).
+#  * A 10-minute timeout on a request whose body is one sentence only ever
+#    describes a hung connection, and retries multiply it: worst case per call
+#    is timeout x (max_retries + 1). At the defaults that is 30 minutes on a
+#    single sentence; at 30s x 9 it is 4.5 minutes.
+#
+# Do not hand-roll a retry loop around these. The SDK's is correct, and it is
+# the part that reads `retry-after`.
+ANTHROPIC_MAX_RETRIES = 8
+ANTHROPIC_TIMEOUT_S = 30.0
 
 
 @dataclass(frozen=True)
