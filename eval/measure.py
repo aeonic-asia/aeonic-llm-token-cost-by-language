@@ -107,7 +107,18 @@ class AnthropicCounter(TokenCounter):
     def _ensure_client(self):
         if self._client is None:
             import anthropic  # not installed in the offline slice; installed with the key
-            self._client = anthropic.Anthropic()
+            # Retry and timeout are set EXPLICITLY, not left to the SDK defaults.
+            # The SDK already retries 408/409/429/5xx and connection errors with
+            # exponential backoff and obeys `retry-after` — that machinery is
+            # correct and must not be hand-rolled around. What is wrong for this
+            # workload is its sizing: max_retries=2 is ~1.5s of backoff, too
+            # little to ride out a sustained limit over ~12,000 sequential calls,
+            # while the 10-minute default timeout is multiplied by every retry.
+            # Rationale and arithmetic live with the constants in config.
+            self._client = anthropic.Anthropic(
+                max_retries=config.ANTHROPIC_MAX_RETRIES,
+                timeout=config.ANTHROPIC_TIMEOUT_S,
+            )
         return self._client
 
     def count(self, text: str) -> int:
