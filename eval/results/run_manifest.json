@@ -28,38 +28,27 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "o200k_base",
-    "cl100k_base",
-    "claude-new",
-    "claude-sonnet-5",
-    "claude-fable-5",
-    "claude-opus-4-8",
-    "gemini-3-1-pro",
-    "llama-4",
-    "qwen-3-6"
+    "claude-old",
+    "claude-haiku-4-5"
   ],
   "counters_carried_forward": [
-    "claude-haiku-4-5",
-    "claude-old"
+    "cl100k_base",
+    "claude-fable-5",
+    "claude-new",
+    "claude-opus-4-8",
+    "claude-sonnet-5",
+    "gemini-3-1-pro",
+    "llama-4",
+    "o200k_base",
+    "qwen-3-6"
   ],
-  "counters_skipped": [
-    {
-      "counter": "claude-old",
-      "status": "needs_key",
-      "reason": "errored at run: RuntimeError (see console output for detail)"
-    },
-    {
-      "counter": "claude-haiku-4-5",
-      "status": "needs_key",
-      "reason": "errored at run: RuntimeError (see console output for detail)"
-    }
-  ],
+  "counters_skipped": [],
   "measured_on_by_counter": {
     "cl100k_base": "2026-07-26",
     "claude-fable-5": "2026-07-26",
-    "claude-haiku-4-5": "unrecorded",
+    "claude-haiku-4-5": "2026-07-26",
     "claude-new": "2026-07-26",
-    "claude-old": "unrecorded",
+    "claude-old": "2026-07-26",
     "claude-opus-4-8": "2026-07-26",
     "claude-sonnet-5": "2026-07-26",
     "gemini-3-1-pro": "2026-07-26",
@@ -80,6 +69,28 @@
     "llama-4": 0,
     "o200k_base": 0,
     "qwen-3-6": 0
+  },
+  "envelope_probe_frames_by_counter": {
+    "claude-haiku-4-5": {
+      "x": 7,
+      "q": 7,
+      "a": 7,
+      "Z": 7,
+      "#": 7,
+      "é": 7,
+      "7": 8,
+      "0": 8
+    },
+    "claude-old": {
+      "x": 7,
+      "q": 7,
+      "a": 7,
+      "Z": 7,
+      "#": 7,
+      "é": 7,
+      "7": 8,
+      "0": 8
+    }
   },
   "versions": {
     "tiktoken": "0.13.0",
