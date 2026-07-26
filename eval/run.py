@@ -30,25 +30,56 @@ corpus (e.g. the Claude FLORES counts) when adding a new one — and preserves
 those numbers byte-for-byte. A full `make reproduce` (no selection) is still a
 clean from-scratch rebuild.
 
-Determinism: token counts are deterministic and the manifest carries no
-wall-clock timestamp (it uses config's dated `as_of`), so a re-run produces
-byte-identical files. Rows are written in a canonical sort order (corpus,
-counter_id, lang[, sentence_idx]) rather than in carry-then-measure order, so a
-selective pass and a full rebuild of the same data produce the same bytes — not
-merely the same content. Before the sort was added, re-measuring one counter
-moved its rows within the file and `git diff` reported deletions plus
-reinsertions; the guarantee then held only for full-rebuild-after-full-rebuild.
+Determinism: token counts are deterministic, so a pass that re-measures nothing
+(everything carried forward) rewrites byte-identical files. Rows are written in a
+canonical sort order (corpus, counter_id, lang[, sentence_idx]) rather than in
+carry-then-measure order, so a selective pass and a full rebuild of the same data
+produce the same bytes — not merely the same content. Before the sort was added,
+re-measuring one counter moved its rows within the file and `git diff` reported
+deletions plus reinsertions; the guarantee then held only for
+full-rebuild-after-full-rebuild.
+
+Two deliberate exceptions to byte-identity, both scoped to rows that genuinely
+changed. (1) `measured_on` carries the run date, so a row that is actually
+re-measured gets a new date — stamping it from a hand-maintained constant instead
+would file fresh counts under a stale date, which is the false provenance the
+whole column exists to prevent. (2) `versions` records the installed libraries,
+which are environment-dependent by design. Neither moves a measured number.
+
+Schema note: `spec` and `measured_on` were added after the committed dataset was
+last written, so the first pass that re-measures anything also migrates the CSVs
+to the wider schema — a large diff in which no measured value changes. Subsequent
+passes are stable.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 
 import pandas as pd
 
 from . import config
-from .corpora import load_corpus
+from .corpora import corpus_fingerprint, load_corpus
 from .measure import build_counter, char_count
+
+
+def _measured_on() -> str:
+    """The date rows measured in THIS pass are stamped with.
+
+    Deliberately the run date, not `config.DATASET_AS_OF`. Stamping rows with a
+    hand-maintained constant is the same false provenance that constant was split
+    from `PRICING_AS_OF` to prevent: a re-measure months later, with the constant
+    left untouched, would file fresh counts under the old date — and CLAUDE.md
+    tells citers to read exactly this field before quoting a date.
+
+    This is the one intentional exception to the module's byte-identity property,
+    and it is scoped: only rows actually re-measured carry a new date, so a pass
+    that carries everything forward still writes identical bytes. `EVAL_MEASURED_ON`
+    overrides it so tests and deterministic fixtures can pin a date.
+    """
+    return os.environ.get("EVAL_MEASURED_ON", "").strip() or \
+        datetime.date.today().isoformat()
 
 
 def _selected_corpora() -> list[str]:
@@ -57,6 +88,15 @@ def _selected_corpora() -> list[str]:
     if not raw:
         return list(config.CORPORA)
     sel = [c.strip() for c in raw.split(",") if c.strip()]
+    # A selector that is non-empty but parses to nothing (e.g. EVAL_CORPORA=',')
+    # must not fall through as "measure nothing": the corpus loop below would run
+    # zero iterations while `ran` still recorded every counter, so the manifest —
+    # and `summary.json`'s counters_measured_last_pass, the one field added so a
+    # citer can tell measured from carried — would assert measurements that never
+    # happened. Unset the variable to mean "all"; never spell it as empty.
+    if not sel:
+        raise SystemExit("EVAL_CORPORA is set but selects no corpus; unset it to "
+                         f"measure all of {list(config.CORPORA)}.")
     unknown = [c for c in sel if c not in config.CORPORA]
     if unknown:
         raise SystemExit(f"unknown corpora in EVAL_CORPORA: {unknown}; "
@@ -78,6 +118,9 @@ def _selected_counters() -> list[str]:
     if not raw:
         return known
     sel = [c.strip() for c in raw.split(",") if c.strip()]
+    if not sel:  # same trap as EVAL_CORPORA above — see the note there
+        raise SystemExit("EVAL_COUNTERS is set but selects no counter; unset it to "
+                         "measure the whole matrix.")
     unknown = [c for c in sel if c not in known]
     if unknown:
         raise SystemExit(f"unknown counters in EVAL_COUNTERS: {unknown}; "
@@ -104,11 +147,16 @@ def _versions() -> dict[str, str]:
 
 def run() -> None:
     langs = list(config.LANGUAGES)
+    measured_on = _measured_on()
     selected = _selected_corpora()
     selected_counters = _selected_counters()
     # Load only the selected corpora (each asserts its own line-alignment).
     corpora = {cid: load_corpus(cid, langs) for cid in selected}
     n_by_corpus = {cid: len(c[langs[0]]) for cid, c in corpora.items()}
+    # Fingerprint EVERY corpus in the matrix, not just the selected ones: the
+    # carried rows are the ones at risk, so their corpus is exactly the one whose
+    # content has to be checked (see the fingerprint gate below).
+    fingerprints = {cid: corpus_fingerprint(cid, langs) for cid in config.CORPORA}
     # A corpus truncated to 0 bytes in every language passes load_corpus's
     # equal-length check (all zero) and would otherwise be "measured" as 0 tokens /
     # 0 chars, overwriting the committed rows with zeros; only the downstream cost
@@ -206,13 +254,19 @@ def run() -> None:
                 for lang in langs:
                     sentences = corpus[lang]
                     # aggregate: paper-style — concatenate, count once. Left
-                    # envelope-inclusive: the fixed frame is <0.01% of a single
-                    # ~10^5-token call, so it is negligible and this stays the
-                    # raw paper-style total.
+                    # envelope-inclusive. The frame's share of the call depends on
+                    # the corpus: measured at 0.0073% (FLORES/newer) but 0.0286%
+                    # and 0.0463% on MASSIVE, whose English totals are ~1.5-2.1x10^4
+                    # tokens rather than ~10^5. Worst resulting bias on a published
+                    # premium is +0.0007 (massive/claude-old/vie), i.e. below the
+                    # 4th decimal — negligible, but note the aggregate is
+                    # envelope-INCLUSIVE while the per-sentence distribution is
+                    # envelope-stripped, so the two are on near-identical rather
+                    # than identical bases.
                     joined = " ".join(sentences)
                     aggregate.append({
                         "corpus": cid, "counter_id": spec.id, "lang": lang,
-                        "spec": spec.spec, "measured_on": config.DATASET_AS_OF,
+                        "spec": spec.spec, "measured_on": measured_on,
                         "total_tokens": counter.count(joined),
                         # Sum the per-sentence character counts rather than measuring
                         # the joined string: the n-1 join spaces are not corpus
@@ -229,7 +283,7 @@ def run() -> None:
                         raw_tok = counter.count(sent)
                         per_sentence.append({
                             "corpus": cid, "counter_id": spec.id, "lang": lang,
-                            "spec": spec.spec, "measured_on": config.DATASET_AS_OF,
+                            "spec": spec.spec, "measured_on": measured_on,
                             "sentence_idx": idx,
                             "n_tokens": raw_tok,
                             "n_tokens_content": raw_tok - envelope,
@@ -273,15 +327,70 @@ def run() -> None:
         # matrix is the declaration of what this dataset contains; anything else
         # is residue.
         known = {c.id for c in config.MODEL_MATRIX}
-        dropped = sorted(set(ex_agg.counter_id) - known)
+        known_corpora = set(config.CORPORA)
+        # Derive from whichever frame actually loaded. Reading ex_agg
+        # unconditionally here crashed with a bare AttributeError in precisely the
+        # "aggregate_counts.csv is absent" case the WARN above says is supported —
+        # after a completed measurement pass, discarding it.
+        ref_existing = ex_agg if ex_agg is not None else ex_raw
+        dropped = sorted(set(ref_existing.counter_id) - known)
         if dropped:
             print(f"  purge {', '.join(dropped)} — no longer in MODEL_MATRIX")
+        # Same treatment on the corpus axis. Without it a corpus removed from
+        # config.CORPORA could never be purged by any pass (carry-forward keys on
+        # `selected`, and a retired corpus is never selected), so its rows survived
+        # into every committed CSV while summary.json declared only the live
+        # corpora — the machine-readable record contradicting itself. This also
+        # makes corpora._loader's "re-run `make reproduce` to purge them" true.
+        dropped_corpora = sorted(set(ref_existing.corpus) - known_corpora)
+        if dropped_corpora:
+            print(f"  purge corpus/corpora {', '.join(dropped_corpora)} — "
+                  "no longer in config.CORPORA")
+
+        # Fingerprint gate. Carried token totals were measured against a specific
+        # corpus version, but corpus_size() and the per-character denominator are
+        # re-read from disk at analyze time — so a rebuilt or edited corpus
+        # silently re-normalizes every carried counter's per-sentence cost.
+        prior_fp = {}
+        manifest_path = config.RESULTS_DIR / "run_manifest.json"
+        if manifest_path.exists():
+            try:
+                prior_fp = json.loads(manifest_path.read_text()).get(
+                    "corpora_fingerprint", {}) or {}
+            except (json.JSONDecodeError, OSError):
+                prior_fp = {}
+        carried_corpora_ids = set(ref_existing.corpus) & known_corpora
+        for cid in sorted(carried_corpora_ids - set(selected)):
+            was, now = prior_fp.get(cid), fingerprints.get(cid)
+            if was and now and was.get("sha256") != now.get("sha256"):
+                raise SystemExit(
+                    f"refusing to carry forward rows for corpus '{cid}': it has "
+                    f"changed on disk since they were measured "
+                    f"({was.get('n_sentences')} sentences / {str(was.get('sha256'))[:12]}… "
+                    f"-> {now.get('n_sentences')} / {now.get('sha256')[:12]}…). "
+                    f"Their per-sentence and per-character denominators are read "
+                    f"live, so carrying them would silently re-normalize every "
+                    f"carried counter. Re-measure it (`make reproduce CORPORA={cid}`) "
+                    f"or restore the corpus (`git checkout -- <path>`).")
+
+        # Purge on the language axis too. Carry-forward keys on (corpus, counter)
+        # with no language dimension, so a language retired from config.LANGUAGES
+        # survived in carried rows but not in re-measured ones — leaving
+        # cost_by_language.csv reporting e.g. German for the nine carried counters
+        # and not the two that re-ran, a ragged published table with nothing to
+        # explain it.
+        known_langs = set(config.LANGUAGES)
+        dropped_langs = sorted(set(ref_existing.lang) - known_langs)
+        if dropped_langs:
+            print(f"  purge language(s) {', '.join(dropped_langs)} — "
+                  "no longer in config.LANGUAGES")
 
         def _carry(df):
             if df is None:
                 return None
             measured = df.corpus.isin(selected) & df.counter_id.isin(ran)
-            return df[~measured & df.counter_id.isin(known)]
+            return df[~measured & df.counter_id.isin(known)
+                      & df.corpus.isin(known_corpora) & df.lang.isin(known_langs)]
         carried_raw, carried_agg = _carry(ex_raw), _carry(ex_agg)
         ref = carried_agg if carried_agg is not None else carried_raw
         carried_counters = sorted(set(ref.counter_id) - set(ran)) if ref is not None else []
@@ -324,9 +433,43 @@ def run() -> None:
     # every counter skipped on a fresh checkout with no keys/SDK) — that would
     # destroy the committed data the run was meant to preserve.
     if final_agg.empty:
+        # Do NOT suggest `make clean` here: it deliberately preserves raw_counts.csv
+        # and aggregate_counts.csv, so it is a no-op for this failure and cannot be
+        # "a true reset". The real causes are missing credentials or a corpus/results
+        # tree that git can restore.
         raise SystemExit("measured 0 counters and nothing to carry forward — "
-                         "refusing to write an empty dataset (check ANTHROPIC_API_KEY / "
-                         "HF_TOKEN / google-genai, or `make clean` for a true reset).")
+                         "refusing to write an empty dataset. Check ANTHROPIC_API_KEY / "
+                         "HF_TOKEN / google-genai, or restore the committed dataset "
+                         "with `git checkout -- eval/results/`.")
+
+    # Counters that will end up with an aggregate but no per-sentence rows lose
+    # their premium distribution (median/p10..p90). Blank is an expected-looking
+    # state — it is exactly what a legitimately aggregate-only counter produces —
+    # so this has to be said out loud rather than inferred from the CSV.
+    #
+    # Two different situations, deliberately treated differently:
+    #  * raw_counts.csv was ABSENT. Carrying the aggregate alone is intended
+    #    behaviour (see the independent loads above, and the test that pins it).
+    #    Nothing is being destroyed that is still on disk, so warn hard and name
+    #    the counters rather than halting a completed pass.
+    #  * raw_counts.csv WAS loaded and rows still went missing. That is a
+    #    carry-forward regression, not a recovery — refuse.
+    lost = sorted(set(final_agg.counter_id) - set(final_raw.counter_id)) \
+        if not final_raw.empty else sorted(set(final_agg.counter_id))
+    if lost and ex_raw is not None:
+        raise SystemExit(
+            f"refusing to write: counter(s) {lost} have aggregate rows but no "
+            "per-sentence rows, although raw_counts.csv loaded. Their premium "
+            "distribution would be silently blanked — this is a carry-forward "
+            "defect, not a missing file.")
+    if lost:
+        print(f"  WARN  no per-sentence rows for {', '.join(lost)} — their premium "
+              "DISTRIBUTION (median/p10..p90) will be blank in "
+              "premium_by_language.csv, which is indistinguishable from a "
+              "legitimately aggregate-only counter. raw_counts.csv was absent, so "
+              "this pass could not carry them. Restore it "
+              "(`git checkout -- eval/results/raw_counts.csv`) and re-run if the "
+              "distributions matter.")
 
     # Canonical order, so byte-identity does not depend on which counters this pass
     # happened to re-measure. pd.concat writes carried rows first and newly measured
@@ -377,12 +520,20 @@ def run() -> None:
         "corpora": {cid: name for cid, name in config.CORPORA.items()},
         "corpora_measured_this_pass": {cid: n_by_corpus[cid] for cid in selected},
         "corpora_carried_forward": carried_corpora,
+        # Line count + content hash per corpus. Carried token totals are divided by
+        # a corpus size re-read from disk, so this is what lets a later pass (and a
+        # reader) tell whether the corpus a row was measured against still exists.
+        "corpora_fingerprint": {cid: fingerprints[cid] for cid in sorted(fingerprints)},
         "languages": config.LANGUAGES,
         "baseline_language": config.BASELINE_LANG,
         "counters_ran": ran,
         "counters_carried_forward": carried_counters,
         "counters_skipped": skipped,
         "measured_on_by_counter": dict(sorted(measured_on_by_counter.items())),
+        # Counters holding an aggregate but no per-sentence rows: their percentile
+        # columns are blank, and blank looks identical to "aggregate-only by
+        # design". Recorded so summary.json can distinguish the two.
+        "counters_without_per_sentence_rows": lost,
         "envelope_tokens_by_counter": envelope_by_counter,
         # Record every library that can move a number or a committed byte, not just
         # the two direct imports: matplotlib determines the figure bytes, and

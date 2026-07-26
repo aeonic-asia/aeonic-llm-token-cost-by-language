@@ -51,9 +51,12 @@ figures: check-venv
 test: check-venv
 	$(PY) -m unittest discover -s eval/tests -t . -v
 
-# Removes every GENERATED analysis artifact (keeps raw_counts/aggregate_counts —
-# the committed measured dataset — in git). Lists each generated file so a new
-# artifact isn't silently left behind on a partial run.
+# Removes every GENERATED analysis artifact, keeping raw_counts/aggregate_counts
+# — the measured dataset, the one thing a keyless machine cannot rebuild. Note
+# ALL of these files are tracked in git, generated ones included, so this is a
+# regenerate-from-source step, not a "delete the untracked stuff" one: recover
+# any of it with `git checkout -- eval/results/`. Lists each generated file so a
+# new artifact isn't silently left behind on a partial run.
 clean:
 	rm -rf eval/results/figures
 	rm -f eval/results/summary.json eval/results/premium_by_language.csv \

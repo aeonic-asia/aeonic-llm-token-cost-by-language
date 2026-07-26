@@ -49,6 +49,15 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
         tok_col = "n_tokens_content"
     else:
         tok_col = "n_tokens"
+    # Corpus sizes, for the sample-basis label below. Resolved once; a corpus in
+    # the data but no longer registered reports 0, which makes every slice of it a
+    # "head slice" rather than a false "full sweep".
+    corpus_n: dict[str, int] = {}
+    for cid in agg["corpus"].unique():
+        try:
+            corpus_n[cid] = corpora.corpus_size(cid)
+        except KeyError:
+            corpus_n[cid] = 0
     for corpus_id in agg["corpus"].unique():
         ac = agg[agg.corpus == corpus_id]
         rc = raw[raw.corpus == corpus_id]
@@ -90,9 +99,17 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
                         # counters sweep all 2009/2033 — previously both landed in
                         # identical percentile columns with nothing to tell them
                         # apart, and this CSV is the extractable table citers read.
+                        #
+                        # Compare against the corpus, not against a config constant.
+                        # The old `>= API_PER_SENTENCE_SUBSAMPLE * 2` heuristic
+                        # mislabelled in BOTH directions whenever the constant moved
+                        # without a re-measure: at 100 it called a carried 200-row
+                        # head slice a "full sweep", and at 1005 it called a genuine
+                        # 2009-sentence sweep a head slice. The corpus size is the
+                        # only honest reference, and it is already in scope.
                         "n_sentences": int(len(ratios)),
                         "sample_basis": ("full sweep"
-                                         if len(ratios) >= config.API_PER_SENTENCE_SUBSAMPLE * 2
+                                         if len(ratios) >= corpus_n.get(corpus_id, 0)
                                          else f"head slice [:{len(ratios)}], "
                                               "topically clustered — not a random sample"),
                         "premium_median": round(float(q[0.50]), 4),
@@ -215,6 +232,7 @@ def _coincidence_check(agg: pd.DataFrame) -> dict:
     still visible without being labelled an identity.
     """
     per_corpus: dict[str, set[tuple[str, str]]] = {}
+    incomparable: list[dict] = []
     for corpus_id in agg["corpus"].unique():
         pivot = (agg[agg.corpus == corpus_id]
                  .pivot(index="lang", columns="counter_id", values="total_tokens"))
@@ -222,7 +240,27 @@ def _coincidence_check(agg: pd.DataFrame) -> dict:
         pairs = set()
         for i in range(len(cols)):
             for j in range(i + 1, len(cols)):
-                if (pivot[cols[i]] == pivot[cols[j]]).all():
+                a, b = pivot[cols[i]], pivot[cols[j]]
+                # Ragged language coverage must not read as inequality. If one
+                # counter was re-measured after a language was added (or before one
+                # was retired) its partner's cell is NaN, and NaN == NaN is False —
+                # so a genuine shared-tokenizer pair silently dropped out of
+                # `shared_in_all_corpora` and did not even appear as a near-miss,
+                # taking the article's "identical counts (verified here)" evidence
+                # with it. Compare only where both are present, and refuse to
+                # conclude anything when the covered sets differ.
+                both = a.notna() & b.notna()
+                if a.notna().sum() != b.notna().sum() or not both.all():
+                    if both.any() and (a[both] == b[both]).all():
+                        incomparable.append({
+                            "pair": [cols[i], cols[j]], "corpus": corpus_id,
+                            "identical_on": sorted(map(str, pivot.index[both])),
+                            "reason": "counters do not cover the same language set; "
+                                      "identical where both are present, but this is "
+                                      "not evidence of a shared tokenizer",
+                        })
+                    continue
+                if (a == b).all():
                     pairs.add((cols[i], cols[j]))
         per_corpus[corpus_id] = pairs
 
@@ -239,6 +277,10 @@ def _coincidence_check(agg: pd.DataFrame) -> dict:
             {"pair": list(p),
              "corpora": sorted(c for c, s in per_corpus.items() if p in s)}
             for p in partial],
+        # Pairs that could not be compared because the two counters cover
+        # different language sets — surfaced rather than silently treated as
+        # "not identical".
+        "incomparable_coverage": incomparable,
         # Retained per corpus for auditability — this is the raw equality result
         # the `shared` verdict is derived from, not a finding in its own right.
         "raw_equality_by_corpus": {c: [list(p) for p in sorted(s)]
@@ -263,6 +305,15 @@ def _coverage(agg: pd.DataFrame, oracle: dict) -> dict:
             manifest = json.load(f)
     # float() the deltas: they arrive as numpy scalars, and a numpy bool_ derived
     # from them is not JSON-serializable.
+    if not manifest:
+        # An absent manifest yields empty counter lists and no versions — which is
+        # indistinguishable from a genuine "nothing measured" state in the very
+        # block CLAUDE.md calls the one that says what the rest of the file is
+        # worth. Say so out loud rather than emitting a confident-looking vacuum.
+        print("  WARN  run_manifest.json is absent — summary.json's `coverage` block "
+              "will report no measured counters and no library versions. That is a "
+              "missing file, not a finding. Restore it with "
+              "`git checkout -- eval/results/run_manifest.json`.")
     deltas = [float(abs(o["delta"])) for o in oracle.values() if o.get("delta") is not None]
     return {
         "counters_in_dataset": sorted(set(agg.counter_id)),
@@ -270,17 +321,53 @@ def _coverage(agg: pd.DataFrame, oracle: dict) -> dict:
         "counters_carried_forward": manifest.get("counters_carried_forward", []),
         "counters_skipped": [s.get("counter") for s in manifest.get("counters_skipped", [])],
         "measured_on_by_counter": manifest.get("measured_on_by_counter", {}),
+        "corpora_fingerprint": manifest.get("corpora_fingerprint", {}),
+        "manifest_present": bool(manifest),
         "versions": manifest.get("versions", {}),
         "oracle_max_abs_delta": round(max(deltas), 6) if deltas else None,
-        "oracle_tolerance": 0.005,
-        "oracle_passes": bool(max(deltas) < 0.005) if deltas else None,
+        "oracle_tolerance": config.ORACLE_TOL,
+        "oracle_passes": bool(max(deltas) < config.ORACLE_TOL) if deltas else None,
         "note": "`counters_carried_forward` were NOT re-measured in the last pass; "
                 "their counts come from an earlier one. Cross-check "
                 "`measured_on_by_counter` before citing a specific counter's date.",
     }
 
 
+def _check_corpora_unchanged() -> None:
+    """Refuse to analyze rows against a corpus that has changed since measurement.
+
+    `_cost_table` divides carried token totals by a corpus size re-read from disk,
+    so a rebuilt or edited corpus silently re-normalizes every per-sentence cost of
+    every counter that was NOT re-measured — exit 0, no warning, wrong numbers in a
+    published figure. run.py records a fingerprint per corpus; this is the reader
+    side of that contract.
+    """
+    manifest_path = config.RESULTS_DIR / "run_manifest.json"
+    if not manifest_path.exists():
+        return
+    try:
+        recorded = json.loads(manifest_path.read_text()).get("corpora_fingerprint", {})
+    except (json.JSONDecodeError, OSError):
+        return
+    if not recorded:
+        return   # dataset predates fingerprinting; nothing to compare against
+    langs = list(config.LANGUAGES)
+    for cid, was in recorded.items():
+        if cid not in config.CORPORA:
+            continue
+        now = corpora.corpus_fingerprint(cid, langs)
+        if was.get("sha256") != now["sha256"]:
+            raise SystemExit(
+                f"corpus '{cid}' has changed since the dataset was measured "
+                f"({was.get('n_sentences')} sentences -> {now['n_sentences']}). "
+                "Per-sentence and per-character denominators are read live, so "
+                "analyzing would re-normalize every carried counter against a corpus "
+                "it was never measured on. Re-measure "
+                f"(`make reproduce CORPORA={cid}`) or restore the corpus.")
+
+
 def analyze() -> None:
+    _check_corpora_unchanged()
     agg = pd.read_csv(config.RESULTS_DIR / "aggregate_counts.csv")
     raw = pd.read_csv(config.RESULTS_DIR / "raw_counts.csv")
 
@@ -310,12 +397,35 @@ def analyze() -> None:
                 for l in config.LANGUAGES if l != config.BASELINE_LANG}
 
     # oracle: our cl100k vs the paper's Table 1 — the paper used FLORES, so the
-    # oracle is defined on the FLORES+ corpus only.
-    paper = {"Vietnamese": 2.45, "Chinese (Simplified)": 1.91, "German": 1.58}
-    ours = headline.get("flores", {}).get("cl100k_base", {})
-    oracle = {name: {"paper": v, "ours": ours.get(name),
-                     "delta": None if ours.get(name) is None else round(ours[name] - v, 4)}
-              for name, v in paper.items()}
+    # oracle is defined on the FLORES+ corpus only. Resolved by LANGUAGE CODE from
+    # the shared constant in config (tests/test_oracle.py reads the same one), then
+    # rendered under the display name. Keying the lookup on the display string meant
+    # renaming a language dropped it from the gate, which then reported a tighter
+    # max delta over two of three checks and still passed.
+    # Computed from the unrounded totals, not from premium_aggregate: that column
+    # is rounded to 4 dp, so a true delta of 0.00496 was presented to the gate as
+    # 0.0050 and failed a tolerance it actually met.
+    ours_by_code = {}
+    fl_agg = agg[(agg.corpus == "flores") & (agg.counter_id == "cl100k_base")]
+    if not fl_agg.empty and config.BASELINE_LANG in set(fl_agg.lang):
+        base_total = float(fl_agg.loc[fl_agg.lang == config.BASELINE_LANG,
+                                      "total_tokens"].iloc[0])
+        for _, r in fl_agg.iterrows():
+            ours_by_code[r["lang"]] = float(r["total_tokens"]) / base_total
+    oracle = {config.LANGUAGES[code]: {
+                  "paper": v,
+                  "ours": None if ours_by_code.get(code) is None
+                  else round(ours_by_code[code], 4),
+                  "delta": None if ours_by_code.get(code) is None
+                  else round(ours_by_code[code] - v, 6)}
+              for code, v in config.PAPER_CL100K_FLORES.items()}
+    absent = sorted(c for c in config.PAPER_CL100K_FLORES if c not in ours_by_code)
+    if absent:
+        # Never let a shrunken oracle report a better margin than a full one.
+        raise SystemExit(
+            f"oracle cannot be evaluated: cl100k_base has no FLORES premium for "
+            f"{absent}. The validation gate would silently check fewer languages "
+            "and report a tighter delta. Re-run `make reproduce COUNTERS=cl100k_base`.")
 
     infl: dict[str, dict] = {}
     if not inflation.empty:
@@ -342,8 +452,13 @@ def analyze() -> None:
                      "fixed frame (see run_manifest.envelope_tokens_by_counter) is "
                      "subtracted to compare like-for-like with the bare-text offline "
                      "counters. The AGGREGATE premium is the raw paper-style "
-                     "concatenated count (frame negligible over ~10^5 tokens), so "
-                     "aggregate and median premia are on consistent bare-text bases.",
+                     "concatenated count and is left envelope-INCLUSIVE, so the two "
+                     "are on near-identical rather than identical bases. The frame's "
+                     "share of the call is corpus-dependent — 0.0073%/0.0124% of the "
+                     "English total on FLORES (newer/older Claude) but 0.0286%/0.0463% "
+                     "on MASSIVE, whose totals are ~1.5-2.1x10^4 tokens rather than "
+                     "~10^5. Worst resulting bias on a published aggregate premium is "
+                     "+0.0007 (massive/claude-old/vie), i.e. below the 4th decimal.",
         "pricing_as_of": config.PRICING_AS_OF,
         "usd_to_vnd": {"rate": config.USD_TO_VND, "as_of": config.USD_TO_VND_AS_OF},
         "cost_note": "token density is measured; USD/VND cost emitted only where "

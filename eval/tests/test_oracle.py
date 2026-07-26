@@ -14,13 +14,19 @@ from eval import config
 from eval.corpora import load_flores
 from eval.measure import TiktokenCounter
 
-# Paper Table 1, cl100k_base column. Values are reported to 2 d.p., so the paper
-# value carries ±0.005 of rounding; that rounding half-step is the tolerance —
-# it's the precision the paper actually pins, and the docs advertise "<0.005".
-# Observed deltas are all under it (max |Δ| ≈ 0.0043), so the gate holds the
-# pipeline to the precision the docs claim rather than a looser bound.
-PAPER_CL100K = {"vie_Latn": 2.45, "zho_Hans": 1.91, "deu_Latn": 1.58}
-TOL = 0.005
+# Paper Table 1, cl100k_base column, and the tolerance — both read from config,
+# NOT restated here. They used to be hardcoded in this file AND in analyze.py
+# under two different key schemes (language code here, display name there), so
+# the two implementations of the same gate could disagree without either failing:
+# renaming a language silently dropped it from analyze's check while this test
+# stayed green. One definition, two readers.
+#
+# Values are reported to 2 d.p., so the paper value carries ±0.005 of rounding;
+# that rounding half-step is the tolerance — the precision the paper actually
+# pins, and what the docs advertise. Observed deltas are all under it
+# (max |Δ| ≈ 0.0043).
+PAPER_CL100K = config.PAPER_CL100K_FLORES
+TOL = config.ORACLE_TOL
 
 
 def aggregate_premium(counter, lang: str, baseline: str) -> float:

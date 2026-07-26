@@ -3,7 +3,9 @@
 # Deliberately minimal: the Aeonic eval (eval/) does NOT use the upstream
 # SeamlessM4T/NLLB pipeline, so the unpinned `seamless_communication @ main`
 # dependency in the upstream requirements.txt is not on this path at all —
-# `make reproduce` is fully reproducible from these pins alone.
+# so nothing on the eval path depends on an unpinned git ref. Read the scope
+# paragraph below before treating that as "fully reproducible": these are direct
+# pins, not a locked environment.
 #
 # Reproducibility scope, stated honestly: these four are pinned exactly, but
 # their TRANSITIVE dependencies are not pinned and not hashed. Pillow governs

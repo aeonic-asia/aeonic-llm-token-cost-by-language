@@ -4,14 +4,21 @@ Exports SVG (for later fig-NN-*.svg article assets) and PNG (quick view) to
 eval/results/figures/. Driven entirely by the committed result CSVs, so figures
 regenerate deterministically from the dataset.
 
-Readability: the full matrix carries proxy/duplicate counters (three models on
-one shared Claude tokenizer; both Gemini generations) so the eval can *verify*
-equivalence. The headline figures collapse those to **one column per distinct
-tokenizer**, named by its flagship model (config `headline` / `flagship_group`),
-share **one canonical column order** across all four charts (ascending in the
-article's lead language, Vietnamese), and print a legend beneath spelling out the
-folds. Which counters fold is config; that a "shared" fold really is byte-identical
-is re-verified here against the counts — never asserted.
+Readability: the full matrix carries proxy counters — four models on the newer
+Claude tokenizer (Opus 5, Opus 4.8, Sonnet 5, Fable 5) and two on the older
+(Sonnet 4.6, Haiku 4.5) — so the eval can *verify* equivalence rather than assert
+it. The headline figures collapse those to **one column per distinct tokenizer**,
+named by its flagship model (config `headline` / `flagship_group`), and print a
+legend beneath spelling out the folds. Which counters fold is config; that a
+"shared" fold really is byte-identical is re-verified here against the counts —
+never asserted, in every caption that makes the claim.
+
+**Two column orders, not one.** The tokenizer figures (heatmap, cost-driver)
+ascend by the lead language's premium via `_headline_order`; the two dollar
+figures ascend by price via `_priced_order`. Both prefer FLORES+ for stability
+across corpora, and neither drops a counter that the preferred corpus does not
+rank — it sorts last instead, and `_check_drawn_coverage` raises if a measured
+counter would go missing anyway.
 
 Two dollar figures are emitted per corpus, differing only in denominator:
 per-1,000,000-characters and per-1,000-sentences. The corpora are parallel, so
@@ -168,6 +175,30 @@ _TINT_BY_COUNTER: dict[str, str] = {
 }
 
 
+def _check_style_registries() -> None:
+    """Assert the style tables name real counters, at import.
+
+    `_SLOT_BY_FLAGSHIP` already fails loudly when a counter cannot resolve a slot,
+    but `_TINT_BY_COUNTER` was only ever read through `.get()`. A renamed counter
+    therefore lost its tint step silently, fell back to the family base hue, and
+    then tripped `_series_style`'s duplicate-fill check — an error naming a colour
+    collision when the actual cause was a stale key here.
+    """
+    unknown_tints = sorted(set(_TINT_BY_COUNTER) - set(config.MATRIX_BY_ID))
+    if unknown_tints:
+        raise ValueError(f"_TINT_BY_COUNTER keys with no counter in MODEL_MATRIX: "
+                         f"{unknown_tints} — a rename left the tint step behind, "
+                         "and the counter would silently take its family base hue")
+    unknown_slots = sorted(set(_SLOT_BY_FLAGSHIP) - set(config.MATRIX_BY_ID))
+    if unknown_slots:
+        raise ValueError(f"_SLOT_BY_FLAGSHIP keys with no counter in MODEL_MATRIX: "
+                         f"{unknown_slots}")
+    unknown_units = sorted(set(_SENTENCE_UNIT) - set(config.CORPORA))
+    if unknown_units:
+        raise ValueError(f"_SENTENCE_UNIT keys with no corpus in config.CORPORA: "
+                         f"{unknown_units}")
+
+
 def _slot(cid: str) -> int:
     """Colour slot for a counter: its own if headline, else its flagship's."""
     c = config.MATRIX_BY_ID[cid]
@@ -317,16 +348,24 @@ def _price_as_of(counters: list[str]) -> str:
     return dates[0] if len(dates) == 1 else f"{dates[0]}–{dates[-1]}"
 
 
-def _same_tokens_diff_price(counters: list[str]) -> list[str]:
-    """The "same tokens, different price" line, DERIVED from what is drawn.
+def _same_tokens_diff_price(agg: pd.DataFrame, corpus_id: str,
+                            counters: list[str]) -> list[str]:
+    """The "same tokens, different price" line — derived AND verified.
 
     Built from the counters actually on the chart and from `config.PRICING`, so it
     can neither name a model that has no bar nor quote a price the bars weren't
     computed from. An earlier cut hardcoded six model/price pairs: it named an
     Opus 4.8 bar that did not exist, opened a line about differing prices with two
     identical ones, and would have gone stale silently the moment a price was
-    re-ratified (Sonnet 5's intro price reverts 2026-09-01). A group is named only
-    if two or more of its priced SKUs are present — with one, the claim is vacuous.
+    re-ratified (Sonnet 5's intro price reverts 2026-09-01).
+
+    The "same tokens" half is now checked against the counts, not taken from
+    config. This module's contract says a fold "is re-verified here against the
+    counts — never asserted"; `_legend_lines` honoured that via `_identical` while
+    this function, making the identical claim on the chart whose entire thesis is
+    the fold, grouped on `flagship_group` metadata alone. Perturbing one member's
+    totals made the two captions in the same figure set disagree, with the
+    unverified one still listing the diverged model.
     """
     groups: dict[str, list[str]] = {}
     for cid in counters:
@@ -335,6 +374,9 @@ def _same_tokens_diff_price(counters: list[str]) -> list[str]:
         if price is None or price.input_usd_per_mtok is None:
             continue
         key = cid if c.headline else (c.flagship_group or cid)
+        # Only claim shared tokens where the counts actually agree in this corpus.
+        if key != cid and not _identical(agg, corpus_id, cid, key):
+            continue
         groups.setdefault(key, []).append(
             f"{_label(cid)} {_usd(price.input_usd_per_mtok)}")
     parts = [" / ".join(v) for v in groups.values() if len(v) > 1]
@@ -347,16 +389,46 @@ def _same_tokens_diff_price(counters: list[str]) -> list[str]:
 def _unpriced_line(cost: pd.DataFrame, drawn: list[str]) -> list[str]:
     """Name the headline counters that were MEASURED but carry no serving price.
 
-    Derived from the cost frame rather than hardcoded, so a counter that simply
-    never ran is not falsely reported as "omitted — no serving list price".
+    Keyed on PRICING, not on "measured but not drawn". The older test —
+    `c.id in measured and c.id not in drawn` — was true for two very different
+    reasons, and stated only one of them: a counter dropped by the column-ordering
+    filter (see `_rank_across_corpora`) was reported as having "no serving list
+    price" even when it carried a high-confidence one. That is a false claim in a
+    published asset, produced by an ordering bug. A counter that is priced but
+    missing from the chart is a defect, not a caption — `_check_drawn_coverage`
+    raises on it instead.
     """
     measured = set(cost.counter_id)
     omitted = [c.id for c in config.MODEL_MATRIX
-               if c.headline and c.id in measured and c.id not in drawn]
+               if c.headline and c.id in measured and c.id not in drawn
+               and (config.PRICING.get(c.id) is None
+                    or config.PRICING[c.id].input_usd_per_mtok is None)]
     if not omitted:
         return []
     return [", ".join(_label(c) for c in omitted)
             + " omitted — no serving list price"]
+
+
+def _check_drawn_coverage(frame: pd.DataFrame, drawn: list[str], what: str) -> None:
+    """Raise if a counter that belongs on this chart was silently dropped.
+
+    The column-ordering functions used to rank on one corpus and hard-filter to
+    that rank, so a counter measured only in the *other* corpus vanished from all
+    four figures of both corpora while its rows sat in every committed CSV — with
+    no error, because the only guard was "no counters at all".
+    """
+    priced_only = what == "dollar"
+    expected = {c.id for c in config.MODEL_MATRIX
+                if c.headline and c.id in set(frame.counter_id)
+                and (not priced_only
+                     or (config.PRICING.get(c.id)
+                         and config.PRICING[c.id].input_usd_per_mtok is not None))}
+    missing = sorted(expected - set(drawn))
+    if missing:
+        raise ValueError(
+            f"{what} figure would omit measured counter(s) {missing} that have rows "
+            "in this corpus. This is a column-ordering defect, not a caption: fix "
+            "the order rather than letting the chart disagree with the dataset.")
 
 
 def _label(cid: str) -> str:
@@ -364,18 +436,46 @@ def _label(cid: str) -> str:
     return c.headline_display or c.display
 
 
+def _corpus_preference() -> list[str]:
+    """Corpora in ranking-preference order: FLORES+ first, then the rest, once each.
+
+    Spelled `("flores", *config.CORPORA)` before, which names flores twice and
+    expressed the "prefer FLORES+" intent only by accident — reorder CORPORA and
+    the preference silently changes.
+    """
+    return ["flores"] + [c for c in config.CORPORA if c != "flores"]
+
+
+def _rank_across_corpora(frame: pd.DataFrame, value_col: str) -> dict[str, float]:
+    """Lead-language rank keys, taken from the preferred corpus and COMPLETED from
+    the others.
+
+    Ranking on one corpus and hard-filtering to that rank dropped any counter
+    absent there from every figure of every corpus. Preference still decides the
+    order (so the four figures line up column-for-column); later corpora only
+    supply keys for counters the preferred one does not cover, which are appended
+    after the ranked ones rather than discarded.
+    """
+    rank: dict[str, float] = {}
+    for corpus in _corpus_preference():
+        sub = frame[(frame.corpus == corpus) & (frame.lang == LEAD_LANG)]
+        for r in sub.itertuples():
+            v = getattr(r, value_col)
+            if pd.notna(v):
+                rank.setdefault(r.counter_id, float(v))
+    return rank
+
+
 def _headline_order(premium: pd.DataFrame, present: list[str]) -> list[str]:
     """Headline counter ids present in `present`, ordered by the lead language's
     premium (prefer FLORES+ so the order is stable across corpora — the four
     figures then line up column-for-column). Non-headline (folded) ids drop out.
+
+    A counter with no lead-language row anywhere sorts last rather than vanishing.
     """
     ids = [c.id for c in config.MODEL_MATRIX if c.headline and c.id in present]
-    for corpus in ("flores", *config.CORPORA):
-        sub = premium[(premium.corpus == corpus) & (premium.lang == LEAD_LANG)]
-        if not sub.empty:
-            rank = {r.counter_id: r.premium_aggregate for r in sub.itertuples()}
-            return sorted([i for i in ids if i in rank], key=lambda i: rank[i])
-    return ids
+    rank = _rank_across_corpora(premium, "premium_aggregate")
+    return sorted(ids, key=lambda i: (i not in rank, rank.get(i, 0.0), i))
 
 
 def _identical(agg: pd.DataFrame, corpus_id: str, a: str, b: str) -> bool:
@@ -386,17 +486,6 @@ def _identical(agg: pd.DataFrame, corpus_id: str, a: str, b: str) -> bool:
     if a not in piv.columns or b not in piv.columns:
         return False
     return bool((piv[a] == piv[b]).all())
-
-
-def _max_rel_divergence(agg: pd.DataFrame, corpus_id: str, a: str, b: str):
-    """Max per-language relative gap between counters `a` and `b` in `corpus_id`,
-    or None if either is absent. Lets the "superseded, within X%" legend quote a
-    number computed from the data instead of a hard-coded claim that can go stale."""
-    piv = (agg[agg.corpus == corpus_id]
-           .pivot(index="lang", columns="counter_id", values="total_tokens"))
-    if a not in piv.columns or b not in piv.columns:
-        return None
-    return float(((piv[a] - piv[b]).abs() / piv[b]).max())
 
 
 def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[str]:
@@ -415,9 +504,17 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
         # ask it directly. Applied to both fold kinds for symmetry.
         flag_spec = config.MATRIX_BY_ID[flag].spec
         folded = [c for c in folded if c.spec != flag_spec]
+        # "shared" is the only supported fold_reason (asserted in
+        # config._check_matrix_integrity). A "superseded" branch used to live here
+        # and printed "<model> superseded, within X% — omitted", attributing to a
+        # tokenizer difference what was entirely a corpus-markup artifact: the one
+        # FLORES sentence carrying an HTML tag. It stopped rendering when the last
+        # superseded counter was removed, but the string — and the reasoning error
+        # in it — survived in the code, ready to re-render. Removed outright; a
+        # genuine new tokenizer earns its own column, established by a vocabulary
+        # diff rather than by quoting a divergence percentage.
         shared = [m for m in folded
                   if m.fold_reason == "shared" and _identical(agg, corpus_id, m.id, flag)]
-        superseded = [m for m in folded if m.fold_reason == "superseded"]
         if shared:
             names = " = ".join([_label(flag)] + [_label(m.id) for m in shared])
             note = f"{names} — one shared tokenizer, identical counts (verified here)"
@@ -439,14 +536,6 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
                 else:
                     note += "; prices differ"
             lines.append(note)
-        for m in superseded:
-            div = _max_rel_divergence(agg, corpus_id, m.id, flag)
-            if div is None:
-                continue  # superseded counter absent in this corpus — nothing to note
-            within = "identical" if div == 0 else f"within {div * 100:.2f}%"
-            lines.append(
-                f"{_label(flag)} shown (current flagship); "
-                f"{_label(m.id)} superseded, {within} — omitted")
         if flag == "cl100k_base":
             lines.append(f"{_label(flag)} — GPT-4/3.5-era baseline, historical anchor")
     return lines
@@ -496,14 +585,19 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
             f"'{corpus_id}'. Nothing to draw — check that the run measured at "
             "least one headline counter, or that _headline_order is not filtering "
             "everything out.")
+    _check_drawn_coverage(premium, counters, "premium")
     langs = CONTRAST
     mat = np.array([[premium[(premium.counter_id == c) & (premium.lang == l)]
                      ["premium_aggregate"].iloc[0] for c in counters] for l in langs])
-    if np.isnan(mat).any():
+    # isfinite, not isnan: the sibling guard in _grouped_bars already uses it, and
+    # +/-inf passed straight through this one into the norm (span = log(inf)),
+    # dying as "ValueError: Invalid vmin or vmax" from inside matplotlib. inf is
+    # reachable from _premium_table whenever a baseline total is 0.
+    if not np.isfinite(mat).all():
         bad = [(config.LANGUAGES[langs[i]], counters[j])
-               for i, j in zip(*np.where(np.isnan(mat)))]
+               for i, j in zip(*np.where(~np.isfinite(mat)))]
         raise ValueError(
-            f"premium_heatmap: NaN premium for {bad}. Drawing these prints a "
+            f"premium_heatmap: non-finite premium for {bad}. Drawing these prints a "
             "literal 'nan×' in the cell and, because every NaN comparison is "
             "False, silently selects the wrong colour scale for the whole chart. "
             "Fix the data rather than rendering it.")
@@ -521,17 +615,30 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     # 0.89x saving rendered as visually extreme as a 2.6x penalty. Premium is a
     # ratio, so the honest mapping is multiplicative: 2x dearer and 2x cheaper sit
     # equally far from parity, in opposite directions.
+    #
+    # Three cases, handled symmetrically. The straddling case is the live one; the
+    # two one-sided cases used to share a single `else` that clamped vmin=1.0 and
+    # painted with a dearer-side sequential ramp. That was right for an all-dearer
+    # slice and exactly backwards for an all-cheaper one — its own comment read "no
+    # sub-parity cell to show" in the branch where EVERY cell is sub-parity, and
+    # imshow then died inside matplotlib with "minvalue must be less than or equal
+    # to maxvalue". Not reachable on the committed data (only Qwen is sub-parity on
+    # FLORES), but "reachable if one counter is dropped" is not a guarantee.
+    imshow_kw: dict = {}
     if mat.min() < 1.0 < mat.max():
         span = max(abs(np.log(mat.min())), abs(np.log(mat.max())))
         norm = mcolors.FuncNorm(
             (lambda v: 0.5 + np.log(np.clip(v, 1e-9, None)) / (2 * span),
              lambda t: np.exp((np.asarray(t) - 0.5) * 2 * span)),
             vmin=float(np.exp(-span)), vmax=float(np.exp(span)))
-        cmap, mid = "RdBu_r", None
-    else:                       # degenerate slice: no sub-parity cell to show
-        norm, cmap, mid = None, "OrRd", 1.0
-    im = ax.imshow(mat, cmap=cmap, norm=norm,
-                   **({} if norm is not None else {"vmin": mid}), aspect="auto")
+        cmap = "RdBu_r"
+    elif mat.min() >= 1.0:      # every cell at or above parity — dearer side only
+        norm, cmap = None, "OrRd"
+        imshow_kw = {"vmin": 1.0}
+    else:                       # every cell at or below parity — cheaper side only
+        norm, cmap = None, "Blues_r"
+        imshow_kw = {"vmin": float(mat.min()), "vmax": 1.0}
+    im = ax.imshow(mat, cmap=cmap, norm=norm, **imshow_kw, aspect="auto")
     ax.set_xticks(range(len(counters)))
     ax.set_xticklabels([_label(c) for c in counters], rotation=25, ha="right", fontsize=9)
     ax.set_yticks(range(len(langs)))
@@ -557,34 +664,32 @@ def _priced_order(cost: pd.DataFrame) -> list[str]:
 
     Unlike the tokenizer figures, this does NOT fold shared-tokenizer models: they
     have identical tokens but *different serving prices*, so each is its own bar —
-    that price split is exactly what the dollar figure exists to show. Superseded
-    near-duplicates (gemma3) are still dropped, and unpriced counters (Llama 4
-    self-host, cl100k historical) fall out for having no USD cost.
+    that price split is exactly what the dollar figure exists to show. Unpriced
+    counters (Llama 4 self-host, cl100k historical) fall out for having no USD
+    cost. A priced counter with no lead-language row in the preferred corpus sorts
+    last rather than being dropped from the chart.
     """
-    priced = [c.id for c in config.MODEL_MATRIX if c.fold_reason != "superseded"
-              and not cost[(cost.counter_id == c.id)
-                           & cost.cost_usd_per_1k_chars.notna()].empty]
-    for corpus in ("flores", *config.CORPORA):
-        sub = cost[(cost.corpus == corpus) & (cost.lang == LEAD_LANG)]
-        rank = {r.counter_id: r.cost_usd_per_1k_chars for r in sub.itertuples()
-                if pd.notna(r.cost_usd_per_1k_chars)}
-        if rank:
-            return sorted([i for i in priced if i in rank], key=lambda i: rank[i])
-    return priced
+    priced = [c.id for c in config.MODEL_MATRIX
+              if not cost[(cost.counter_id == c.id)
+                          & cost.cost_usd_per_1k_chars.notna()].empty]
+    rank = _rank_across_corpora(cost, "cost_usd_per_1k_chars")
+    return sorted(priced, key=lambda i: (i not in rank, rank.get(i, 0.0), i))
 
 
-def _cost_legend_lines(cost: pd.DataFrame, counters: list[str]) -> list[str]:
+def _cost_legend_lines(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
+                       counters: list[str]) -> list[str]:
     return [
         f"USD to serve 1,000,000 input characters — input list price "
         f"({_price_as_of(counters)}); VND = USD × {int(config.USD_TO_VND):,}",
-        *_same_tokens_diff_price(counters),
+        *_same_tokens_diff_price(agg, corpus_id, counters),
         *_unpriced_line(cost, counters),
     ]
 
 
-def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
-                     order: list[str], stem: str) -> None:
+def dollar_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
+                     corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
+    _check_drawn_coverage(cost, counters, "dollar")
     langs = list(config.LANGUAGES)
     vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
              ["cost_usd_per_1k_chars"].iloc[0] * 1000 for l in langs]  # USD / 1M chars
@@ -597,7 +702,7 @@ def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
                  f"(price × tokens; lower = cheaper)",
                  fontsize=11.5, color=_INK, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
-    _caption(fig, _cost_legend_lines(cost, counters), ax)
+    _caption(fig, _cost_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
 
 
@@ -609,7 +714,8 @@ def dollar_cost_bars(cost: pd.DataFrame, corpus_name: str,
 _SENTENCE_UNIT = {"flores": "sentence", "massive": "message"}
 
 
-def _cost_per_sentence_legend_lines(cost: pd.DataFrame, corpus_id: str,
+def _cost_per_sentence_legend_lines(cost: pd.DataFrame, agg: pd.DataFrame,
+                                    corpus_id: str,
                                     counters: list[str]) -> list[str]:
     unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
     return [
@@ -619,7 +725,7 @@ def _cost_per_sentence_legend_lines(cost: pd.DataFrame, corpus_id: str,
         f"Read against the per-character chart: a dense script (Chinese) needs "
         f"few characters, so per-character overstates its cost; per {unit} it "
         f"ranks far lower.",
-        *_same_tokens_diff_price(counters),
+        *_same_tokens_diff_price(agg, corpus_id, counters),
         # Both dollar figures drop the same measured-but-unpriced counters, but
         # only the per-character one said so. Qwen 3.6 — the mildest Vietnamese
         # tax in the matrix — silently vanished from this chart with no note.
@@ -627,9 +733,11 @@ def _cost_per_sentence_legend_lines(cost: pd.DataFrame, corpus_id: str,
     ]
 
 
-def dollar_cost_per_sentence_bars(cost: pd.DataFrame, corpus_id: str,
+def dollar_cost_per_sentence_bars(cost: pd.DataFrame, agg: pd.DataFrame,
+                                  corpus_id: str,
                                   corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
+    _check_drawn_coverage(cost, counters, "dollar")
     langs = list(config.LANGUAGES)
     unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
     vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
@@ -643,13 +751,14 @@ def dollar_cost_per_sentence_bars(cost: pd.DataFrame, corpus_id: str,
                  f"(price × tokens per {unit}; lower = cheaper)",
                  fontsize=11.5, color=_INK, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
-    _caption(fig, _cost_per_sentence_legend_lines(cost, corpus_id, counters), ax)
+    _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
 
 
 def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
                      corpus_id: str, corpus_name: str, order: list[str], stem: str) -> None:
     counters = [c for c in order if c in set(cost.counter_id)]
+    _check_drawn_coverage(cost, counters, "cost-driver")
     langs = list(config.LANGUAGES)
     vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
              ["tokens_per_1k_chars"].iloc[0] for l in langs] for c in counters]
@@ -665,6 +774,11 @@ def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
     _save(fig, stem)
 
 
+# Called here rather than beside the tables: _SENTENCE_UNIT is defined further
+# down, and the check covers all three style registries in one place.
+_check_style_registries()
+
+
 def make_figures() -> None:
     premium = pd.read_csv(config.RESULTS_DIR / "premium_by_language.csv")
     cost = pd.read_csv(config.RESULTS_DIR / "cost_by_language.csv")
@@ -673,16 +787,41 @@ def make_figures() -> None:
     # dollar figure has its own (priced options, unfolded — see _priced_order).
     order = _headline_order(premium, sorted(set(premium.counter_id)))
     dollar_order = _priced_order(cost)
+    live: set[str] = set()
     for corpus_id, corpus_name in config.CORPORA.items():
         p = premium[premium.corpus == corpus_id]
         c = cost[cost.corpus == corpus_id]
         if p.empty:
             continue
+        live.add(corpus_id)
         premium_heatmap(p, agg, corpus_id, corpus_name, order, f"fig-premium-heatmap-{corpus_id}")
         cost_driver_bars(c, agg, corpus_id, corpus_name, order, f"fig-cost-driver-bars-{corpus_id}")
-        dollar_cost_bars(c, corpus_name, dollar_order, f"fig-dollar-cost-{corpus_id}")
-        dollar_cost_per_sentence_bars(c, corpus_id, corpus_name, dollar_order,
+        dollar_cost_bars(c, agg, corpus_id, corpus_name, dollar_order,
+                         f"fig-dollar-cost-{corpus_id}")
+        dollar_cost_per_sentence_bars(c, agg, corpus_id, corpus_name, dollar_order,
                                       f"fig-dollar-cost-per-sentence-{corpus_id}")
+    # Remove figures for corpora this dataset no longer covers. The loop above
+    # simply stops emitting them, which left four committed, publishable
+    # `fig-*-<retired>.{svg,png}` on disk and in git, silently stale beside CSVs
+    # that no longer carried the corpus. analyze.py already unlinks
+    # within_vendor_inflation.csv for exactly this reason; this is its counterpart.
+    # Keyed on the four stems this module emits, so it can only ever remove files
+    # it produced — and on `live` rather than config.CORPORA, since a corpus
+    # retired from the config is exactly the case that leaves figures behind.
+    _STEMS = ("fig-premium-heatmap-", "fig-cost-driver-bars-",
+              "fig-dollar-cost-per-sentence-", "fig-dollar-cost-")
+    if FIG_DIR.exists():
+        for path in sorted(FIG_DIR.iterdir()):
+            if path.suffix not in (".svg", ".png"):
+                continue
+            for pre in _STEMS:
+                if path.stem.startswith(pre):
+                    corpus = path.stem[len(pre):]
+                    if corpus and corpus not in live:
+                        print(f"  removing stale figure for corpus '{corpus}' "
+                              f"(no longer in the dataset): {path.name}")
+                        path.unlink()
+                    break
     print(f"wrote figures to {FIG_DIR}/ (svg + png)")
     print(f"  tokenizer columns: {[_label(c) for c in order]}")
     print(f"  dollar columns:    {[_label(c) for c in dollar_order]}")
