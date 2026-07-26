@@ -15,7 +15,7 @@ Honesty rules baked in:
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -79,8 +79,8 @@ API_KINDS = {"anthropic"}
 # tokens (measured: 6 tokens for the newer Claude tokenizer, 7 for the older).
 # The offline counters (tiktoken / gemma / Llama) count bare text with no frame,
 # so a raw comparison would inflate Claude's *per-sentence* counts by that fixed
-# floor — negligible on the whole-corpus aggregate (one call over ~10^5 tokens),
-# but material on short sentences (a true 2.0x premium reads ~1.6x when +6 lands
+# floor — small on the whole-corpus aggregate (see the measured shares below), but
+# material on short sentences (a true 2.0x premium reads ~1.6x when +6 lands
 # on both sides of the ratio). The driver measures this floor per API counter and
 # subtracts it from the per-sentence counts so the distribution is comparable to
 # the offline counters. Precisely: count(probe) is MEASURED, and the subtrahend
@@ -90,8 +90,19 @@ API_KINDS = {"anthropic"}
 # tested rather than trusted: measure.py probes several distinct single
 # characters and requires them all to yield the same frame, and bounds the
 # result. Empty content is rejected by the API, hence a single-char probe.
-# The aggregate is left uncorrected (the fixed frame is <0.01% of a ~10^5-token
-# concatenated call) and stays the paper-style raw count.
+# Note what this does and does not establish: three probes AGREEING rules out a
+# class-specific surprise, but cannot distinguish "each probe is one token" from
+# "each is two". The subtrahend remains an assumption, tested for consistency.
+#
+# The aggregate is left uncorrected and stays the paper-style raw count. State the
+# frame's share per corpus rather than as one bound — it is not uniformly <0.01%.
+# Measured against each counter's English total: FLORES 0.0073% (newer) / 0.0124%
+# (older); MASSIVE 0.0286% / 0.0463%, because MASSIVE's totals are ~1.5-2.1x10^4
+# tokens, not ~10^5. Worst resulting bias on a published aggregate premium is
+# +0.0007 (massive/claude-old/vie) — below the 4th decimal, so the numbers stand,
+# but the aggregate is envelope-INCLUSIVE while the per-sentence distribution is
+# envelope-stripped: near-identical bases, not identical ones. Do not describe them
+# as "consistent bare-text bases".
 ENVELOPE_PROBE = "x"
 ENVELOPE_PROBE_TOKENS = 1
 # Cross-checks for the assumption above. Each must be a single ASCII character
@@ -145,18 +156,20 @@ class Counter:
     # (Qwen) download with no credentials. Drives the token gate in measure.py so
     # an ungated counter isn't wrongly skipped for a missing token.
     gated: bool = False
-    init_kwargs: dict = field(default_factory=dict)
     # ── figure display (headline charts) ────────────────────────────────────
-    # The full matrix carries proxy/duplicate counters (e.g. the three models
-    # that share one Claude tokenizer, both Gemini generations) so the eval can
-    # *verify* equivalence in-dataset. The headline figures collapse those to one
-    # column per distinct tokenizer to stay readable. These fields drive that
-    # collapse; nothing here affects measurement — only what the charts show.
+    # The full matrix carries proxy counters — the FOUR models that share one
+    # newer-Claude tokenizer (Opus 5, Opus 4.8, Sonnet 5, Fable 5) and the two
+    # that share the older one (Sonnet 4.6, Haiku 4.5) — so the eval can *verify*
+    # equivalence in-dataset rather than asserting it. The headline figures
+    # collapse those to one column per distinct tokenizer to stay readable. These
+    # fields drive that collapse; nothing here affects measurement — only what the
+    # charts show.
     headline: bool = True     # own column in the headline figures?
     headline_display: str = ""  # short chart/legend label (falls back to display)
     flagship_group: str = ""  # id of the headline column a folded counter maps to
-    fold_reason: str = ""     # why folded: "shared" (byte-identical tokenizer)
-    #                           | "superseded" (older flagship, near-identical)
+    fold_reason: str = ""     # why folded — "shared" (byte-identical tokenizer,
+    #                           re-verified against the counts before any caption
+    #                           claims it) is the only supported value.
 
 
 # The trimmed flagship matrix — 11 counters: one column per DISTINCT tokenizer
@@ -333,6 +346,27 @@ def _check_matrix_integrity() -> None:
                        if c.flagship_group and c.flagship_group not in MATRIX_BY_ID)
     if bad_folds:
         raise ValueError(f"counters folding into a non-existent flagship_group: {bad_folds}")
+    bad_reason = sorted({c.fold_reason for c in MODEL_MATRIX
+                         if c.fold_reason and c.fold_reason != "shared"})
+    if bad_reason:
+        raise ValueError(f"unsupported fold_reason(s): {bad_reason} — only 'shared' "
+                         "is supported, and it is re-verified against the counts")
+    # analyze._within_vendor_inflation keys on these two literal ids to produce
+    # within_vendor_inflation.csv — the article's headline hook. A rename used to
+    # make it return empty: the CSV was unlinked, the summary key became {}, and
+    # the console printed nothing at all. Fail at import instead.
+    for required in ("claude-new", "claude-old"):
+        if required not in MATRIX_BY_ID:
+            raise ValueError(
+                f"MODEL_MATRIX has no '{required}' counter — the within-vendor "
+                "inflation metric (the article's headline hook) is keyed on "
+                "'claude-new'/'claude-old' and would silently produce nothing. "
+                "Keep the ids generational, or update analyze._within_vendor_inflation.")
+    missing_oracle = sorted(set(PAPER_CL100K_FLORES) - set(LANGUAGES))
+    if missing_oracle:
+        raise ValueError(f"oracle languages absent from LANGUAGES: {missing_oracle} — "
+                         "the cl100k validation gate would silently check fewer "
+                         "languages and report a tighter delta")
 
 
 # ── pricing (dated, sourced, confidence-flagged) ─────────────────────────────
@@ -351,6 +385,26 @@ USD_TO_VND_AS_OF = "2026-07-17"
 # PRICING_AS_OF (the $ layer can be re-ratified without re-measuring tokens, and
 # vice versa; stamping one with the other would assert a false provenance date).
 DATASET_AS_OF = "2026-07-25"   # model-currency refresh: Opus 5 endpoint, Opus 4.8 proxy, Qwen 3.6
+# NOTE this is the dataset's SCOPE stamp, not a measurement date. Per-row
+# measurement dates live in raw_counts/aggregate_counts `measured_on` (written by
+# run.py from the run date) and are summarised in
+# run_manifest.measured_on_by_counter. Cite those, not this.
+
+# ── validation oracle (single source of truth) ───────────────────────────────
+# The paper's Table 1 cl100k_base premiums (Petrov et al., arXiv:2305.15425),
+# measured on FLORES. Keyed by LANGUAGE CODE, not display name: keying on the
+# display string meant renaming a language in LANGUAGES silently dropped that
+# language from the oracle, which then reported a *tighter* max delta computed
+# over fewer checks and still passed. Both the analyze-time check and
+# tests/test_oracle.py read these, so the two implementations of the same gate
+# cannot drift apart.
+PAPER_CL100K_FLORES: dict[str, float] = {
+    "vie_Latn": 2.45,
+    "zho_Hans": 1.91,
+    "deu_Latn": 1.58,
+}
+# The paper reports 2 dp, so half a step is the tightest defensible tolerance.
+ORACLE_TOL = 0.005
 
 
 @dataclass(frozen=True)
@@ -384,9 +438,11 @@ PRICING: dict[str, Price] = {
     # but stamping an Opus 5 claim with a pre-release date would assert a false
     # provenance — the same error DATASET_AS_OF exists to prevent.
     "claude-new": Price(5.00, "2026-07-25", "high",
-                        "Newer-Claude tokenizer; current flagship Claude Opus 5 and "
-                        "Opus 4.8 share the same $5.00/1M in ($25.00/1M out) input list "
-                        "price. Verified 2026-07-25 vs. the Anthropic pricing page"),
+                        "Newer-Claude tokenizer; Claude Opus 5 (Anthropic's recommended "
+                        "default — Fable 5 is its most capable widely released model, so "
+                        "avoid 'flagship' here) and Opus 4.8 share the same $5.00/1M in "
+                        "($25.00/1M out) input list price. Verified 2026-07-25 vs. the "
+                        "Anthropic pricing page"),
     "claude-old": Price(3.00, PRICING_AS_OF, "high",
                         "Claude Sonnet 4.6 input list price ($3.00/1M in, $15.00/1M out)"),
     "claude-sonnet-5": Price(3.00, PRICING_AS_OF, "high",
