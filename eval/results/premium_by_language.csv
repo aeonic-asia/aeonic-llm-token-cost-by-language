@@ -34,11 +34,21 @@ flores,claude-sonnet-5,vie_Latn,Vietnamese,1.8434,200,"head slice [:200], topica
 flores,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.1749,200,"head slice [:200], topically clustered — not a random sample",1.2026,0.9231,1.0597,1.3622,1.5022,1.2145
 flores,claude-sonnet-5,rus_Cyrl,Russian,1.3432,200,"head slice [:200], topically clustered — not a random sample",1.3297,1.1189,1.2231,1.544,1.7097,1.3802
 flores,claude-sonnet-5,deu_Latn,German,1.7384,200,"head slice [:200], topically clustered — not a random sample",1.7078,1.3559,1.4926,1.8609,2.1228,1.7101
+flores,gemini-3-1-flash-lite,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,gemini-3-1-flash-lite,vie_Latn,Vietnamese,1.3604,2009,full sweep,1.36,1.1154,1.2222,1.52,1.6842,1.3813
+flores,gemini-3-1-flash-lite,zho_Hans,Chinese (Simplified),1.1078,2009,full sweep,1.05,0.8125,0.9167,1.2222,1.4167,1.0873
+flores,gemini-3-1-flash-lite,rus_Cyrl,Russian,1.3703,2009,full sweep,1.3611,1.087,1.2143,1.5333,1.7143,1.3837
+flores,gemini-3-1-flash-lite,deu_Latn,German,1.3189,2009,full sweep,1.3095,1.0833,1.1852,1.4643,1.6,1.332
 flores,gemini-3-1-pro,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
 flores,gemini-3-1-pro,vie_Latn,Vietnamese,1.3604,2009,full sweep,1.36,1.1154,1.2222,1.52,1.6842,1.3813
 flores,gemini-3-1-pro,zho_Hans,Chinese (Simplified),1.1078,2009,full sweep,1.05,0.8125,0.9167,1.2222,1.4167,1.0873
 flores,gemini-3-1-pro,rus_Cyrl,Russian,1.3703,2009,full sweep,1.3611,1.087,1.2143,1.5333,1.7143,1.3837
 flores,gemini-3-1-pro,deu_Latn,German,1.3189,2009,full sweep,1.3095,1.0833,1.1852,1.4643,1.6,1.332
+flores,gemini-3-5-flash,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+flores,gemini-3-5-flash,vie_Latn,Vietnamese,1.3604,2009,full sweep,1.36,1.1154,1.2222,1.52,1.6842,1.3813
+flores,gemini-3-5-flash,zho_Hans,Chinese (Simplified),1.1078,2009,full sweep,1.05,0.8125,0.9167,1.2222,1.4167,1.0873
+flores,gemini-3-5-flash,rus_Cyrl,Russian,1.3703,2009,full sweep,1.3611,1.087,1.2143,1.5333,1.7143,1.3837
+flores,gemini-3-5-flash,deu_Latn,German,1.3189,2009,full sweep,1.3095,1.0833,1.1852,1.4643,1.6,1.332
 flores,llama-4,eng_Latn,English,1.0,2009,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
 flores,llama-4,vie_Latn,Vietnamese,1.3241,2009,full sweep,1.3158,1.0857,1.1923,1.4706,1.6115,1.3387
 flores,llama-4,zho_Hans,Chinese (Simplified),1.094,2009,full sweep,1.037,0.8092,0.9024,1.2,1.4,1.0737
@@ -89,11 +99,21 @@ massive,claude-sonnet-5,vie_Latn,Vietnamese,2.0013,200,"head slice [:200], topic
 massive,claude-sonnet-5,zho_Hans,Chinese (Simplified),1.2636,200,"head slice [:200], topically clustered — not a random sample",1.1667,0.7773,0.9215,1.5,1.8,1.2156
 massive,claude-sonnet-5,rus_Cyrl,Russian,1.406,200,"head slice [:200], topically clustered — not a random sample",1.3604,0.9091,1.1429,1.6278,2.0,1.4402
 massive,claude-sonnet-5,deu_Latn,German,1.6031,200,"head slice [:200], topically clustered — not a random sample",1.6154,1.1818,1.3512,1.9023,2.1818,1.6649
+massive,gemini-3-1-flash-lite,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,gemini-3-1-flash-lite,vie_Latn,Vietnamese,1.2738,2033,full sweep,1.4,1.0,1.1667,1.6667,2.0,1.4783
+massive,gemini-3-1-flash-lite,zho_Hans,Chinese (Simplified),0.9784,2033,full sweep,1.0,0.625,0.75,1.1429,1.3333,0.9673
+massive,gemini-3-1-flash-lite,rus_Cyrl,Russian,1.2126,2033,full sweep,1.3,0.875,1.0714,1.6,2.0,1.3763
+massive,gemini-3-1-flash-lite,deu_Latn,German,1.2072,2033,full sweep,1.25,0.9,1.0,1.5,1.75,1.3044
 massive,gemini-3-1-pro,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
 massive,gemini-3-1-pro,vie_Latn,Vietnamese,1.2738,2033,full sweep,1.4,1.0,1.1667,1.6667,2.0,1.4783
 massive,gemini-3-1-pro,zho_Hans,Chinese (Simplified),0.9784,2033,full sweep,1.0,0.625,0.75,1.1429,1.3333,0.9673
 massive,gemini-3-1-pro,rus_Cyrl,Russian,1.2126,2033,full sweep,1.3,0.875,1.0714,1.6,2.0,1.3763
 massive,gemini-3-1-pro,deu_Latn,German,1.2072,2033,full sweep,1.25,0.9,1.0,1.5,1.75,1.3044
+massive,gemini-3-5-flash,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
+massive,gemini-3-5-flash,vie_Latn,Vietnamese,1.2738,2033,full sweep,1.4,1.0,1.1667,1.6667,2.0,1.4783
+massive,gemini-3-5-flash,zho_Hans,Chinese (Simplified),0.9784,2033,full sweep,1.0,0.625,0.75,1.1429,1.3333,0.9673
+massive,gemini-3-5-flash,rus_Cyrl,Russian,1.2126,2033,full sweep,1.3,0.875,1.0714,1.6,2.0,1.3763
+massive,gemini-3-5-flash,deu_Latn,German,1.2072,2033,full sweep,1.25,0.9,1.0,1.5,1.75,1.3044
 massive,llama-4,eng_Latn,English,1.0,2033,full sweep,1.0,1.0,1.0,1.0,1.0,1.0
 massive,llama-4,vie_Latn,Vietnamese,1.2524,2033,full sweep,1.375,1.0,1.1667,1.6667,2.0,1.4483
 massive,llama-4,zho_Hans,Chinese (Simplified),1.0099,2033,full sweep,1.0,0.6273,0.8,1.1667,1.4,0.9985

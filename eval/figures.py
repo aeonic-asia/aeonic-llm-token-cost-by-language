@@ -117,16 +117,49 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 #     table view, so hue is not doing the work alone.
 #
 #   dollar figures: the HUE figures above no longer describe this chart. It draws
-#     seven flat fills — three of them tint steps, not palette slots — in price
-#     order: #6c62d2 (Haiku 4.5) . #008300 (Gemini 3.1 Pro) . #eda100 (GPT-5.6) .
-#     #4a3aa7 (Sonnet 4.6) . #fe7a73 (Sonnet 5) . #e34948 (Opus 5) . #b51221
-#     (Fable 5). The older "(violet,green,yellow,violet,red)" sequence and its
-#     ΔE 16.2 / 30.3 were measured before the tint steps replaced hatch, so they
-#     describe a chart that is no longer rendered and are not restated here as if
-#     they were. What IS validated for this chart is below: each family's steps as
-#     an ordinal ramp, and the cross-family adjacencies the steps create as
-#     categorical pairs (worst #4a3aa7 -> #fe7a73, CVD ΔE 29.2). A full re-run of
-#     the adjacent-pair gate over this seven-fill order is outstanding.
+#     NINE flat fills — five of them tint steps, not palette slots — in cost order:
+#     #59c253 (Gemini 3.1 Flash-Lite) . #36a231 (Gemini 3.5 Flash) . #6c62d2
+#     (Haiku 4.5) . #008300 (Gemini 3.1 Pro) . #eda100 (GPT-5.6) . #4a3aa7
+#     (Sonnet 4.6) . #fe7a73 (Sonnet 5) . #e34948 (Opus 5) . #b51221 (Fable 5).
+#     The older "(violet,green,yellow,violet,red)" sequence and its ΔE 16.2 / 30.3
+#     were measured before the tint steps replaced hatch, so they describe a chart
+#     that is no longer rendered and are not restated here as if they were.
+#
+#     The full adjacent-pair re-run was recorded here as outstanding; it has now
+#     BEEN RUN (2026-07-27), and the result needs stating plainly because the
+#     headline verdict is a FAIL:
+#
+#       * All five CROSS-family adjacencies pass, comfortably. Worst is
+#         #008300 -> #eda100 at CVD ΔE 16.2 (protan) / 30.3 normal, against floors
+#         of 8 and 15. #4a3aa7 -> #fe7a73 measures 29.2, reproducing the number
+#         recorded below and confirming the checker agrees with the original run.
+#       * Every WITHIN-family adjacency fails the categorical normal-vision floor,
+#         and always did: green 10.0 and 9.9, red 11.3 and 12.9, violet 13.0 — all
+#         below 15. Running the categorical gate over the whole sequence therefore
+#         reports FAIL, and reported FAIL for the seven-fill chart that shipped
+#         before this one (worst #e34948 -> #fe7a73, 11.3). This is not a
+#         regression introduced by the Gemini steps; it is what the tint-step
+#         design has always measured.
+#
+#     The right reading is that the categorical gate is the WRONG gate inside a
+#     family, not that the chart is broken. That gate assumes hue = identity and
+#     asks whether two fills are confusable; here two steps of one hue ARE the same
+#     tokenizer, and their similarity is the message the encoding exists to send.
+#     Within a family the governing gate is the ordinal one (single hue, monotone
+#     lightness, ΔL >= 0.06), which all three ramps pass. Identity is never carried
+#     by fill alone in this chart: every bar is in the legend, and the caption names
+#     each model with its price.
+#
+#     One hard limit worth recording so it is not rediscovered as a bug. Within a
+#     single hue ΔE is roughly 100x ΔL, so a ΔE-15 step needs ΔL 0.15. The green
+#     ramp's base #008300 is fixed at L 0.529 (it is the validated slot-5 hue and
+#     must stay Gemini's colour across every figure) and Gemini's flagship is its
+#     DEAREST tier, so the ramp can only run lighter — into a ceiling of L 0.752,
+#     where contrast hits the 2:1 floor. That leaves 0.223 of lightness for two
+#     steps, i.e. ΔL 0.112 and ΔE ~11 at the absolute best. A ΔE-15 green ramp is
+#     therefore unreachable without either moving Gemini off #008300 or letting the
+#     ramp run darker than its flagship. Neither is worth it; the steps sit at
+#     ΔL 0.0995 to keep the light end at 2.21:1 rather than 2.05:1.
 #
 # Re-check BOTH rendered orders against the gate above before changing any hue —
 # slot order alone is not the thing that ships. Folded members reuse a validated
@@ -163,15 +196,29 @@ _SLOT_BY_FLAGSHIP: dict[str, int] = {
 #
 #   red / claude-new    #fe7a73 -> #e34948 -> #b51221   (Sonnet 5 $3, Opus 5 $5, Fable 5 $10)
 #   violet / claude-old #6c62d2 -> #4a3aa7              (Haiku 4.5 $1, Sonnet 4.6 $3)
+#   green / gemini      #59c253 -> #36a231 -> #008300   (Flash-Lite $0.25, 3.5 Flash $1.50,
+#                                                        3.1 Pro $2.00)
 #
-# Both pass monotone lightness, adjacent OKLCH ΔL >= 0.06, single hue, and a
-# light end clearing 2:1 on this surface (red 2.48:1, violet 4.74:1). The
-# CROSS-family adjacencies these steps create are validated categorically, like
+# All three pass monotone lightness, adjacent OKLCH ΔL >= 0.06, single hue, and a
+# light end clearing 2:1 on this surface (red 2.48:1, violet 4.74:1, green 2.21:1).
+# The CROSS-family adjacencies these steps create are validated categorically, like
 # any other neighbouring pair: worst is #4a3aa7 -> #fe7a73 at CVD ΔE 29.2.
+#
+# The green ramp was generated the same way as the other two — fixed OKLCH hue and
+# chroma (H 142.5, C 0.180, in gamut at every step, so chroma needed no clamping),
+# stepping lightness DOWN as price rises: L 0.727 -> 0.628 -> 0.529, ΔL 0.0995 and
+# 0.0993. Its light end is the tightest of the three at 2.21:1, which is why
+# Flash-Lite sits at L 0.727 rather than lighter: L 0.749 would read as a cleaner
+# ramp step and falls to 2.05:1, and this ramp's cheap end is a real bar in the
+# published dollar figures rather than a legend swatch. Note the base hue #008300
+# is the DEAREST member here, where in the Claude families the base sits mid-ramp —
+# Gemini's flagship is its most expensive tier, so the ramp only runs lighter.
 _TINT_BY_COUNTER: dict[str, str] = {
-    "claude-sonnet-5": "#fe7a73",   # $3 — lightest of the newer-Claude family
-    "claude-fable-5": "#b51221",    # $10 — darkest
-    "claude-haiku-4-5": "#6c62d2",  # $1 — lighter of the older-Claude pair
+    "claude-sonnet-5": "#fe7a73",        # $3 — lightest of the newer-Claude family
+    "claude-fable-5": "#b51221",         # $10 — darkest
+    "claude-haiku-4-5": "#6c62d2",       # $1 — lighter of the older-Claude pair
+    "gemini-3-5-flash": "#36a231",       # $1.50 — middle step of the green ramp
+    "gemini-3-1-flash-lite": "#59c253",  # $0.25 — lightest; cheapest bar in the chart
 }
 
 
