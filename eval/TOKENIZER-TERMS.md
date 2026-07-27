@@ -10,7 +10,7 @@ eval without guessing, and so the licence position is stated rather than assumed
 |---|---|---|---|
 | `o200k_base`, `cl100k_base` | tiktoken BPE ranks | committed under `eval/tiktoken_cache/` | [tiktoken](https://github.com/openai/tiktoken), MIT |
 | `claude-*` (6 counters) | none published | Anthropic `count_tokens` API | [Anthropic usage policies](https://www.anthropic.com/legal/aup); the endpoint is free and unbilled |
-| `gemini-3-1-pro` | `gemma4` | `google/gemma-4-E4B-it` via the google-genai SDK | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
+| `gemini-3-1-pro`, `gemini-3-5-flash`, `gemini-3-1-flash-lite` | `gemma4` (one artifact, all three) | `google/gemma-4-E4B-it` via the google-genai SDK | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
 | `llama-4` | Llama 4 tokenizer | `meta-llama/Llama-4-Scout-17B-16E` (**gated**; needs `HF_TOKEN` and licence acceptance) | [Llama 4 Community License](https://www.llama.com/llama4/license/) |
 | `qwen-3-6` | Qwen 3.6 tokenizer | `Qwen/Qwen3.6-27B` (ungated) | Apache-2.0 |
 
