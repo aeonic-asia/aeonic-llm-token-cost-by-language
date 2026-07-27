@@ -348,6 +348,35 @@ def _price_as_of(counters: list[str]) -> str:
     return dates[0] if len(dates) == 1 else f"{dates[0]}–{dates[-1]}"
 
 
+def _price_confidence_note(counters: list[str]) -> list[str]:
+    """Name any drawn price the config does not grade `high`. Usually empty.
+
+    `Price.confidence` reached `cost_by_language.price_confidence` but never a
+    figure, so a bar computed from a hedged price rendered under a caption reading
+    only "input list price" — identical authority to a fully-sourced one, with the
+    hedge visible solely to a reader who opened the CSV. Every priced row is `high`
+    as of 2026-07-27 (the last `medium`, o200k_base, was resolved by claiming its
+    exact SKU rather than by softening the caption), so this line renders nothing
+    today. It exists so that the next hedged price cannot silently inherit the
+    confident caption: the qualifier appears the moment one is added, without
+    anyone remembering to edit prose here.
+
+    Deliberately names the counters rather than counting them — "1 price is
+    medium-confidence" tells a reader to distrust the chart; naming it tells them
+    which bar.
+    """
+    hedged = [c for c in counters
+              if (p := config.PRICING.get(c)) is not None
+              and p.input_usd_per_mtok is not None
+              and p.confidence != "high"]
+    if not hedged:
+        return []
+    named = ", ".join(f"{_label(c)} ({config.PRICING[c].confidence})"
+                      for c in hedged)
+    return [f"Not every price is high-confidence — {named}. See `source` in "
+            f"config.PRICING and `price_confidence` in cost_by_language.csv"]
+
+
 def _same_tokens_diff_price(agg: pd.DataFrame, corpus_id: str,
                             counters: list[str]) -> list[str]:
     """The "same tokens, different price" line — derived AND verified.
@@ -681,6 +710,7 @@ def _cost_legend_lines(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
     return [
         f"USD to serve 1,000,000 input characters — input list price "
         f"({_price_as_of(counters)}); VND = USD × {int(config.USD_TO_VND):,}",
+        *_price_confidence_note(counters),
         *_same_tokens_diff_price(agg, corpus_id, counters),
         *_unpriced_line(cost, counters),
     ]
@@ -725,6 +755,7 @@ def _cost_per_sentence_legend_lines(cost: pd.DataFrame, agg: pd.DataFrame,
         f"Read against the per-character chart: a dense script (Chinese) needs "
         f"few characters, so per-character overstates its cost; per {unit} it "
         f"ranks far lower.",
+        *_price_confidence_note(counters),
         *_same_tokens_diff_price(agg, corpus_id, counters),
         # Both dollar figures drop the same measured-but-unpriced counters, but
         # only the per-character one said so. Qwen 3.6 — the mildest Vietnamese
