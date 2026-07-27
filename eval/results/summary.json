@@ -49,7 +49,19 @@
         "Russian": 1.3432,
         "German": 1.7384
       },
+      "gemini-3-1-flash-lite": {
+        "Vietnamese": 1.3604,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3189
+      },
       "gemini-3-1-pro": {
+        "Vietnamese": 1.3604,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3189
+      },
+      "gemini-3-5-flash": {
         "Vietnamese": 1.3604,
         "Chinese (Simplified)": 1.1078,
         "Russian": 1.3703,
@@ -117,7 +129,19 @@
         "Russian": 1.406,
         "German": 1.6031
       },
+      "gemini-3-1-flash-lite": {
+        "Vietnamese": 1.2738,
+        "Chinese (Simplified)": 0.9784,
+        "Russian": 1.2126,
+        "German": 1.2072
+      },
       "gemini-3-1-pro": {
+        "Vietnamese": 1.2738,
+        "Chinese (Simplified)": 0.9784,
+        "Russian": 1.2126,
+        "German": 1.2072
+      },
+      "gemini-3-5-flash": {
         "Vietnamese": 1.2738,
         "Chinese (Simplified)": 0.9784,
         "Russian": 1.2126,
@@ -240,6 +264,18 @@
       [
         "claude-opus-4-8",
         "claude-sonnet-5"
+      ],
+      [
+        "gemini-3-1-flash-lite",
+        "gemini-3-1-pro"
+      ],
+      [
+        "gemini-3-1-flash-lite",
+        "gemini-3-5-flash"
+      ],
+      [
+        "gemini-3-1-pro",
+        "gemini-3-5-flash"
       ]
     ],
     "coincident_in_some_corpora": [],
@@ -273,6 +309,18 @@
         [
           "claude-opus-4-8",
           "claude-sonnet-5"
+        ],
+        [
+          "gemini-3-1-flash-lite",
+          "gemini-3-1-pro"
+        ],
+        [
+          "gemini-3-1-flash-lite",
+          "gemini-3-5-flash"
+        ],
+        [
+          "gemini-3-1-pro",
+          "gemini-3-5-flash"
         ]
       ],
       "massive": [
@@ -303,6 +351,18 @@
         [
           "claude-opus-4-8",
           "claude-sonnet-5"
+        ],
+        [
+          "gemini-3-1-flash-lite",
+          "gemini-3-1-pro"
+        ],
+        [
+          "gemini-3-1-flash-lite",
+          "gemini-3-5-flash"
+        ],
+        [
+          "gemini-3-1-pro",
+          "gemini-3-5-flash"
         ]
       ]
     }
@@ -316,19 +376,23 @@
       "claude-old",
       "claude-opus-4-8",
       "claude-sonnet-5",
+      "gemini-3-1-flash-lite",
       "gemini-3-1-pro",
+      "gemini-3-5-flash",
       "llama-4",
       "o200k_base",
       "qwen-3-6"
     ],
     "counters_measured_last_pass": [
-      "claude-old",
-      "claude-haiku-4-5"
+      "gemini-3-5-flash",
+      "gemini-3-1-flash-lite"
     ],
     "counters_carried_forward": [
       "cl100k_base",
       "claude-fable-5",
+      "claude-haiku-4-5",
       "claude-new",
+      "claude-old",
       "claude-opus-4-8",
       "claude-sonnet-5",
       "gemini-3-1-pro",
@@ -345,7 +409,9 @@
       "claude-old": "2026-07-26",
       "claude-opus-4-8": "2026-07-26",
       "claude-sonnet-5": "2026-07-26",
+      "gemini-3-1-flash-lite": "2026-07-27",
       "gemini-3-1-pro": "2026-07-26",
+      "gemini-3-5-flash": "2026-07-27",
       "llama-4": "2026-07-26",
       "o200k_base": "2026-07-26",
       "qwen-3-6": "2026-07-26"

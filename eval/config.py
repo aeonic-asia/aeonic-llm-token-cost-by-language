@@ -214,11 +214,14 @@ class Counter:
     #                           claims it) is the only supported value.
 
 
-# The trimmed flagship matrix — 11 counters: one column per DISTINCT tokenizer
+# The trimmed flagship matrix — 13 counters: one column per DISTINCT tokenizer
 # (o200k, cl100k, newer Claude, older Claude, gemma4, Llama 4, Qwen 3.6) plus the
 # fold proxies that prove the sharing in-dataset rather than asserting it. The
 # original scope lock said "≈7 counters"; the proxies and the extra Anthropic
-# price tiers took it to 11, each addition recorded in the workshop decision log.
+# price tiers took it to 11, then the two Gemini Flash price tiers to 13, each
+# addition recorded in the workshop decision log. Note the count grows only with
+# PRICE tiers and fold proofs — the number of distinct tokenizers is still seven,
+# and that is the number the headline figures draw.
 # Counting is free, so the trim is for table legibility, not cost.
 MODEL_MATRIX: list[Counter] = [
     # OpenAI — offline via tiktoken, real now.
@@ -322,12 +325,67 @@ MODEL_MATRIX: list[Counter] = [
     # Keep it one column. If a future Gemini genuinely changes tokenization, that
     # is a new headline column — establish it with a vocabulary diff, not with an
     # equality test on counts.
+    #
+    # ── 2026-07-27 model-currency check ──────────────────────────────────────
+    # Google shipped four newer GA models since the last pass. None of them earns a
+    # column, and the Pro column does not rotate. What changed is the PRICE layer:
+    # this tokenizer now serves an 8x price range, so two of the four join as fold
+    # proxies (below) to draw it.
+    #
+    #   Gemini 3.6 Flash       GA  $1.50  — NOT ADDED, see below
+    #   Gemini 3.5 Flash       GA  $1.50  — added as a fold proxy
+    #   Gemini 3.5 Flash-Lite  GA  $0.30  — NOT ADDED, see below
+    #   Gemini 3.1 Flash-Lite  GA  $0.25  — added as a fold proxy
+    #
+    # Three findings, each load-bearing for a decision above:
+    #
+    #  1. No new tokenizer, so no new column. Every model the SDK maps from 3.1
+    #     onward resolves to `gemma4`, and Google has published no tokenization
+    #     change. The bar for a column is a vocabulary diff plus a vendor report
+    #     (see the note above); neither exists here.
+    #  2. The Pro column stays on 3.1 Pro because Google shipped no newer Pro. The
+    #     Flash line advanced 3.1 -> 3.5 -> 3.6 while Pro did not move, so the
+    #     "flagship rotated, repoint the spec" rule does not fire. gemini-3.1-pro-
+    #     preview remains Google's newest Pro, and is still Preview rather than GA
+    #     — note the two proxies below are GA, so this column is the only Preview-
+    #     priced row in the matrix.
+    #  3. Gemini 3.6 Flash and 3.5 Flash-Lite are UNMEASURABLE here, which is why
+    #     the two newest models are absent while older ones are present. The
+    #     counter is offline: `spec` is not an endpoint, it is a lookup key into
+    #     the SDK's model->tokenizer table, and neither id is in that table — not
+    #     in the pinned 2.12.1 and not on python-genai `main` (checked 2026-07-27;
+    #     the two tables are identical, so upgrading the SDK would gain nothing).
+    #     `get_tokenizer_name('gemini-3.6-flash')` raises ValueError. Assigning
+    #     them gemma4 by hand would be asserting a tokenizer Google has not
+    #     published and the SDK does not claim — exactly the inference this matrix
+    #     refuses elsewhere. Revisit when the SDK maps them; the price rows are
+    #     ready-made ($1.50 and $0.30).
     Counter("gemini-3-1-pro", "Gemini 3.1 Pro (gemma4)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3.1-pro-preview",
             generation="gemini-gemma4",
             stands_in_for="Google Pro flagship — Gemini 3.1/3.5/4 'gemma4' tokenizer; "
                           "text vocabulary unchanged from the gemma3 line (2.0-3.0)",
             headline_display="Gemini 3.1 Pro"),
+    # The two Google fold proxies. Same job as the Claude proxies: confirm the
+    # shared tokenizer IN-DATASET via the coincidence check rather than on the
+    # SDK's mapping table alone, and give the dollar figures the price span this
+    # tokenizer actually serves. Before this pass Google drew a single $2.00 bar,
+    # so the "same tokens, different price" argument rested on Claude alone; it now
+    # has a second vendor, with a WIDER span (8x, $0.25 -> $2.00) than Claude's 10x
+    # split across two tokenizers. Both are Flash-tier, both GA, both mapped to
+    # gemma4 by the pinned SDK — measurable offline with no credential.
+    Counter("gemini-3-5-flash", "Gemini 3.5 Flash (gemma4, shared)", "Google",
+            "gemini_local", STATUS_NEEDS_SDK, spec="gemini-3.5-flash",
+            generation="gemini-gemma4",
+            stands_in_for="shared gemma4 tokenizer (verify); mid Flash tier",
+            headline=False, headline_display="Gemini 3.5 Flash",
+            flagship_group="gemini-3-1-pro", fold_reason="shared"),
+    Counter("gemini-3-1-flash-lite", "Gemini 3.1 Flash-Lite (gemma4, shared)", "Google",
+            "gemini_local", STATUS_NEEDS_SDK, spec="gemini-3.1-flash-lite",
+            generation="gemini-gemma4",
+            stands_in_for="shared gemma4 tokenizer (verify); cheapest mapped Gemini tier",
+            headline=False, headline_display="Gemini 3.1 Flash-Lite",
+            flagship_group="gemini-3-1-pro", fold_reason="shared"),
     # Open-weight representatives — HuggingFace AutoTokenizer. Content-token count
     # (no BOS/EOS), matching the tiktoken counters.
     #   Llama 4 Scout — GATED Meta repo: needs an HF access token (HF_TOKEN).
@@ -481,6 +539,15 @@ class Price:
 #   * Google — ai.google.dev/gemini-api/docs/pricing (Gemini 3.1 Pro Preview
 #     $2.00 ≤200K / $4.00 >200K input; still preview, not GA).
 #
+# ── 2026-07-27 addendum: two Google rows added ───────────────────────────────
+# The re-ratification above covered the eleven entries that existed at the time and
+# moved no price. Separately and on the same date, the model-currency check (see the
+# Gemini block in MODEL_MATRIX) added two Flash tiers, so this table now holds
+# thirteen. Both new prices are first verifications, not re-verifications, read off
+# the same ai.google.dev pricing page in the same pass. No existing price moved as a
+# result — the two rows are additive, and every previously published dollar figure
+# is unchanged.
+#
 # ── Two editorial choices, both DECIDED here rather than left implicit ────────
 #  * claude-sonnet-5 → **list $3.00, not the effective $2.00 intro.** The intro price
 #    runs through 2026-08-31 and reverts 2026-09-01, so for anything published near
@@ -596,7 +663,36 @@ PRICING: dict[str, Price] = {
                             "request under this eval never approaches the 200K boundary. "
                             "Verified 2026-07-27 against ai.google.dev/gemini-api/docs/"
                             "pricing, which still labels it Preview and not GA — a preview "
-                            "price carries less notice before it changes than a stable one"),
+                            "price carries less notice before it changes than a stable one. "
+                            "It is the DEAREST of three gemma4 tiers priced here (Flash-Lite "
+                            "$0.25 / Flash $1.50 / Pro $2.00), so unlike o200k this "
+                            "tokenizer's full price range is drawn"),
+    # The two Flash tiers. Their reason to exist is the DOLLAR figures: identical
+    # tokens to the Pro column at a fraction of the price, which is the article's
+    # thesis stated by a second vendor. Priced (unlike claude-opus-4-8, which is
+    # left unpriced precisely because its price matches its column's) — here every
+    # price differs, so each draws its own bar.
+    "gemini-3-5-flash": Price(1.50, "2026-07-27", "high",
+                              "Gemini 3.5 Flash (SKU `gemini-3.5-flash`) input list price "
+                              "($1.50/1M in), GA — not Preview, unlike the Pro column it "
+                              "folds into. Verified 2026-07-27 vs. ai.google.dev/gemini-api/"
+                              "docs/pricing. Worth knowing for a caption: the NEWER Gemini "
+                              "3.6 Flash carries the SAME $1.50 list price, so this bar's "
+                              "height is current for both — but only 3.5 Flash is MEASURED "
+                              "here (the SDK maps no tokenizer for 3.6), so name 3.5 Flash "
+                              "in print and do not silently extend the bar to 3.6"),
+    "gemini-3-1-flash-lite": Price(0.25, "2026-07-27", "high",
+                                   "Gemini 3.1 Flash-Lite (SKU `gemini-3.1-flash-lite`) "
+                                   "input list price for TEXT ($0.25/1M in; audio input is "
+                                   "a separate $0.50 tier, not used here — this eval feeds "
+                                   "text only, so the text tier is the correct one rather "
+                                   "than merely the cheaper one). GA. The cheapest Gemini "
+                                   "tier the SDK can tokenize, hence the light end of the "
+                                   "green ramp; note 3.5 Flash-Lite at $0.30 is newer and "
+                                   "also GA but is unmappable, so this is not Google's "
+                                   "cheapest model, only the cheapest measurable one. "
+                                   "Verified 2026-07-27 vs. ai.google.dev/gemini-api/docs/"
+                                   "pricing"),
     "llama-4": Price(None, "2026-07-27", "unknown",
                      "self-host / open-weight; no single per-token list price. Third-party "
                      "hosts serve Llama 4 at differing rates, none of which is Meta's price "
