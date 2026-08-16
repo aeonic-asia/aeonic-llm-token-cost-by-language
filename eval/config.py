@@ -479,7 +479,7 @@ def _check_matrix_integrity() -> None:
 # entry makes a claim about a specific SKU (or a specific reason not to price one).
 # The two coincide today only because 2026-07-27 re-verified all eleven at once; a
 # single-row correction moves that row's date and leaves this constant alone.
-PRICING_AS_OF = "2026-07-27"
+PRICING_AS_OF = "2026-08-16"
 # Interbank mid-market USD/VND. Source: TradingEconomics / Wise interbank quote
 # for the as-of date (prior-week range 26,249–26,305). Confidence: medium — a
 # reference mid-rate, not a specific bank's card rate; cost figures scale
@@ -539,6 +539,33 @@ class Price:
 #   * Google — ai.google.dev/gemini-api/docs/pricing (Gemini 3.1 Pro Preview
 #     $2.00 ≤200K / $4.00 >200K input; still preview, not GA).
 #
+# ── 2026-08-16 re-verification: the first pass where a price actually MOVED ──
+# Prompted by a pre-merge freshness check — the ratification below was three weeks
+# old and this branch's whole contribution is a price ladder. Ten priced/vendor rows
+# re-checked; the three unpriced self-host/historical rows were NOT re-checked and
+# keep their 2026-07-27 dates, because a row's date must mean "someone looked".
+#
+#  * **claude-sonnet-5 $3.00 -> $2.00.** Anthropic CANCELLED the scheduled increase
+#    and made the launch price standard: "the previously scheduled increase to
+#    $3/$15 per million input/output tokens on September 1, 2026 will not occur."
+#    The elaborate list-vs-effective decision recorded below is therefore MOOT, not
+#    overruled — there is no promotion left to decline to price. Every Sonnet 5
+#    dollar figure drops by a third and the cost ladder REORDERS; this is the first
+#    time this table has moved a published number.
+#  * Everything else held: Opus 5 / Opus 4.8 $5, Sonnet 4.6 $3, Haiku 4.5 $1,
+#    Fable 5 $10, GPT-5.6 Sol $5, Gemini 3.1 Pro $2.00 <=200K (still Preview),
+#    3.5 Flash $1.50, 3.1 Flash-Lite $0.25 text.
+#  * Two source strings were wrong without their prices being wrong, and are fixed
+#    in place: OpenAI cut Luna to $0.20 and Terra to $2.00 (Sol unmoved, so this row
+#    does not move), and Gemini 3.6 Flash is $0.75 through 2026-12-31 rather than the
+#    $1.50 this table briefly claimed.
+#  * Two new models seen and deliberately NOT added. **Claude Mythos 5** ($10/$50,
+#    limited availability via Anthropic's Glasswing programme) is on the newer
+#    tokenizer per Anthropic's own note, but it shares both that tokenizer AND
+#    Fable 5's exact price, so by the claude-opus-4-8 rule it would draw a duplicate
+#    bar; it also needs access this eval does not have. **Gemini 3.7 Flash**
+#    (Preview, $0.75 -> $1.50) is unmappable like 3.6 Flash and 3.5 Flash-Lite.
+#
 # ── 2026-07-27 addendum: two Google rows added ───────────────────────────────
 # The re-ratification above covered the eleven entries that existed at the time and
 # moved no price. Separately and on the same date, the model-currency check (see the
@@ -549,14 +576,14 @@ class Price:
 # is unchanged.
 #
 # ── Two editorial choices, both DECIDED here rather than left implicit ────────
-#  * claude-sonnet-5 → **list $3.00, not the effective $2.00 intro.** The intro price
-#    runs through 2026-08-31 and reverts 2026-09-01, so for anything published near
-#    that boundary $3.00 is what a reader will pay and $2.00 is what a reader paid.
-#    The deciding reason is comparability, not durability: every other row in this
-#    table is an undiscounted list price, so pricing one model at a promotion would
-#    put a temporarily-discounted bar in a ladder of list bars and silently flatter
-#    Sonnet 5 against Sonnet 4.6, which sits at the same $3.00 list. The effective
-#    price is stated in the source string so a drafter can quote it as a caveat.
+#  * ~~claude-sonnet-5 → list $3.00, not the effective $2.00 intro.~~ **SUPERSEDED
+#    2026-08-16 — kept only because it explains why the row read $3.00 for three
+#    weeks.** The reasoning was: price every row undiscounted, so a promotion does
+#    not put a temporarily-cheap bar in a list-price ladder and flatter Sonnet 5
+#    against Sonnet 4.6 at the same $3.00 list. Anthropic then cancelled the
+#    scheduled reversion and made $2.00 the standard price, which dissolves the
+#    choice rather than deciding it the other way: there is no discount to decline.
+#    The row is $2.00 because that is list. Do not resurrect the caveat.
 #  * o200k_base → **the Sol tier**, now claimed by exact SKU id (`gpt-5.6-sol`), so
 #    `confidence` is `high`: the number is primary-sourced for a named SKU. What is
 #    editorial is the *tier choice*, not the number, and a confidence grade is the
@@ -572,10 +599,13 @@ class Price:
 #    Do not read the charts as "OpenAI costs $5.00 to serve"; read them as "the
 #    flagship tier does".
 PRICING: dict[str, Price] = {
-    "o200k_base": Price(5.00, "2026-07-27", "high",
+    "o200k_base": Price(5.00, "2026-08-16", "high",
                         "GPT-5.6 Sol (SKU `gpt-5.6-sol`) input list price — the flagship "
                         "of three GPT-5.6 tiers that all share the o200k tokenizer "
-                        "(Luna $1.00 / Terra $2.50 / Sol $5.00 in). Verified 2026-07-27 "
+                        "(Luna $0.20 / Terra $2.00 / Sol $5.00 in; the cheaper two were "
+                        "cut from $1.00 and $2.50 between 2026-07-27 and 2026-08-16, "
+                        "which does NOT move this row but widens the unseen range below "
+                        "it to 25x). Verified 2026-08-16 "
                         "vs. developers.openai.com/api/docs/pricing. `high` because the "
                         "number is primary-sourced for a NAMED SKU; the tier pick is an "
                         "editorial scope choice, not an uncertainty. Note the cheaper "
@@ -588,37 +618,43 @@ PRICING: dict[str, Price] = {
     # Each Claude row is dated by when its own SKU claim was last checked, never by
     # PRICING_AS_OF: an entry naming Opus 5 stamped with a pre-Opus-5 date would assert
     # a false provenance — the same error DATASET_AS_OF exists to prevent.
-    "claude-new": Price(5.00, "2026-07-27", "high",
+    "claude-new": Price(5.00, "2026-08-16", "high",
                         "Newer-Claude tokenizer, priced on Claude Opus 5 (SKU "
                         "`claude-opus-5`): $5.00/1M in, $25.00/1M out. Opus 5 is "
                         "Anthropic's recommended default — Fable 5 is its most capable "
                         "widely released model, so avoid 'flagship' here. Opus 4.8 shares "
                         "both this tokenizer and this exact price (see its entry). "
                         "Verified 2026-07-27 vs. the Anthropic models/pricing page"),
-    "claude-old": Price(3.00, "2026-07-27", "high",
+    "claude-old": Price(3.00, "2026-08-16", "high",
                         "Older-Claude tokenizer, priced on Claude Sonnet 4.6 (SKU "
                         "`claude-sonnet-4-6`): $3.00/1M in, $15.00/1M out — an "
                         "undiscounted list price with no promotion attached. Verified "
                         "2026-07-27 vs. the Anthropic models/pricing page"),
-    "claude-sonnet-5": Price(3.00, "2026-07-27", "high",
-                             "Claude Sonnet 5 (SKU `claude-sonnet-5`) STANDARD list price: "
-                             "$3.00/1M in, $15.00/1M out. DELIBERATE list-vs-effective "
-                             "choice — an introductory $2.00/1M in ($10.00/1M out) is in "
-                             "effect through 2026-08-31 and reverts 2026-09-01. List wins "
-                             "on comparability: every other row here is undiscounted, so "
-                             "pricing the promotion would put a discounted bar in a "
-                             "list-price ladder and flatter Sonnet 5 against Sonnet 4.6 at "
-                             "the same $3.00 list. A drafter quoting what a buyer pays "
-                             "BEFORE 2026-09-01 should say two-thirds of the Sonnet 5 "
-                             "figures shown. Verified 2026-07-27 vs. the Anthropic "
-                             "models/pricing page"),
-    "claude-fable-5": Price(10.00, "2026-07-27", "high",
+    "claude-sonnet-5": Price(2.00, "2026-08-16", "high",
+                             "Claude Sonnet 5 (SKU `claude-sonnet-5`) standard list price: "
+                             "$2.00/1M in, $10.00/1M out. THE ONLY PRICE THAT HAS MOVED IN "
+                             "THIS TABLE — and it moved by being made permanent, not by "
+                             "changing. Through 2026-07-27 this row carried $3.00 with a "
+                             "deliberate list-vs-effective note: $2.00 was introductory "
+                             "pricing due to revert to $3.00 on 2026-09-01, and list won on "
+                             "comparability. Anthropic has since cancelled that increase — "
+                             "its pricing page now states the $2/$10 launch pricing 'is now "
+                             "the standard price' and 'the previously scheduled increase to "
+                             "$3/$15 per million input/output tokens on September 1, 2026 "
+                             "will not occur.' So $2.00 is simply the list price, the old "
+                             "reasoning is moot rather than overridden, and NO intro-price "
+                             "caveat belongs in print. Consequence worth carrying: Sonnet 5 "
+                             "is now CHEAPER than Sonnet 4.6 ($3.00), so the newer Claude "
+                             "tokenizer is no longer uniformly dearer at the Sonnet tier — "
+                             "more tokens, lower unit price. Verified 2026-08-16 vs. the "
+                             "Anthropic models/pricing page"),
+    "claude-fable-5": Price(10.00, "2026-08-16", "high",
                             "Claude Fable 5 (SKU `claude-fable-5`) input list price "
                             "($10.00/1M in, $50.00/1M out) — 2x Opus 5 / Opus 4.8; shares "
                             "the newer-Claude tokenizer, so identical token counts at "
                             "double the price. Verified 2026-07-27 vs. the Anthropic "
                             "models/pricing page + claude-api reference"),
-    "claude-haiku-4-5": Price(1.00, "2026-07-27", "high",
+    "claude-haiku-4-5": Price(1.00, "2026-08-16", "high",
                               "Claude Haiku 4.5 (SKU `claude-haiku-4-5`) input list price "
                               "($1.00/1M in, $5.00/1M out) — the cheapest Claude serving "
                               "tier, and it runs the OLDER Claude tokenizer. Verified "
@@ -645,7 +681,7 @@ PRICING: dict[str, Price] = {
     # the price IS known is stated above and in claude-new, not smuggled into a
     # confidence grade that lands in cost_by_language.csv as "high" beside an empty
     # price cell.
-    "claude-opus-4-8": Price(None, "2026-07-27", "unknown",
+    "claude-opus-4-8": Price(None, "2026-08-16", "unknown",
                              "premium-only by design: same tokenizer AND same $5.00/1M input price as "
                              "the claude-new headline column it folds into (Claude Opus 5) — priced "
                              "there, not duplicated here. Both re-verified 2026-07-27 vs. the "
@@ -654,7 +690,7 @@ PRICING: dict[str, Price] = {
     # The former "gemini-3-pro" entry is gone with its counter: gemini-3-pro-preview
     # was shut down 2026-03-09 and is absent from Google's pricing page, so its
     # $2.00 was a price for a model no longer sold.
-    "gemini-3-1-pro": Price(2.00, "2026-07-27", "high",
+    "gemini-3-1-pro": Price(2.00, "2026-08-16", "high",
                             "Gemini 3.1 Pro (SKU `gemini-3.1-pro-preview`) — Google's "
                             "current and newest Pro model — input list price, "
                             "<=200K-context tier ($2.00/1M in; $4.00/1M above 200K). The "
@@ -672,16 +708,19 @@ PRICING: dict[str, Price] = {
     # thesis stated by a second vendor. Priced (unlike claude-opus-4-8, which is
     # left unpriced precisely because its price matches its column's) — here every
     # price differs, so each draws its own bar.
-    "gemini-3-5-flash": Price(1.50, "2026-07-27", "high",
+    "gemini-3-5-flash": Price(1.50, "2026-08-16", "high",
                               "Gemini 3.5 Flash (SKU `gemini-3.5-flash`) input list price "
                               "($1.50/1M in), GA — not Preview, unlike the Pro column it "
-                              "folds into. Verified 2026-07-27 vs. ai.google.dev/gemini-api/"
-                              "docs/pricing. Worth knowing for a caption: the NEWER Gemini "
-                              "3.6 Flash carries the SAME $1.50 list price, so this bar's "
-                              "height is current for both — but only 3.5 Flash is MEASURED "
-                              "here (the SDK maps no tokenizer for 3.6), so name 3.5 Flash "
-                              "in print and do not silently extend the bar to 3.6"),
-    "gemini-3-1-flash-lite": Price(0.25, "2026-07-27", "high",
+                              "folds into. Verified 2026-08-16 vs. ai.google.dev/gemini-api/"
+                              "docs/pricing; unmoved since 2026-07-27. ⚠️ A CAPTION CLAIM "
+                              "WAS RETIRED HERE: this row briefly said the newer Gemini 3.6 "
+                              "Flash carried the same $1.50, so the bar was current for "
+                              "both. That is no longer true — 3.6 Flash is $0.75 through "
+                              "2026-12-31 and $1.50 only from 2027-01-01, so the bar is HALF "
+                              "its height for most of the article's life. Name 3.5 Flash and "
+                              "nothing else; 3.6 Flash remains unmeasurable anyway (the SDK "
+                              "maps no tokenizer for it)"),
+    "gemini-3-1-flash-lite": Price(0.25, "2026-08-16", "high",
                                    "Gemini 3.1 Flash-Lite (SKU `gemini-3.1-flash-lite`) "
                                    "input list price for TEXT ($0.25/1M in; audio input is "
                                    "a separate $0.50 tier, not used here — this eval feeds "

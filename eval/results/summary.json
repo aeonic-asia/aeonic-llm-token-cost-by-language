@@ -443,7 +443,7 @@
     "note": "`counters_carried_forward` were NOT re-measured in the last pass; their counts come from an earlier one. Cross-check `measured_on_by_counter` before citing a specific counter's date."
   },
   "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): Anthropic count_tokens counts a wrapped chat message, so a fixed frame (see run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count and is left envelope-INCLUSIVE, so the two are on near-identical rather than identical bases. The frame's share of the call is corpus-dependent — 0.0073%/0.0124% of the English total on FLORES (newer/older Claude) but 0.0286%/0.0463% on MASSIVE, whose totals are ~1.5-2.1x10^4 tokens rather than ~10^5. Worst resulting bias on a published aggregate premium is +0.0007 (massive/claude-old/vie), i.e. below the 4th decimal.",
-  "pricing_as_of": "2026-07-27",
+  "pricing_as_of": "2026-08-16",
   "usd_to_vnd": {
     "rate": 26295.0,
     "as_of": "2026-07-17"
