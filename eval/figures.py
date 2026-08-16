@@ -119,7 +119,7 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 #   dollar figures: the HUE figures above no longer describe this chart. It draws
 #     NINE flat fills — five of them tint steps, not palette slots — in cost order:
 #     #59c253 (Gemini 3.1 Flash-Lite) . #36a231 (Gemini 3.5 Flash) . #6c62d2
-#     (Haiku 4.5) . #008300 (Gemini 3.1 Pro) . #fe7a73 (Sonnet 5) . #eda100
+#     (Haiku 4.5) . #008300 (Gemini 3.1 Pro) . #f06d67 (Sonnet 5) . #eda100
 #     (GPT-5.6) . #4a3aa7 (Sonnet 4.6) . #e34948 (Opus 5) . #b51221 (Fable 5).
 #     The older "(violet,green,yellow,violet,red)" sequence and its ΔE 16.2 / 30.3
 #     were measured before the tint steps replaced hatch, so they describe a chart
@@ -129,27 +129,33 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 #     KNOWING: Anthropic repriced Sonnet 5 from $3.00 to $2.00, which lifted it from
 #     8th-cheapest to 5th. Nothing about the palette changed — but the chart sorts by
 #     COST, so a vendor price change silently reorders the fills and creates
-#     adjacencies nobody validated. Treat the adjacent-pair gate as a check on a
-#     *rendered order*, not on a palette: it has to be re-run whenever a price moves,
-#     not only when a colour does.
+#     adjacencies nobody validated. The adjacent-pair gate is a check on a *rendered
+#     order*, not on a palette. THAT IS NOW ENFORCED IN CODE, not remembered:
+#     tests/test_palette_adjacency.py derives the order from the committed cost data
+#     and fails the suite when any cross-family neighbour drops below the floors.
 #
-#     Three adjacencies are NEW at this order and are UNMEASURED: #008300 -> #fe7a73,
-#     #fe7a73 -> #eda100, and #4a3aa7 -> #e34948. The 2026-08-16 session did not have
-#     the validator available to run them. Do not read the "all cross-family
-#     adjacencies pass" line below as covering them — it was measured on the
-#     2026-07-27 order, where those three pairs were not neighbours. #fe7a73 ->
-#     #eda100 is the one to check first: the closest analogue already measured is
-#     #e34948 -> #eda100 at CVD ΔE 15.3, the tightest cross-family pair in the whole
-#     figure set, and #fe7a73 is a LIGHTER red than #e34948.
+#     It caught a real defect on its first run. The reorder put Sonnet 5 next to
+#     GPT-5.6, and #fe7a73 -> #eda100 measured normal ΔE 14.1 (floor 15) with CVD 8.5
+#     (floor 8) — a genuine FAIL, and a cross-family pair, so unlike a within-family
+#     tint step the categorical gate really does apply. Fixed by darkening Sonnet 5
+#     one step inside its own red ramp, #fe7a73 -> #f06d67 (OKLCH L 0.732 -> 0.692 at
+#     unchanged hue/chroma), which lifts that pair to normal 15.6 / CVD 10.6 while
+#     keeping it the lightest step of the family, so "lighter = cheaper" still holds.
+#     Two margins narrowed and both still clear: vs #008300 the CVD separation falls
+#     11.8 -> 8.9 (floor 8), and the ramp step to Opus 5 falls ΔL 0.109 -> 0.069
+#     (floor 0.06). Neither has much room left — if a future price change squeezes
+#     this pair again, re-slot a hue rather than darkening Sonnet 5 further.
 #
 #     The full adjacent-pair re-run was recorded here as outstanding; it was RUN on
 #     2026-07-27 against that date's order, and the result needs stating plainly
 #     because the headline verdict is a FAIL:
 #
-#       * All five CROSS-family adjacencies pass, comfortably. Worst is
-#         #008300 -> #eda100 at CVD ΔE 16.2 (protan) / 30.3 normal, against floors
-#         of 8 and 15. #4a3aa7 -> #fe7a73 measures 29.2, reproducing the number
-#         recorded below and confirming the checker agrees with the original run.
+#       * All CROSS-family adjacencies pass. On the CURRENT (2026-08-16) order the
+#         worst is #f06d67 -> #eda100 at normal ΔE 15.6 / CVD 10.6, then
+#         #008300 -> #f06d67 at 33.6 / 8.9 — floors 15 and 8. On the 2026-07-27
+#         order the worst was #008300 -> #eda100 at CVD 16.2 (protan) / 30.3 normal,
+#         and #4a3aa7 -> #fe7a73 measured 29.2, reproducing the number recorded
+#         below and confirming the checker agrees with the original run.
 #       * Every WITHIN-family adjacency fails the categorical normal-vision floor,
 #         and always did: green 10.0 and 9.9, red 11.3 and 12.9, violet 13.0 — all
 #         below 15. Running the categorical gate over the whole sequence therefore
@@ -211,7 +217,7 @@ _SLOT_BY_FLAGSHIP: dict[str, int] = {
 # at fixed hue and chroma, then validated as ordinal ramps (see the provenance
 # note above for the tool and its portability caveat):
 #
-#   red / claude-new    #fe7a73 -> #e34948 -> #b51221   (Sonnet 5 $2, Opus 5 $5, Fable 5 $10)
+#   red / claude-new    #f06d67 -> #e34948 -> #b51221   (Sonnet 5 $2, Opus 5 $5, Fable 5 $10)
 #   violet / claude-old #6c62d2 -> #4a3aa7              (Haiku 4.5 $1, Sonnet 4.6 $3)
 #   green / gemini      #59c253 -> #36a231 -> #008300   (Flash-Lite $0.25, 3.5 Flash $1.50,
 #                                                        3.1 Pro $2.00)
@@ -231,7 +237,7 @@ _SLOT_BY_FLAGSHIP: dict[str, int] = {
 # is the DEAREST member here, where in the Claude families the base sits mid-ramp —
 # Gemini's flagship is its most expensive tier, so the ramp only runs lighter.
 _TINT_BY_COUNTER: dict[str, str] = {
-    "claude-sonnet-5": "#fe7a73",        # $2 — lightest of the newer-Claude family
+    "claude-sonnet-5": "#f06d67",        # $2 — lightest of the newer-Claude family
     "claude-fable-5": "#b51221",         # $10 — darkest
     "claude-haiku-4-5": "#6c62d2",       # $1 — lighter of the older-Claude pair
     "gemini-3-5-flash": "#36a231",       # $1.50 — middle step of the green ramp
