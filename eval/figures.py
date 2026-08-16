@@ -183,7 +183,7 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 # hue and differ by a LIGHTNESS STEP (see _TINT_BY_COUNTER); texture was the
 # previous mechanism and is gone.
 _SLOT_BY_FLAGSHIP: dict[str, int] = {
-    "qwen-3-6": 1, "llama-4": 0, "gemini-3-1-pro": 5, "o200k_base": 3,
+    "qwen-3-8": 1, "llama-4": 0, "gemini-3-1-pro": 5, "o200k_base": 3,
     "claude-new": 7, "claude-old": 6, "cl100k_base": 2,
     # slot 4 (#e87ba4, magenta) is deliberately unassigned — headroom for one
     # more tokenizer without disturbing any existing hue. Re-validate both
