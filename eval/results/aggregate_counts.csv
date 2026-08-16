@@ -64,6 +64,11 @@ flores,qwen-3-6,eng_Latn,53541,257160,Qwen/Qwen3.6-27B,2026-07-26
 flores,qwen-3-6,rus_Cyrl,72596,280198,Qwen/Qwen3.6-27B,2026-07-26
 flores,qwen-3-6,vie_Latn,69365,270586,Qwen/Qwen3.6-27B,2026-07-26
 flores,qwen-3-6,zho_Hans,51350,85435,Qwen/Qwen3.6-27B,2026-07-26
+flores,qwen-3-8,deu_Latn,69824,300367,Qwen/Qwen3.8-27B,2026-08-16
+flores,qwen-3-8,eng_Latn,53541,257160,Qwen/Qwen3.8-27B,2026-08-16
+flores,qwen-3-8,rus_Cyrl,72596,280198,Qwen/Qwen3.8-27B,2026-08-16
+flores,qwen-3-8,vie_Latn,69365,270586,Qwen/Qwen3.8-27B,2026-08-16
+flores,qwen-3-8,zho_Hans,51350,85435,Qwen/Qwen3.8-27B,2026-08-16
 massive,cl100k_base,deu_Latn,20743,79734,cl100k_base,2026-07-26
 massive,cl100k_base,eng_Latn,15045,70729,cl100k_base,2026-07-26
 massive,cl100k_base,rus_Cyrl,34488,74623,cl100k_base,2026-07-26
@@ -129,3 +134,8 @@ massive,qwen-3-6,eng_Latn,15013,70729,Qwen/Qwen3.6-27B,2026-07-26
 massive,qwen-3-6,rus_Cyrl,18067,74623,Qwen/Qwen3.6-27B,2026-07-26
 massive,qwen-3-6,vie_Latn,18542,75810,Qwen/Qwen3.6-27B,2026-07-26
 massive,qwen-3-6,zho_Hans,13306,21222,Qwen/Qwen3.6-27B,2026-07-26
+massive,qwen-3-8,deu_Latn,18148,79734,Qwen/Qwen3.8-27B,2026-08-16
+massive,qwen-3-8,eng_Latn,15013,70729,Qwen/Qwen3.8-27B,2026-08-16
+massive,qwen-3-8,rus_Cyrl,18067,74623,Qwen/Qwen3.8-27B,2026-08-16
+massive,qwen-3-8,vie_Latn,18542,75810,Qwen/Qwen3.8-27B,2026-08-16
+massive,qwen-3-8,zho_Hans,13306,21222,Qwen/Qwen3.8-27B,2026-08-16

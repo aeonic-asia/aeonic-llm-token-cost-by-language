@@ -214,14 +214,15 @@ class Counter:
     #                           claims it) is the only supported value.
 
 
-# The trimmed flagship matrix — 13 counters: one column per DISTINCT tokenizer
-# (o200k, cl100k, newer Claude, older Claude, gemma4, Llama 4, Qwen 3.6) plus the
+# The trimmed flagship matrix — 14 counters: one column per DISTINCT tokenizer
+# (o200k, cl100k, newer Claude, older Claude, gemma4, Llama 4, Qwen) plus the
 # fold proxies that prove the sharing in-dataset rather than asserting it. The
 # original scope lock said "≈7 counters"; the proxies and the extra Anthropic
-# price tiers took it to 11, then the two Gemini Flash price tiers to 13, each
-# addition recorded in the workshop decision log. Note the count grows only with
-# PRICE tiers and fold proofs — the number of distinct tokenizers is still seven,
-# and that is the number the headline figures draw.
+# price tiers took it to 11, then the two Gemini Flash price tiers to 13, then the
+# retained Qwen 3.6 proxy to 14, each addition recorded in the workshop decision
+# log. Note the count grows only with PRICE tiers and fold proofs — the number of
+# distinct tokenizers is still seven, and that is the number the headline figures
+# draw.
 # Counting is free, so the trim is for table legibility, not cost.
 MODEL_MATRIX: list[Counter] = [
     # OpenAI — offline via tiktoken, real now.
@@ -397,20 +398,51 @@ MODEL_MATRIX: list[Counter] = [
     Counter("llama-4", "Llama 4 Scout (open-weight)", "Meta", "hf",
             STATUS_NEEDS_KEY, spec="meta-llama/Llama-4-Scout-17B-16E",
             gated=True, headline_display="Llama 4"),
-    # Qwen 3.6 (Alibaba, released 2026-04; open-weight, Apache-2.0). A NEW, larger
-    # tokenizer — 248,044 vocab entries, counted directly from the downloaded
-    # tokenizer.json (reproducible; the only vocab figure here that is measured
-    # rather than cited). Earlier Qwen generations are widely reported at ~152k,
-    # but that is a secondary-source number and is not restated as fact. The size
-    # difference is not the finding anyway — the measured premiums are. Earns its
-    # own headline column as the first non-incumbent vendor in the matrix.
-    # Self-host: no single per-token serving list price → premium-only,
-    # like Llama 4. This is the dense flagship repo; the MoE sibling is *believed*
-    # to share this tokenizer but that is NOT measured here — do not state it as
-    # fact, and add it as a fold proxy if the claim ever needs to be made in print.
-    Counter("qwen-3-6", "Qwen 3.6 (open-weight)", "Alibaba", "hf",
+    # Qwen (Alibaba; open-weight, Apache-2.0). A large tokenizer — 248,044 vocab
+    # entries, counted directly from the downloaded tokenizer.json (reproducible;
+    # the only vocab figure here that is measured rather than cited). Earlier Qwen
+    # generations are widely reported at ~152k, but that is a secondary-source
+    # number and is not restated as fact. The size difference is not the finding
+    # anyway — the measured premiums are. Earns its own headline column as the
+    # first non-incumbent vendor in the matrix. Self-host: no single per-token
+    # serving list price → premium-only, like Llama 4. These are the DENSE flagship
+    # repos; the MoE sibling (Qwen3.8-2.4T-A95B) is *believed* to share this
+    # tokenizer but that is NOT measured here — do not state it as fact, and add it
+    # as a fold proxy if the claim ever needs to be made in print.
+    #
+    # ── 2026-08-16: repointed 3.6 → 3.8, and the tokenizer did NOT change ────────
+    # Alibaba released Qwen3.8 in 2026-08. Per the flagship-rotation rule above the
+    # spec moves to the current dense flagship and the outgoing model stays as a
+    # fold proxy, so both names are backed by their own measured rows.
+    #
+    # The rotation is safe because the tokenizer is provably unchanged. A direct
+    # diff of both `tokenizer.json` files (2026-08-16) found the BASE TEXT VOCABULARY
+    # BYTE-IDENTICAL — 248,044 entries in each, zero pieces added, zero removed, zero
+    # ids moved — AND the BPE merge lists identical as Python objects (247,587 rules
+    # each). The only difference is seven added/special tokens present in 3.8 and not
+    # 3.6, all audio/TTS control tokens (`<tts_pad>`, `<tts_text_bos>`,
+    # `<tts_text_bos_single>`, `<tts_text_eod>`, `<|audio_start|>`, `<|audio_end|>`,
+    # `<|audio_pad|>`), which is what a multimodal successor would add; every added
+    # token the two share keeps its id.
+    #
+    # Note the strength of that evidence relative to everything else in this repo.
+    # Identical vocab AND identical merges means the two tokenizers produce equal
+    # counts BY CONSTRUCTION, on any corpus — not "equal on the corpus we happened to
+    # run", which the Gemini episode showed proves nothing. The fold proxy below is
+    # therefore confirmation, not the evidence; the vocabulary diff is the evidence.
+    # This is the same shape as gemma3/gemma4: one text vocabulary, two artifacts,
+    # differing only in control tokens. Two vendors independently.
+    Counter("qwen-3-8", "Qwen 3.8 (open-weight)", "Alibaba", "hf",
+            STATUS_NEEDS_SDK, spec="Qwen/Qwen3.8-27B",
+            gated=False, headline_display="Qwen 3.8"),
+    # Qwen 3.6 — the prior dense flagship, retained as a fold proxy after the column
+    # moved to 3.8, exactly as claude-opus-4-8 was retained behind claude-new. Keeping
+    # it measured is what lets a caption say "Qwen 3.8 = Qwen 3.6" with both names
+    # backed by their own rows rather than by a comment.
+    Counter("qwen-3-6", "Qwen 3.6 (open-weight, shared — confirmed)", "Alibaba", "hf",
             STATUS_NEEDS_SDK, spec="Qwen/Qwen3.6-27B",
-            gated=False, headline_display="Qwen 3.6"),
+            gated=False, headline=False, headline_display="Qwen 3.6",
+            flagship_group="qwen-3-8", fold_reason="shared"),
 ]
 
 MATRIX_BY_ID = {c.id: c for c in MODEL_MATRIX}
@@ -736,11 +768,17 @@ PRICING: dict[str, Price] = {
                      "self-host / open-weight; no single per-token list price. Third-party "
                      "hosts serve Llama 4 at differing rates, none of which is Meta's price "
                      "for this open-weight repo, so none is used. Re-confirmed 2026-07-27"),
-    "qwen-3-6": Price(None, "2026-07-27", "unknown",
+    "qwen-3-8": Price(None, "2026-08-16", "unknown",
                       "self-host / open-weight (Apache-2.0); no single per-token list price. "
-                      "Alibaba Cloud hosts distinct commercial Qwen3.6 SKUs (Plus/Max/Flash, "
-                      "~$0.19–1.30/1M in) — different models from this open-weight repo, so NOT "
-                      "used as its price. Premium-only, like Llama 4"),
+                      "Alibaba Cloud hosts distinct commercial Qwen SKUs (Plus/Max/Flash) — "
+                      "different models from this open-weight repo, so NOT used as its price. "
+                      "Premium-only, like Llama 4"),
+    "qwen-3-6": Price(None, "2026-07-27", "unknown",
+                      "premium-only by design, same as the qwen-3-8 column it folds into: "
+                      "self-host / open-weight, no single per-token list price. Kept as the "
+                      "measured proxy for the prior dense flagship. Date deliberately NOT "
+                      "bumped on 2026-08-16 — nothing about this row was re-checked, and "
+                      "there is no price to re-check"),
 }
 
 

@@ -84,6 +84,12 @@
         "Chinese (Simplified)": 0.9591,
         "Russian": 1.3559,
         "German": 1.3041
+      },
+      "qwen-3-8": {
+        "Vietnamese": 1.2955,
+        "Chinese (Simplified)": 0.9591,
+        "Russian": 1.3559,
+        "German": 1.3041
       }
     },
     "massive": {
@@ -160,6 +166,12 @@
         "German": 1.2041
       },
       "qwen-3-6": {
+        "Vietnamese": 1.2351,
+        "Chinese (Simplified)": 0.8863,
+        "Russian": 1.2034,
+        "German": 1.2088
+      },
+      "qwen-3-8": {
         "Vietnamese": 1.2351,
         "Chinese (Simplified)": 0.8863,
         "Russian": 1.2034,
@@ -276,6 +288,10 @@
       [
         "gemini-3-1-pro",
         "gemini-3-5-flash"
+      ],
+      [
+        "qwen-3-6",
+        "qwen-3-8"
       ]
     ],
     "coincident_in_some_corpora": [],
@@ -321,6 +337,10 @@
         [
           "gemini-3-1-pro",
           "gemini-3-5-flash"
+        ],
+        [
+          "qwen-3-6",
+          "qwen-3-8"
         ]
       ],
       "massive": [
@@ -363,6 +383,10 @@
         [
           "gemini-3-1-pro",
           "gemini-3-5-flash"
+        ],
+        [
+          "qwen-3-6",
+          "qwen-3-8"
         ]
       ]
     }
@@ -381,11 +405,11 @@
       "gemini-3-5-flash",
       "llama-4",
       "o200k_base",
-      "qwen-3-6"
+      "qwen-3-6",
+      "qwen-3-8"
     ],
     "counters_measured_last_pass": [
-      "gemini-3-5-flash",
-      "gemini-3-1-flash-lite"
+      "qwen-3-8"
     ],
     "counters_carried_forward": [
       "cl100k_base",
@@ -395,7 +419,9 @@
       "claude-old",
       "claude-opus-4-8",
       "claude-sonnet-5",
+      "gemini-3-1-flash-lite",
       "gemini-3-1-pro",
+      "gemini-3-5-flash",
       "llama-4",
       "o200k_base",
       "qwen-3-6"
@@ -414,7 +440,8 @@
       "gemini-3-5-flash": "2026-07-27",
       "llama-4": "2026-07-26",
       "o200k_base": "2026-07-26",
-      "qwen-3-6": "2026-07-26"
+      "qwen-3-6": "2026-07-26",
+      "qwen-3-8": "2026-08-16"
     },
     "corpora_fingerprint": {
       "flores": {

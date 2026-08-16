@@ -28,8 +28,7 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "gemini-3-5-flash",
-    "gemini-3-1-flash-lite"
+    "qwen-3-8"
   ],
   "counters_carried_forward": [
     "cl100k_base",
@@ -39,7 +38,9 @@
     "claude-old",
     "claude-opus-4-8",
     "claude-sonnet-5",
+    "gemini-3-1-flash-lite",
     "gemini-3-1-pro",
+    "gemini-3-5-flash",
     "llama-4",
     "o200k_base",
     "qwen-3-6"
@@ -58,7 +59,8 @@
     "gemini-3-5-flash": "2026-07-27",
     "llama-4": "2026-07-26",
     "o200k_base": "2026-07-26",
-    "qwen-3-6": "2026-07-26"
+    "qwen-3-6": "2026-07-26",
+    "qwen-3-8": "2026-08-16"
   },
   "counters_without_per_sentence_rows": [],
   "envelope_tokens_by_counter": {
@@ -74,7 +76,8 @@
     "gemini-3-5-flash": 0,
     "llama-4": 0,
     "o200k_base": 0,
-    "qwen-3-6": 0
+    "qwen-3-6": 0,
+    "qwen-3-8": 0
   },
   "envelope_probe_frames_by_counter": {},
   "versions": {

@@ -2502,7 +2502,7 @@ z
      <use xlink:href="#DejaVuSans-56" transform="translate(10341.53125 0)"/>
      <use xlink:href="#DejaVuSans-c" transform="translate(10393.625 0)"/>
     </g>
-    <!-- cl100k (2023), Llama 4, Qwen 3.6 omitted — no serving list price -->
+    <!-- cl100k (2023), Llama 4, Qwen 3.8 omitted — no serving list price -->
     <g style="fill: #898781" transform="translate(49.465312 402.119734) scale(0.075 -0.075)">
      <defs>
       <path id="DejaVuSans-34" d="M 2522 4238 
@@ -2563,7 +2563,7 @@ z
      <use xlink:href="#DejaVuSans-3" transform="translate(1507.265625 0)"/>
      <use xlink:href="#DejaVuSans-16" transform="translate(1539.046875 0)"/>
      <use xlink:href="#DejaVuSans-11" transform="translate(1602.671875 0)"/>
-     <use xlink:href="#DejaVuSans-19" transform="translate(1634.453125 0)"/>
+     <use xlink:href="#DejaVuSans-1b" transform="translate(1634.453125 0)"/>
      <use xlink:href="#DejaVuSans-3" transform="translate(1698.078125 0)"/>
      <use xlink:href="#DejaVuSans-52" transform="translate(1729.859375 0)"/>
      <use xlink:href="#DejaVuSans-50" transform="translate(1791.046875 0)"/>
