@@ -1034,15 +1034,23 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
         # text token rather than the series hue and recedes behind the subject.
         ax.plot([en, vi], [y, y], color=fill, linewidth=3, solid_capstyle="round",
                 zorder=2, alpha=0.55)
-        ax.plot([en], [y], marker="o", markersize=7, color=_T.ink_muted, zorder=3)
+        # Hue means MODEL everywhere in this repo, so it cannot also mean language.
+        # Fill state carries the language instead: hollow = English, solid =
+        # Vietnamese, both in the row's own hue. The earlier version drew the
+        # English dot in muted ink and legended "Vietnamese" with one arbitrary
+        # model's red, which asserted "red = Vietnamese" — false, and contradicted
+        # by nine rows of green, violet and orange Vietnamese dots.
+        ax.plot([en], [y], marker="o", markersize=8, markerfacecolor=_T.surface,
+                markeredgecolor=fill, markeredgewidth=2.0, zorder=3)
         ax.plot([vi], [y], marker="o", markersize=9, color=fill, zorder=4)
         ax.annotate(f"${vi:,.4f}  ({vi / en:.2f}\u00d7)", (vi, y),
                     textcoords="offset points", xytext=(9, 0), ha="left",
                     va="center", fontsize=8.5, color=_T.ink_2)
-    # one legend entry per dot role, not per model — identity is on the y axis
-    ax.plot([], [], marker="o", markersize=7, color=_T.ink_muted, linestyle="none",
+    # Legend swatches are neutral: they explain the FILL convention, not a colour.
+    ax.plot([], [], marker="o", markersize=8, markerfacecolor=_T.surface,
+            markeredgecolor=_T.ink_muted, markeredgewidth=2.0, linestyle="none",
             label="English (same content)")
-    ax.plot([], [], marker="o", markersize=9, color=_T.series[7], linestyle="none",
+    ax.plot([], [], marker="o", markersize=9, color=_T.ink_muted, linestyle="none",
             label="Vietnamese")
     # Upper right, not lower: the rows are sorted cheapest-first so the short bars
     # are at the top and the long ones at the bottom — a lower-right legend lands
@@ -1054,13 +1062,28 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
         t.set_color(_T.ink_2)
     ax.set_xlabel("USD per 1,000 sentences \u2014 same content, both languages",
                   fontsize=9, color=_T.ink_2)
-    worst = max(pairs, key=lambda t: t[2] / t[1])
+    # This axis draws DOLLARS, so the title must name the widest dollar gap. The
+    # first version named the steepest RATIO (Haiku 4.5, 2.42x) and sent the
+    # reader hunting for the longest line, which is one of the shortest on the
+    # chart — Haiku is a cheap model with an inefficient tokenizer, so its tax is
+    # large in proportion and small in money. Naming both, and labelling which is
+    # which, is the article's own point rather than a caption apology.
+    widest = max(pairs, key=lambda t: t[2] - t[1])
+    steepest = max(pairs, key=lambda t: t[2] / t[1])
     ax.set_title(f"The Vietnamese tax in money \u2014 {corpus_name} "
-                 f"(the gap is the tax; worst is {_label(worst[0])} at "
-                 f"{worst[2] / worst[1]:.2f}\u00d7)",
+                 f"(each line is what the same content costs extra in Vietnamese)",
                  fontsize=11.5, color=_T.ink, pad=18, loc="left")
-    _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id,
-                                                  [c for c, _, _ in pairs]), ax)
+    lines = [
+        f"Widest gap: {_label(widest[0])}, +${widest[2] - widest[1]:,.4f} per "
+        f"1,000 sentences ({widest[2] / widest[1]:.2f}\u00d7). "
+        f"Steepest ratio: {_label(steepest[0])} at {steepest[2] / steepest[1]:.2f}\u00d7 "
+        f"— only +${steepest[2] - steepest[1]:,.4f}, because a cheap model with an "
+        f"inefficient tokenizer is costly in proportion and small in money.",
+        "The two are different axes: the tokenizer sets the ratio, the serving tier "
+        "sets the size of the bill it applies to.",
+    ] + _cost_per_sentence_legend_lines(cost, agg, corpus_id,
+                                        [c for c, _, _ in pairs])
+    _caption(fig, lines, ax)
     _save(fig, stem)
 
 
