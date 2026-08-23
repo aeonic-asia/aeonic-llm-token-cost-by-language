@@ -47,6 +47,9 @@ from .. import figures
 MIN_NORMAL_DE = 15.0
 MIN_CVD_DE = 8.0
 MIN_RAMP_DL = 0.06
+# 2.0:1 is the dataviz validator's ordinal light-end floor — the point below which
+# the pale (light theme) or dark (dark theme) end of a ramp stops reading as a mark.
+MIN_FILL_CONTRAST = 2.0
 
 # Machado, Oliveira & Fernandes (2009), severity 1.0, for LINEAR sRGB.
 _CVD = {
@@ -138,9 +141,21 @@ class PaletteAdjacencyTest(unittest.TestCase):
     def test_adjacent_bars_in_the_dollar_figures_are_distinguishable(self):
         """The gate a vendor price change can break without touching a colour."""
         order = _rendered_dollar_order()
-        fills = figures._series_style(order)
         slots = [figures._slot(c) for c in order]
 
+        failures = []
+        for theme in figures.THEMES:
+            with figures._use_theme(theme):
+                fills = figures._series_style(order)
+            failures += self._adjacency_failures(theme, order, slots, fills)
+        self.assertEqual(failures, [], "\n  ".join(
+            ["adjacent bars are too close to tell apart. NOTE the rendered order "
+             "follows COST, so a vendor price change can cause this with no colour "
+             "edited — check config.PRICING before assuming a palette bug. Fix by "
+             "re-stepping the offending tint in that Theme's `tints`, or by "
+             "re-slotting a hue if the ramp has no room left."] + failures))
+
+    def _adjacency_failures(self, theme, order, slots, fills):
         failures = []
         for i in range(len(order) - 1):
             if slots[i] == slots[i + 1]:
@@ -149,45 +164,74 @@ class PaletteAdjacencyTest(unittest.TestCase):
             cvd = min(delta_e(fills[i], fills[i + 1], k) for k in _CVD)
             if normal < MIN_NORMAL_DE or cvd < MIN_CVD_DE:
                 failures.append(
-                    f"{order[i]} ({fills[i]}) next to {order[i+1]} ({fills[i+1]}): "
+                    f"[{theme.name}] {order[i]} ({fills[i]}) next to "
+                    f"{order[i+1]} ({fills[i+1]}): "
                     f"normal ΔE {normal:.1f} (need >={MIN_NORMAL_DE}), "
                     f"CVD ΔE {cvd:.1f} (need >={MIN_CVD_DE})")
-        self.assertEqual(failures, [], "\n  ".join(
-            ["adjacent bars are too close to tell apart. NOTE the rendered order "
-             "follows COST, so a vendor price change can cause this with no colour "
-             "edited — check config.PRICING before assuming a palette bug. Fix by "
-             "re-stepping the offending tint in figures._TINT_BY_COUNTER, or by "
-             "re-slotting a hue if the ramp has no room left."] + failures))
+        return failures
 
     def test_tint_ramps_are_ordinal(self):
         """Within a family the rule is monotone lightness, not colour distance."""
         families: dict[int, list[str]] = {}
         for c in config.MODEL_MATRIX:
-            if c.id in figures._TINT_BY_COUNTER or not c.headline:
+            if c.id in figures.LIGHT.tints or not c.headline:
                 if c.id in config.PRICING and config.PRICING[c.id].input_usd_per_mtok:
                     families.setdefault(figures._slot(c.id), []).append(c.id)
         for cid in figures._SLOT_BY_FLAGSHIP:
             if config.PRICING.get(cid) and config.PRICING[cid].input_usd_per_mtok:
                 families.setdefault(figures._slot(cid), []).append(cid)
 
-        for slot, members in families.items():
+        for theme, (slot, members) in (
+                (t, fm) for t in figures.THEMES for fm in families.items()):
             if len(members) < 2:
                 continue
             # lighter = cheaper, so sort by price and expect descending lightness
             ordered = sorted(members,
                              key=lambda c: config.PRICING[c].input_usd_per_mtok)
-            fills = [figures._TINT_BY_COUNTER.get(c, figures._SERIES[slot])
-                     for c in ordered]
+            fills = [theme.tints.get(c, theme.series[slot]) for c in ordered]
             lightness = [oklch_lightness(f) for f in fills]
             for a, b, la, lb in zip(ordered, ordered[1:], lightness, lightness[1:]):
                 self.assertGreater(
                     la, lb,
-                    f"{a} is priced below {b} but is not lighter — the ramp encodes "
-                    "price, so lighter must mean cheaper")
+                    f"[{theme.name}] {a} is priced below {b} but is not lighter — "
+                    "the ramp encodes price, so lighter must mean cheaper")
                 self.assertGreaterEqual(
                     la - lb, MIN_RAMP_DL,
-                    f"{a} -> {b} steps only ΔL {la - lb:.4f}; the ramp needs "
-                    f">={MIN_RAMP_DL} to read as ordered")
+                    f"[{theme.name}] {a} -> {b} steps only ΔL {la - lb:.4f}; the "
+                    f"ramp needs >={MIN_RAMP_DL} to read as ordered")
+
+    def test_every_fill_clears_its_own_surface(self):
+        """The check the dark theme exists to satisfy.
+
+        A fill is only a mark if it separates from the ground it is drawn on, and
+        the ground is per-theme. This is what forced the violet family up: on the
+        dark surface #4a3aa7 sat at 2.04:1, over the ordinal floor by a hair and
+        dark-violet-on-near-black in practice. Pinned so a later re-step cannot
+        quietly sink a bar into the background — the failure mode is invisible in
+        a diff and obvious only on the rendered page.
+        """
+        def _lin(v):
+            v /= 255
+            return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+
+        def contrast(fg, bg):
+            def lum(h):
+                r, g, b = (int(h[i:i + 2], 16) for i in (1, 3, 5))
+                return 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b)
+            a, b = sorted((lum(fg), lum(bg)), reverse=True)
+            return (a + 0.05) / (b + 0.05)
+
+        order = _rendered_dollar_order()
+        for theme in figures.THEMES:
+            with figures._use_theme(theme):
+                fills = figures._series_style(order)
+            for cid, fill in zip(order, fills):
+                ratio = contrast(fill, theme.surface)
+                self.assertGreaterEqual(
+                    ratio, MIN_FILL_CONTRAST,
+                    f"[{theme.name}] {cid} ({fill}) is {ratio:.2f}:1 against the "
+                    f"{theme.surface} surface, under the {MIN_FILL_CONTRAST}:1 floor "
+                    "— it will not read as a mark")
 
 
 if __name__ == "__main__":

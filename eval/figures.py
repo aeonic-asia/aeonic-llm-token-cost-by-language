@@ -30,6 +30,9 @@ price-independent driver of the per-character view.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
+from dataclasses import dataclass
+
 import matplotlib
 matplotlib.use("Agg")
 # Determinism: pin the SVG element-id hash salt (else matplotlib re-randomises
@@ -57,14 +60,109 @@ from . import config
 # cost_by_language.csv / premium_by_language.csv are that table view, and the
 # extreme in each group is directly labelled. (Magenta is also sub-3:1 but is
 # currently unassigned; see _SLOT_BY_FLAGSHIP.)
-_SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
-           "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
-_SURFACE = "#fcfcfb"     # chart surface
-_INK = "#0b0b0b"         # primary ink (titles)
-_INK_2 = "#52514e"       # secondary ink (legend, axis titles)
-_INK_MUTED = "#898781"   # muted ink (tick labels, captions)
-_GRID = "#e1e0d9"        # hairline gridline, one step off the surface
-_BASELINE = "#c3c2b7"    # baseline / axis rule
+# TWO THEMES. The repo's own project page is light; the Insights article that
+# consumes these figures is dark. Both render from one code path — a Theme
+# carries every colour that depends on the surface, and make_figures() emits the
+# whole set once per theme.
+#
+# The dark theme changes the SURFACE and the INK, and deliberately keeps the
+# series fills. That is not laziness — it is the finding that shaped this work.
+# CVD separation is measured fill-against-fill, so it does not depend on the
+# surface at all: reusing the fills inherits every colourblind-safety property
+# the light palette already validated, for free. Recolouring the marks forfeits
+# it. A first attempt did exactly that — it inverted the price ramps so the dear
+# end stayed bright on black — and put Sonnet 5's red beside Gemini 3.1 Pro's
+# green at deutan dE 1.0 in the RENDERED (cost-sorted) order: indistinguishable
+# to a red-green colourblind reader, where the light palette scores 8.9. The
+# slot-order check passed and hid it; only the rendered order caught it, which
+# is the same lesson _SLOT_BY_FLAGSHIP already records.
+#
+# So exactly one family moves, and only because it had to: violet's dear end
+# #4a3aa7 sits at 2.04:1 on the dark surface — over the 2:1 ordinal floor by a
+# hair, and dark violet on near-black in practice. Lifting the pair at fixed hue
+# and chroma puts it at 3.02:1. Everything else is the shipped light value, so
+# `lighter = cheaper` still reads the same way in both themes.
+#
+# Two dark-theme numbers beat their light counterparts: muted ink goes 3.50:1 ->
+# 4.90:1 (light misses the 4.5 WCAG text threshold; dark clears it) and the
+# violet dear end 2.04 -> 3.02:1.
+#
+# Validated with the dataviz validator, dark surface #1a1a19: categorical set
+# and all three ordinal ramps PASS; rendered-order cross-family CVD dE 8.9
+# (protan), identical to light. The residual within-family FAILs are the
+# documented expected ones (see Theme.tints).
+@dataclass(frozen=True)
+class Theme:
+    name: str
+    suffix: str          # appended to every figure stem ("" keeps light's filenames)
+    surface: str         # painted on the figure + axes patch
+    ink: str             # primary ink (titles)
+    ink_2: str           # secondary ink (legend, axis titles)
+    ink_muted: str       # muted ink (tick labels, captions)
+    grid: str            # hairline gridline, one step off the surface
+    baseline: str        # baseline / axis rule
+    series: tuple[str, ...]      # categorical slots, fixed order, never cycled
+    tints: dict[str, str]        # per-counter lightness steps within a family hue
+
+
+# Categorical hues assigned in FIXED slot order and never cycled (provenance and
+# validation notes live with _SLOT_BY_FLAGSHIP below). On the light surface aqua
+# and yellow fall below 3:1, which obliges "relief" — the committed
+# cost_by_language.csv / premium_by_language.csv are that table view, and the
+# extreme in each group is directly labelled. (Magenta is also sub-3:1 but is
+# currently unassigned; see _SLOT_BY_FLAGSHIP.)
+_LIGHT_SERIES = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+                 "#e87ba4", "#008300", "#4a3aa7", "#e34948")
+
+LIGHT = Theme(
+    name="light", suffix="",
+    # #ffffff, not #fcfcfb. The old _SURFACE constant said #fcfcfb but was never
+    # read by anything, so every figure has always rendered on matplotlib's
+    # default white while the documented contrast ratios were reasoned against a
+    # surface that never shipped. Recording what actually renders.
+    surface="#ffffff",
+    ink="#0b0b0b", ink_2="#52514e", ink_muted="#898781",
+    grid="#e1e0d9", baseline="#c3c2b7",
+    series=_LIGHT_SERIES, tints={
+        "claude-sonnet-5": "#f06d67",        # $2 — lightest of the newer-Claude family
+        "claude-fable-5": "#b51221",         # $10 — darkest
+        "claude-haiku-4-5": "#6c62d2",       # $1 — lighter of the older-Claude pair
+        "gemini-3-5-flash": "#36a231",       # $1.50 — middle step of the green ramp
+        "gemini-3-1-flash-lite": "#59c253",  # $0.25 — lightest; cheapest bar in the chart
+    })
+
+DARK = Theme(
+    name="dark", suffix="-dark",
+    surface="#1a1a19",
+    ink="#f5f4f1", ink_2="#b8b6b0", ink_muted="#8a8880",
+    grid="#2a2926", baseline="#3d3b37",
+    # Slot 6 (violet) is the one lifted value; every other slot is light's.
+    series=_LIGHT_SERIES[:6] + ("#6156c5",) + _LIGHT_SERIES[7:],
+    tints={
+        "claude-sonnet-5": "#f06d67",
+        "claude-fable-5": "#b51221",
+        "claude-haiku-4-5": "#857ef1",       # lifted with its family (was #6c62d2)
+        "gemini-3-5-flash": "#36a231",
+        "gemini-3-1-flash-lite": "#59c253",
+    })
+
+THEMES = (LIGHT, DARK)
+
+# The theme in force for the current render. Module state rather than a
+# parameter threaded through every helper: the render functions are already
+# long, and a Theme is read in thirteen places across five of them.
+_T: Theme = LIGHT
+
+
+@contextmanager
+def _use_theme(theme: Theme):
+    """Render under `theme`, restoring the previous one afterwards."""
+    global _T
+    prev, _T = _T, theme
+    try:
+        yield theme
+    finally:
+        _T = prev
 
 
 # Colour follows the TOKENIZER; the tint STEP within that colour follows the
@@ -186,7 +284,7 @@ _BASELINE = "#c3c2b7"    # baseline / axis rule
 #
 # Re-check BOTH rendered orders against the gate above before changing any hue —
 # slot order alone is not the thing that ships. Folded members reuse a validated
-# hue and differ by a LIGHTNESS STEP (see _TINT_BY_COUNTER); texture was the
+# hue and differ by a LIGHTNESS STEP (see Theme.tints); texture was the
 # previous mechanism and is gone.
 _SLOT_BY_FLAGSHIP: dict[str, int] = {
     "qwen-3-8": 1, "llama-4": 0, "gemini-3-1-pro": 5, "o200k_base": 3,
@@ -236,27 +334,21 @@ _SLOT_BY_FLAGSHIP: dict[str, int] = {
 # published dollar figures rather than a legend swatch. Note the base hue #008300
 # is the DEAREST member here, where in the Claude families the base sits mid-ramp —
 # Gemini's flagship is its most expensive tier, so the ramp only runs lighter.
-_TINT_BY_COUNTER: dict[str, str] = {
-    "claude-sonnet-5": "#f06d67",        # $2 — lightest of the newer-Claude family
-    "claude-fable-5": "#b51221",         # $10 — darkest
-    "claude-haiku-4-5": "#6c62d2",       # $1 — lighter of the older-Claude pair
-    "gemini-3-5-flash": "#36a231",       # $1.50 — middle step of the green ramp
-    "gemini-3-1-flash-lite": "#59c253",  # $0.25 — lightest; cheapest bar in the chart
-}
+# (the per-theme values now live on LIGHT.tints / DARK.tints above)
 
 
 def _check_style_registries() -> None:
     """Assert the style tables name real counters, at import.
 
     `_SLOT_BY_FLAGSHIP` already fails loudly when a counter cannot resolve a slot,
-    but `_TINT_BY_COUNTER` was only ever read through `.get()`. A renamed counter
+    but `Theme.tints` was only ever read through `.get()`. A renamed counter
     therefore lost its tint step silently, fell back to the family base hue, and
     then tripped `_series_style`'s duplicate-fill check — an error naming a colour
     collision when the actual cause was a stale key here.
     """
-    unknown_tints = sorted(set(_TINT_BY_COUNTER) - set(config.MATRIX_BY_ID))
+    unknown_tints = sorted((set(LIGHT.tints) | set(DARK.tints)) - set(config.MATRIX_BY_ID))
     if unknown_tints:
-        raise ValueError(f"_TINT_BY_COUNTER keys with no counter in MODEL_MATRIX: "
+        raise ValueError(f"Theme.tints keys with no counter in MODEL_MATRIX: "
                          f"{unknown_tints} — a rename left the tint step behind, "
                          "and the counter would silently take its family base hue")
     unknown_slots = sorted(set(_SLOT_BY_FLAGSHIP) - set(config.MATRIX_BY_ID))
@@ -293,19 +385,19 @@ def _series_style(counters: list[str]) -> list[str]:
         # Bounds-check per counter, before the duplicate test: a negative index
         # would otherwise wrap silently to the palette tail, and an over-range
         # one would be misreported as a duplicate-hue problem.
-        if not 0 <= s < len(_SERIES):
+        if not 0 <= s < len(_T.series):
             raise ValueError(
-                f"slot {s} for {cid!r} is outside the {len(_SERIES)}-slot palette "
+                f"slot {s} for {cid!r} is outside the {len(_T.series)}-slot palette "
                 "— a 9th categorical hue is not distinguishable under CVD; fold "
                 "the tail into 'Other' or facet into small multiples")
-        styles.append(_TINT_BY_COUNTER.get(cid, _SERIES[s]))
+        styles.append(_T.tints.get(cid, _T.series[s]))
     if len(set(styles)) != len(styles):
         dupes = sorted({c for c, st in zip(counters, styles)
                         if styles.count(st) > 1})
         raise ValueError(
             f"counters {dupes} resolve to the same fill in one chart — they "
             "would be indistinguishable. Give one a validated step in "
-            "_TINT_BY_COUNTER; but if this fired because you priced a "
+            "Theme.tints; but if this fired because you priced a "
             "same-tokenizer-same-price proxy, read the PRICING note on "
             "claude-opus-4-8 first — the right fix is to leave it unpriced. "
             "Two SKUs at one price cannot take ordered steps honestly, because "
@@ -320,14 +412,14 @@ def _style_axes(ax, ylabel: str) -> None:
     tick text, and a single quiet baseline for the bars to grow from.
     """
     ax.set_axisbelow(True)
-    ax.yaxis.grid(True, color=_GRID, linewidth=0.8, linestyle="-")
+    ax.yaxis.grid(True, color=_T.grid, linewidth=0.8, linestyle="-")
     ax.xaxis.grid(False)
     for side in ("top", "right", "left"):
         ax.spines[side].set_visible(False)
-    ax.spines["bottom"].set_color(_BASELINE)
+    ax.spines["bottom"].set_color(_T.baseline)
     ax.spines["bottom"].set_linewidth(0.8)
-    ax.tick_params(colors=_INK_MUTED, labelsize=9, length=0)
-    ax.set_ylabel(ylabel, fontsize=9, color=_INK_2)
+    ax.tick_params(colors=_T.ink_muted, labelsize=9, length=0)
+    ax.set_ylabel(ylabel, fontsize=9, color=_T.ink_2)
 
 
 def _legend_above(ax, ncol: int) -> None:
@@ -338,7 +430,7 @@ def _legend_above(ax, ncol: int) -> None:
     series colour.
     """
     leg = ax.legend(loc="lower left", bbox_to_anchor=(0, 1.01), ncol=ncol,
-                    frameon=False, fontsize=8.5, labelcolor=_INK_2,
+                    frameon=False, fontsize=8.5, labelcolor=_T.ink_2,
                     handlelength=0.85, handleheight=0.85, borderpad=0,
                     columnspacing=1.5, handletextpad=0.5)
     return leg
@@ -379,7 +471,7 @@ def _grouped_bars(ax, groups: list[str], series: list[str],
         top = max(range(len(col)), key=lambda k: col[k])
         ax.annotate(_fmt(col[top]), (x[gi] + top * slot, col[top]),
                     textcoords="offset points", xytext=(0, 3),
-                    ha="center", va="bottom", fontsize=7.5, color=_INK_2)
+                    ha="center", va="bottom", fontsize=7.5, color=_T.ink_2)
     ax.set_xticks(x + slot * (len(series) - 1) / 2)
     ax.set_xticklabels([config.LANGUAGES[l] for l in groups], fontsize=9)
     ax.set_xlim(-0.5 * slot - 0.12, len(groups) - 1 + slot * len(series) + 0.02)
@@ -662,16 +754,23 @@ def _caption(fig, lines: list[str], ax=None, pad: float = -46) -> None:
         ax = fig.axes[0]
     ax.annotate("\n".join(lines), xy=(0, 0), xycoords="axes fraction",
                 xytext=(0, pad), textcoords="offset points",
-                ha="left", va="top", fontsize=7.5, color=_INK_MUTED,
+                ha="left", va="top", fontsize=7.5, color=_T.ink_muted,
                 linespacing=1.6, annotation_clip=False)
 
 
 def _save(fig, stem: str) -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
+    # Paint the surface explicitly. Light's value is matplotlib's own default
+    # white, so the light SVGs stay byte-identical to the committed ones; dark
+    # would otherwise render its ink on a white ground.
+    fig.patch.set_facecolor(_T.surface)
+    for ax in fig.get_axes():
+        ax.set_facecolor(_T.surface)
     for ext in ("svg", "png"):
         # Drop the wall-clock Date from SVG metadata so re-runs are byte-identical.
         kw = {"metadata": {"Date": None}} if ext == "svg" else {}
-        fig.savefig(FIG_DIR / f"{stem}.{ext}", bbox_inches="tight", dpi=150, **kw)
+        fig.savefig(FIG_DIR / f"{stem}{_T.suffix}.{ext}", bbox_inches="tight", dpi=150,
+                    facecolor=_T.surface, **kw)
     plt.close(fig)
 
 
@@ -742,6 +841,15 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     ax.set_xticklabels([_label(c) for c in counters], rotation=25, ha="right", fontsize=9)
     ax.set_yticks(range(len(langs)))
     ax.set_yticklabels([config.LANGUAGES[l] for l in langs], fontsize=9)
+    # The heatmap does not go through _style_axes (it has no gridline or baseline
+    # to style), so its chrome had no colour set at all and inherited matplotlib's
+    # default black. That was invisible while every figure rendered on white, and
+    # unreadable the moment one rendered on #1a1a19. Ink the chrome explicitly —
+    # the CELL labels below are a separate rule and correctly follow each cell's
+    # own luminance rather than the theme.
+    ax.tick_params(colors=_T.ink_muted, labelsize=9, length=0)
+    for spine in ax.spines.values():
+        spine.set_color(_T.baseline)
     for i in range(len(langs)):
         for j in range(len(counters)):
             # Ink contrast follows the rendered cell luminance, so it stays correct
@@ -750,8 +858,12 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
             lum = 0.299 * r + 0.587 * g + 0.114 * b
             ax.text(j, i, f"{mat[i, j]:.2f}×", ha="center", va="center",
                     color="black" if lum > 0.55 else "white", fontsize=9)
-    ax.set_title(f"Token premium vs. English ({corpus_name})", fontsize=11)
-    fig.colorbar(im, ax=ax, label="× English tokens (1.00 = parity)")
+    ax.set_title(f"Token premium vs. English ({corpus_name})", fontsize=11,
+                 color=_T.ink)
+    cbar = fig.colorbar(im, ax=ax, label="× English tokens (1.00 = parity)")
+    cbar.ax.yaxis.label.set_color(_T.ink_2)
+    cbar.ax.tick_params(colors=_T.ink_muted)
+    cbar.outline.set_edgecolor(_T.baseline)
     # Rotated x tick labels here are taller than the bar charts' upright ones, so
     # the caption needs more clearance than the shared default.
     _caption(fig, _legend_lines(agg, corpus_id, counters), ax, pad=-86)
@@ -800,7 +912,7 @@ def dollar_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
     ax.set_title(f"Serving cost: USD per 1M input characters — {corpus_name} "
                  f"(price × tokens; lower = cheaper)",
-                 fontsize=11.5, color=_INK, pad=30, loc="left")
+                 fontsize=11.5, color=_T.ink, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
     _caption(fig, _cost_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
@@ -850,7 +962,7 @@ def dollar_cost_per_sentence_bars(cost: pd.DataFrame, agg: pd.DataFrame,
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
     ax.set_title(f"Serving cost: USD per 1,000 {unit}s — {corpus_name} "
                  f"(price × tokens per {unit}; lower = cheaper)",
-                 fontsize=11.5, color=_INK, pad=30, loc="left")
+                 fontsize=11.5, color=_T.ink, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
     _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
@@ -869,7 +981,7 @@ def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
     ax.set_title(f"Cost driver: tokens per 1,000 characters — {corpus_name} "
                  f"(lower = cheaper)",
-                 fontsize=11.5, color=_INK, pad=30, loc="left")
+                 fontsize=11.5, color=_T.ink, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
     _caption(fig, _legend_lines(agg, corpus_id, counters), ax)
     _save(fig, stem)
@@ -889,6 +1001,19 @@ def make_figures() -> None:
     order = _headline_order(premium, sorted(set(premium.counter_id)))
     dollar_order = _priced_order(cost)
     live: set[str] = set()
+    for theme in THEMES:
+        with _use_theme(theme):
+            live |= _render_all(premium, cost, agg, order, dollar_order)
+    _prune_stale(live)
+    print(f"wrote figures to {FIG_DIR}/ (svg + png, themes: "
+          f"{', '.join(t.name for t in THEMES)})")
+    print(f"  tokenizer columns: {[_label(c) for c in order]}")
+    print(f"  dollar columns:    {[_label(c) for c in dollar_order]}")
+
+
+def _render_all(premium, cost, agg, order, dollar_order) -> set[str]:
+    """Emit every figure for the theme in force; return the corpora seen."""
+    live: set[str] = set()
     for corpus_id, corpus_name in config.CORPORA.items():
         p = premium[premium.corpus == corpus_id]
         c = cost[cost.corpus == corpus_id]
@@ -901,6 +1026,10 @@ def make_figures() -> None:
                          f"fig-dollar-cost-{corpus_id}")
         dollar_cost_per_sentence_bars(c, agg, corpus_id, corpus_name, dollar_order,
                                       f"fig-dollar-cost-per-sentence-{corpus_id}")
+    return live
+
+
+def _prune_stale(live: set[str]) -> None:
     # Remove figures for corpora this dataset no longer covers. The loop above
     # simply stops emitting them, which left four committed, publishable
     # `fig-*-<retired>.{svg,png}` on disk and in git, silently stale beside CSVs
@@ -918,14 +1047,18 @@ def make_figures() -> None:
             for pre in _STEMS:
                 if path.stem.startswith(pre):
                     corpus = path.stem[len(pre):]
+                    # Strip the theme suffix before the corpus test. Without this
+                    # every dark figure parses as corpus "<corpus>-dark", matches
+                    # nothing in `live`, and is deleted on the run that wrote it.
+                    for t in THEMES:
+                        if t.suffix and corpus.endswith(t.suffix):
+                            corpus = corpus[: -len(t.suffix)]
+                            break
                     if corpus and corpus not in live:
                         print(f"  removing stale figure for corpus '{corpus}' "
                               f"(no longer in the dataset): {path.name}")
                         path.unlink()
                     break
-    print(f"wrote figures to {FIG_DIR}/ (svg + png)")
-    print(f"  tokenizer columns: {[_label(c) for c in order]}")
-    print(f"  dollar columns:    {[_label(c) for c in dollar_order]}")
 
 
 if __name__ == "__main__":
