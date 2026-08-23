@@ -102,7 +102,7 @@ def oklch_lightness(hex_c: str) -> float:
 
 
 def _rendered_dollar_order() -> list[str]:
-    """The counter ids the dollar figures actually draw, in drawn order.
+    """The counter ids the grouped dollar figures draw, in drawn order.
 
     Reuses figures._priced_order so the test tracks whatever the chart does,
     rather than re-deriving the ordering rule and drifting from it.
@@ -111,6 +111,43 @@ def _rendered_dollar_order() -> list[str]:
     order = figures._priced_order(cost)
     drawn = set(cost.counter_id)
     return [c for c in order if c in drawn]
+
+
+def _rendered_orders() -> list[tuple[str, list[str]]]:
+    """EVERY sequence of series fills that reaches a canvas, in drawn order.
+
+    One rendered order is not the whole surface, and testing only one is how this
+    gate goes stale. `_priced_order` ranks by cost-per-1k-CHARS averaged across
+    corpora; the Vietnamese ladder and the tax dumbbell re-sort by cost per
+    SENTENCE within one corpus, which is a different sequence (on MASSIVE,
+    gemini-3-1-pro and claude-haiku-4-5 swap) and therefore a different set of
+    adjacent pairs. The tokenizer bars draw `_headline_order`, which includes the
+    unpriced counters no dollar figure ever reaches.
+
+    So: derive each order the way its own figure derives it, and gate all of them.
+    """
+    cost = pd.read_csv(config.RESULTS_DIR / "cost_by_language.csv")
+    premium = pd.read_csv(config.RESULTS_DIR / "premium_by_language.csv")
+    orders = [("dollar bars", _rendered_dollar_order())]
+
+    # figures.cost_driver_bars / premium_heatmap columns.
+    orders.append(("tokenizer bars",
+                   figures._headline_order(premium, sorted(set(premium.counter_id)))))
+
+    # figures.vietnamese_cost_bars / vietnamese_tax_dumbbell, per corpus. Mirrors
+    # their own sort: priced counters with a Vietnamese row, ascending by
+    # cost_usd_per_sentence.
+    for corpus_id in config.CORPORA:
+        rows = cost[(cost.corpus == corpus_id) & (cost.lang == "vie_Latn")
+                    & cost.cost_usd_per_sentence.notna()]
+        drawn = set(rows.counter_id)
+        counters = [c for c in figures._priced_order(cost) if c in drawn]
+        if not counters:
+            continue
+        counters.sort(key=lambda c: float(
+            rows[rows.counter_id == c]["cost_usd_per_sentence"].iloc[0]))
+        orders.append((f"vietnamese ladder / tax gap ({corpus_id})", counters))
+    return orders
 
 
 class PaletteAdjacencyTest(unittest.TestCase):
@@ -138,24 +175,24 @@ class PaletteAdjacencyTest(unittest.TestCase):
             self.assertAlmostEqual(worst, exp_cvd, delta=0.05,
                                    msg=f"CVD ΔE drifted for {a}/{b}")
 
-    def test_adjacent_bars_in_the_dollar_figures_are_distinguishable(self):
+    def test_adjacent_bars_in_every_rendered_order_are_distinguishable(self):
         """The gate a vendor price change can break without touching a colour."""
-        order = _rendered_dollar_order()
-        slots = [figures._slot(c) for c in order]
-
         failures = []
-        for theme in figures.THEMES:
-            with figures._use_theme(theme):
-                fills = figures._series_style(order)
-            failures += self._adjacency_failures(theme, order, slots, fills)
+        for label, order in _rendered_orders():
+            slots = [figures._slot(c) for c in order]
+            for theme in figures.THEMES:
+                with figures._use_theme(theme):
+                    fills = figures._series_style(order)
+                failures += self._adjacency_failures(theme, order, slots, fills,
+                                                     label)
         self.assertEqual(failures, [], "\n  ".join(
-            ["adjacent bars are too close to tell apart. NOTE the rendered order "
-             "follows COST, so a vendor price change can cause this with no colour "
+            ["adjacent bars are too close to tell apart. NOTE the rendered orders "
+             "follow COST, so a vendor price change can cause this with no colour "
              "edited — check config.PRICING before assuming a palette bug. Fix by "
              "re-stepping the offending tint in that Theme's `tints`, or by "
              "re-slotting a hue if the ramp has no room left."] + failures))
 
-    def _adjacency_failures(self, theme, order, slots, fills):
+    def _adjacency_failures(self, theme, order, slots, fills, label):
         failures = []
         for i in range(len(order) - 1):
             if slots[i] == slots[i + 1]:
@@ -164,7 +201,7 @@ class PaletteAdjacencyTest(unittest.TestCase):
             cvd = min(delta_e(fills[i], fills[i + 1], k) for k in _CVD)
             if normal < MIN_NORMAL_DE or cvd < MIN_CVD_DE:
                 failures.append(
-                    f"[{theme.name}] {order[i]} ({fills[i]}) next to "
+                    f"[{theme.name}/{label}] {order[i]} ({fills[i]}) next to "
                     f"{order[i+1]} ({fills[i+1]}): "
                     f"normal ΔE {normal:.1f} (need >={MIN_NORMAL_DE}), "
                     f"CVD ΔE {cvd:.1f} (need >={MIN_CVD_DE})")
@@ -209,6 +246,19 @@ class PaletteAdjacencyTest(unittest.TestCase):
         dark-violet-on-near-black in practice. Pinned so a later re-step cannot
         quietly sink a bar into the background — the failure mode is invisible in
         a diff and obvious only on the rendered page.
+
+        Runs over every rendered order, so the unpriced counters that reach only
+        the tokenizer bars (Qwen, Llama, cl100k) are gated too — an earlier cut
+        checked the dollar order alone and left three fills on a published figure
+        ungated.
+
+        This measures the fill AS PAINTED. Nothing in `figures` may draw a series
+        mark with alpha: compositing lowers effective contrast, and no alpha
+        clears this floor for every row (o200k_base's yellow is 2.17:1 solid on
+        the light surface, so any fade takes it under). The tax dumbbell's
+        connector was faded to 0.55 in an earlier cut and reached 1.50:1 on dark;
+        it now carries its hierarchy by line weight instead. Reintroduce alpha and
+        this gate must composite before measuring.
         """
         def _lin(v):
             v /= 255
@@ -221,17 +271,17 @@ class PaletteAdjacencyTest(unittest.TestCase):
             a, b = sorted((lum(fg), lum(bg)), reverse=True)
             return (a + 0.05) / (b + 0.05)
 
-        order = _rendered_dollar_order()
-        for theme in figures.THEMES:
-            with figures._use_theme(theme):
-                fills = figures._series_style(order)
-            for cid, fill in zip(order, fills):
-                ratio = contrast(fill, theme.surface)
-                self.assertGreaterEqual(
-                    ratio, MIN_FILL_CONTRAST,
-                    f"[{theme.name}] {cid} ({fill}) is {ratio:.2f}:1 against the "
-                    f"{theme.surface} surface, under the {MIN_FILL_CONTRAST}:1 floor "
-                    "— it will not read as a mark")
+        for label, order in _rendered_orders():
+            for theme in figures.THEMES:
+                with figures._use_theme(theme):
+                    fills = figures._series_style(order)
+                for cid, fill in zip(order, fills):
+                    ratio = contrast(fill, theme.surface)
+                    self.assertGreaterEqual(
+                        ratio, MIN_FILL_CONTRAST,
+                        f"[{theme.name}/{label}] {cid} ({fill}) is {ratio:.2f}:1 "
+                        f"against the {theme.surface} surface, under the "
+                        f"{MIN_FILL_CONTRAST}:1 floor — it will not read as a mark")
 
 
 if __name__ == "__main__":
