@@ -983,6 +983,87 @@ def vietnamese_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
     _save(fig, stem)
 
 
+def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
+                            corpus_name: str, order: list[str], stem: str) -> None:
+    """English vs Vietnamese cost per model -- the tax, in money, per vendor.
+
+    The ladder answers "which vendor is cheapest for Vietnamese" and drops the
+    language axis entirely; the heatmaps carry the language comparison but in
+    TOKENS, not dollars. Neither shows what the article's thesis is actually
+    about: how much more the same content costs in Vietnamese, and how much that
+    depends on the vendor rather than the language.
+
+    A dumbbell is the honest form for exactly two values per category. The dots
+    give the levels, the LINE LENGTH is the tax, and rows sorted by Vietnamese
+    cost keep the vendor ladder readable alongside it. It also separates two
+    causes a bar chart conflates: Haiku 4.5's line is long because its tokenizer
+    is inefficient, Fable 5's because everything about it is dear. Same visual
+    quantity, different reasons -- visible here, invisible in a grouped bar.
+    """
+    rows = cost[cost.cost_usd_per_sentence.notna()]
+    def per_1k(cid, lang):
+        r = rows[(rows.counter_id == cid) & (rows.lang == lang)]
+        return float(r["cost_usd_per_sentence"].iloc[0]) * 1000 if len(r) else None
+
+    pairs = []
+    for c in order:
+        en, vi = per_1k(c, "eng_Latn"), per_1k(c, "vie_Latn")
+        if en and vi:
+            pairs.append((c, en, vi))
+    if not pairs:
+        return
+    pairs.sort(key=lambda t: t[2])                 # cheapest Vietnamese at top
+    fills = _series_style([c for c, _, _ in pairs])
+
+    fig, ax = plt.subplots(figsize=(11, 4.8))
+    ax.set_facecolor(_T.surface)
+    ax.xaxis.grid(True, color=_T.grid, linewidth=0.8, linestyle="-")
+    ax.set_axisbelow(True)
+    for sp in ("top", "right", "bottom"):
+        ax.spines[sp].set_visible(False)
+    ax.spines["left"].set_color(_T.baseline)
+    ax.tick_params(colors=_T.ink_muted, labelsize=9, length=0)
+
+    ys = np.arange(len(pairs))[::-1]
+    ax.set_yticks(ys)
+    ax.set_yticklabels([_label(c) for c, _, _ in pairs], fontsize=9)
+    ax.set_ylim(-0.8, len(pairs) - 0.2)
+    ax.set_xlim(0, max(v for _, _, v in pairs) * 1.30)
+    for y, (cid, en, vi), fill in zip(ys, pairs, fills):
+        # the connector IS the tax; the English dot is a reference, so it wears a
+        # text token rather than the series hue and recedes behind the subject.
+        ax.plot([en, vi], [y, y], color=fill, linewidth=3, solid_capstyle="round",
+                zorder=2, alpha=0.55)
+        ax.plot([en], [y], marker="o", markersize=7, color=_T.ink_muted, zorder=3)
+        ax.plot([vi], [y], marker="o", markersize=9, color=fill, zorder=4)
+        ax.annotate(f"${vi:,.4f}  ({vi / en:.2f}\u00d7)", (vi, y),
+                    textcoords="offset points", xytext=(9, 0), ha="left",
+                    va="center", fontsize=8.5, color=_T.ink_2)
+    # one legend entry per dot role, not per model — identity is on the y axis
+    ax.plot([], [], marker="o", markersize=7, color=_T.ink_muted, linestyle="none",
+            label="English (same content)")
+    ax.plot([], [], marker="o", markersize=9, color=_T.series[7], linestyle="none",
+            label="Vietnamese")
+    # Upper right, not lower: the rows are sorted cheapest-first so the short bars
+    # are at the top and the long ones at the bottom — a lower-right legend lands
+    # squarely on the dearest row's value label, which is the one row a reader is
+    # most likely to be looking at.
+    leg = ax.legend(loc="upper right", frameon=False, fontsize=8.5,
+                    labelcolor=_T.ink_2, handletextpad=0.4)
+    for t in leg.get_texts():
+        t.set_color(_T.ink_2)
+    ax.set_xlabel("USD per 1,000 sentences \u2014 same content, both languages",
+                  fontsize=9, color=_T.ink_2)
+    worst = max(pairs, key=lambda t: t[2] / t[1])
+    ax.set_title(f"The Vietnamese tax in money \u2014 {corpus_name} "
+                 f"(the gap is the tax; worst is {_label(worst[0])} at "
+                 f"{worst[2] / worst[1]:.2f}\u00d7)",
+                 fontsize=11.5, color=_T.ink, pad=18, loc="left")
+    _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id,
+                                                  [c for c, _, _ in pairs]), ax)
+    _save(fig, stem)
+
+
 def _priced_order(cost: pd.DataFrame) -> list[str]:
     """Priced serving options, ordered by the lead language's USD cost (ascending).
 
@@ -1141,6 +1222,8 @@ def _render_all(premium, cost, agg, order, dollar_order) -> set[str]:
                                       f"fig-dollar-cost-per-sentence-{corpus_id}")
         vietnamese_cost_bars(c, agg, corpus_id, corpus_name, dollar_order,
                              f"fig-vietnamese-cost-ladder-{corpus_id}")
+        vietnamese_tax_dumbbell(c, agg, corpus_id, corpus_name, dollar_order,
+                                f"fig-vietnamese-tax-gap-{corpus_id}")
     return live
 
 
@@ -1155,7 +1238,7 @@ def _prune_stale(live: set[str]) -> None:
     # retired from the config is exactly the case that leaves figures behind.
     _STEMS = ("fig-premium-heatmap-", "fig-cost-driver-bars-",
               "fig-dollar-cost-per-sentence-", "fig-dollar-cost-",
-              "fig-vietnamese-cost-ladder-")
+              "fig-vietnamese-cost-ladder-", "fig-vietnamese-tax-gap-")
     if FIG_DIR.exists():
         for path in sorted(FIG_DIR.iterdir()):
             if path.suffix not in (".svg", ".png"):
