@@ -462,10 +462,21 @@ def _grouped_bars(ax, groups: list[str], series: list[str],
             "upstream data instead.")
     x = np.arange(len(groups))
     slot = 0.84 / len(series)
-    width = slot * 0.84          # leftover slot = the surface gap
+    width = slot * 0.78          # leftover slot = the surface gap between bars
+    # A zero-height proxy bar registers the series in the legend; the visible mark
+    # is drawn by _rounded_end_bar so the data end is rounded and the baseline
+    # stays square. bar() cannot do two-corner rounding.
     for k, color in enumerate(_series_style(series)):
-        ax.bar(x + k * slot, values[k], width, label=labels[k],
+        ax.bar(x + k * slot, np.zeros(len(groups)), width, label=labels[k],
                color=color, linewidth=0)
+    ax.autoscale_view()
+    ymax = max(max(v) for v in values)
+    ax.set_ylim(0, ymax * 1.10)
+    for k, color in enumerate(_series_style(series)):
+        for gi in range(len(groups)):
+            _rounded_end_bar(ax, x=x[gi] + k * slot - width / 2, y=0,
+                             w=width, h=values[k][gi], color=color,
+                             horizontal=False)
     for gi in range(len(groups)):
         col = [values[k][gi] for k in range(len(series))]
         top = max(range(len(col)), key=lambda k: col[k])
@@ -870,6 +881,108 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     _save(fig, stem)
 
 
+
+def _rounded_end_bar(ax, *, x, y, w, h, color, horizontal: bool, radius_px=4.0):
+    """One bar with its DATA end rounded and its baseline end square.
+
+    matplotlib's bar() is a plain rectangle, and FancyBboxPatch rounds all four
+    corners -- which detaches the bar from its own baseline and reads as a
+    floating pill. Two corners is the spec, so the path is built by hand.
+
+    The radius is specified in POINTS and converted per axis. A radius in data
+    units looks circular only on a square aspect: on this chart x spans ~0.8 USD
+    while y spans nine categories, so a data-space radius rendered the long bars
+    as stretched lozenges with pointed ends. Converting through transData gives
+    the same visual corner on both axes whatever the aspect. The radius is then
+    clamped to half the bar's thickness and a third of its length, so a thin or
+    short bar degrades to a nearly-square end rather than a lozenge.
+    """
+    from matplotlib.patches import PathPatch
+    from matplotlib.path import Path
+    if w == 0 or h == 0:
+        return
+    # data units per pixel, per axis, at the current limits
+    (x0p, y0p), (x1p, y1p) = ax.transData.transform([(0, 0), (1, 1)])
+    dx_per_px = 1.0 / abs(x1p - x0p) if x1p != x0p else 0
+    dy_per_px = 1.0 / abs(y1p - y0p) if y1p != y0p else 0
+    rx, ry = radius_px * dx_per_px, radius_px * dy_per_px
+    if horizontal:
+        rx = min(rx, abs(w) / 3)
+        ry = min(ry, abs(h) / 2)
+    else:
+        rx = min(rx, abs(w) / 2)
+        ry = min(ry, abs(h) / 3)
+    if rx <= 0 or ry <= 0:
+        return
+    x1, y1 = x + w, y + h
+    if horizontal:                      # square at x, rounded at x+w
+        pts = [(x, y), (x1 - rx, y), (x1, y), (x1, y + ry),
+               (x1, y1 - ry), (x1, y1), (x1 - rx, y1), (x, y1), (x, y)]
+    else:                               # square at y, rounded at y+h
+        pts = [(x, y), (x, y1 - ry), (x, y1), (x + rx, y1),
+               (x1 - rx, y1), (x1, y1), (x1, y1 - ry), (x1, y), (x, y)]
+    codes = [Path.MOVETO, Path.LINETO, Path.CURVE3, Path.CURVE3,
+             Path.LINETO, Path.CURVE3, Path.CURVE3, Path.LINETO, Path.CLOSEPOLY]
+    ax.add_patch(PathPatch(Path(pts, codes), facecolor=color, edgecolor="none",
+                           linewidth=0, clip_on=False))
+
+
+def vietnamese_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
+                         corpus_name: str, order: list[str], stem: str) -> None:
+    """The serving-cost ladder for ONE language, horizontally, every bar labelled.
+
+    The five-language grouped chart answers "how does cost vary by language and
+    model" with 45 bars and one label. This answers the narrower question the
+    article actually asks -- what does serving Vietnamese cost, and how wide is
+    the gap -- and answers it in a glance.
+
+    Horizontal because the categories are long model names, which read straight
+    across instead of rotated. Linear rather than log because every bar carries
+    its own value: the cheap tiers ARE slivers next to the dear ones, that ~83x
+    ratio is the finding, and a log axis would flatter it into looking modest.
+    The labels are what make the slivers readable, so the scale can stay honest.
+    """
+    rows = cost[(cost.lang == "vie_Latn") & cost.cost_usd_per_sentence.notna()]
+    counters = [c for c in order if c in set(rows.counter_id)]
+    if not counters:
+        return
+    vals = {c: float(rows[rows.counter_id == c]["cost_usd_per_sentence"].iloc[0]) * 1000
+            for c in counters}
+    counters.sort(key=lambda c: vals[c])           # cheapest at top, matching the article table
+    fills = _series_style(counters)
+
+    fig, ax = plt.subplots(figsize=(11, 4.6))
+    ax.set_facecolor(_T.surface)
+    ax.xaxis.grid(True, color=_T.grid, linewidth=0.8, linestyle="-")
+    ax.set_axisbelow(True)
+    for sp in ("top", "right", "bottom"):
+        ax.spines[sp].set_visible(False)
+    ax.spines["left"].set_color(_T.baseline)
+    ax.tick_params(colors=_T.ink_muted, labelsize=9, length=0)
+
+    ys = np.arange(len(counters))[::-1]            # first counter at the top
+    # Limits first: _rounded_end_bar reads transData to size its corner in pixels,
+    # so drawing before the limits are final would round against a stale scale.
+    ax.set_yticks(ys)
+    ax.set_yticklabels([_label(c) for c in counters], fontsize=9)
+    ax.set_ylim(-0.7, len(counters) - 0.3)
+    ax.set_xlim(0, max(vals.values()) * 1.16)      # headroom for the labels
+    for y, c, fill in zip(ys, counters, fills):
+        _rounded_end_bar(ax, x=0, y=y - 0.3, w=vals[c], h=0.6,
+                         color=fill, horizontal=True)
+        ax.annotate(f"${vals[c]:,.4f}", (vals[c], y), textcoords="offset points",
+                    xytext=(6, 0), ha="left", va="center", fontsize=8.5,
+                    color=_T.ink_2)
+    ax.set_xlabel("USD per 1,000 sentences of Vietnamese input", fontsize=9,
+                  color=_T.ink_2)
+    spread = max(vals.values()) / min(vals.values())
+    ax.set_title(f"What serving Vietnamese costs \u2014 {corpus_name} "
+                 f"({spread:.0f}\u00d7 between the cheapest and dearest tier)",
+                 fontsize=11.5, color=_T.ink, pad=18, loc="left")
+    _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id, counters), ax)
+    _save(fig, stem)
+
+
 def _priced_order(cost: pd.DataFrame) -> list[str]:
     """Priced serving options, ordered by the lead language's USD cost (ascending).
 
@@ -1026,6 +1139,8 @@ def _render_all(premium, cost, agg, order, dollar_order) -> set[str]:
                          f"fig-dollar-cost-{corpus_id}")
         dollar_cost_per_sentence_bars(c, agg, corpus_id, corpus_name, dollar_order,
                                       f"fig-dollar-cost-per-sentence-{corpus_id}")
+        vietnamese_cost_bars(c, agg, corpus_id, corpus_name, dollar_order,
+                             f"fig-vietnamese-cost-ladder-{corpus_id}")
     return live
 
 
@@ -1039,7 +1154,8 @@ def _prune_stale(live: set[str]) -> None:
     # it produced — and on `live` rather than config.CORPORA, since a corpus
     # retired from the config is exactly the case that leaves figures behind.
     _STEMS = ("fig-premium-heatmap-", "fig-cost-driver-bars-",
-              "fig-dollar-cost-per-sentence-", "fig-dollar-cost-")
+              "fig-dollar-cost-per-sentence-", "fig-dollar-cost-",
+              "fig-vietnamese-cost-ladder-")
     if FIG_DIR.exists():
         for path in sorted(FIG_DIR.iterdir()):
             if path.suffix not in (".svg", ".png"):
