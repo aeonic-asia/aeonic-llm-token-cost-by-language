@@ -772,8 +772,9 @@ def _caption(fig, lines: list[str], ax=None, pad: float = -46) -> None:
 def _save(fig, stem: str) -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     # Paint the surface explicitly. Light's value is matplotlib's own default
-    # white, so the light SVGs stay byte-identical to the committed ones; dark
-    # would otherwise render its ink on a white ground.
+    # white, so painting it does not alter the light output; dark would otherwise
+    # render its ink on a white ground. (Scoped to the surface: other changes in
+    # the same cut — rounded bar ends — did move the light SVGs.)
     fig.patch.set_facecolor(_T.surface)
     for ax in fig.get_axes():
         ax.set_facecolor(_T.surface)
@@ -1030,10 +1031,16 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
     ax.set_ylim(-0.8, len(pairs) - 0.2)
     ax.set_xlim(0, max(v for _, _, v in pairs) * 1.30)
     for y, (cid, en, vi), fill in zip(ys, pairs, fills):
-        # the connector IS the tax; the English dot is a reference, so it wears a
-        # text token rather than the series hue and recedes behind the subject.
-        ax.plot([en, vi], [y, y], color=fill, linewidth=3, solid_capstyle="round",
-                zorder=2, alpha=0.55)
+        # The connector IS the tax, so it is drawn at FULL opacity. An earlier cut
+        # faded it to alpha 0.55 to let the dots lead; that composited several rows
+        # under the 2.0:1 ordinal floor against their own surface (Fable 5 reached
+        # 1.50:1 on dark, Gemini 3.1 Flash-Lite 1.56:1 on light) — the chart's
+        # primary encoded quantity, sunk into the background. No alpha clears the
+        # floor for every row, because o200k_base's yellow is only 2.17:1 solid on
+        # the light surface, so ANY fade takes it under. Weight carries the
+        # hierarchy instead: a thinner solid line against markersize-8/9 dots.
+        ax.plot([en, vi], [y, y], color=fill, linewidth=2.5,
+                solid_capstyle="round", zorder=2)
         # Hue means MODEL everywhere in this repo, so it cannot also mean language.
         # Fill state carries the language instead: hollow = English, solid =
         # Vietnamese, both in the row's own hue. The earlier version drew the
