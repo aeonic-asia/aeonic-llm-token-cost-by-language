@@ -209,8 +209,8 @@ EN = Locale(
         "ylabel_usd_per_1m_chars": "USD per 1,000,000 input characters",
         "ylabel_usd_per_1k_units": "USD per 1,000 {unit}s",
         "ylabel_tokens_per_1k_chars": "Tokens per 1,000 NFC characters",
-        "xlabel_vi_ladder": "USD per 1,000 sentences of Vietnamese input",
-        "xlabel_dumbbell": "USD per 1,000 sentences \u2014 same content, both languages",
+        "xlabel_vi_ladder": "USD per 1,000 {unit}s of Vietnamese input",
+        "xlabel_dumbbell": "USD per 1,000 {unit}s \u2014 same content, both languages",
         "title_heatmap": "Token premium vs. English ({corpus})",
         "title_cost_driver": "Cost driver: tokens per 1,000 characters \u2014 {corpus} "
                              "(lower = cheaper)",
@@ -250,7 +250,7 @@ EN = Locale(
         "cap_read_against": "Read against the per-character chart: a dense script (Chinese) "
                             "needs few characters, so per-character overstates its cost; "
                             "per {unit} it ranks far lower.",
-        "cap_dumbbell_gaps": "Widest gap: {widest}, +{widest_delta} per 1,000 sentences "
+        "cap_dumbbell_gaps": "Widest gap: {widest}, +{widest_delta} per 1,000 {unit}s "
                              "({widest_ratio}\u00d7). Steepest ratio: {steepest} at "
                              "{steepest_ratio}\u00d7 \u2014 only +{steepest_delta}, because a "
                              "cheap model with an inefficient tokenizer is costly in "
@@ -277,8 +277,8 @@ VI = Locale(
         "ylabel_usd_per_1m_chars": "USD tr\u00ean 1.000.000 k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o",
         "ylabel_usd_per_1k_units": "USD tr\u00ean 1.000 {unit}",
         "ylabel_tokens_per_1k_chars": "Token tr\u00ean 1.000 k\u00fd t\u1ef1 NFC",
-        "xlabel_vi_ladder": "USD tr\u00ean 1.000 c\u00e2u \u0111\u1ea7u v\u00e0o ti\u1ebfng Vi\u1ec7t",
-        "xlabel_dumbbell": "USD tr\u00ean 1.000 c\u00e2u \u2014 c\u00f9ng m\u1ed9t n\u1ed9i dung, c\u1ea3 hai ng\u00f4n ng\u1eef",
+        "xlabel_vi_ladder": "USD tr\u00ean 1.000 {unit} \u0111\u1ea7u v\u00e0o ti\u1ebfng Vi\u1ec7t",
+        "xlabel_dumbbell": "USD tr\u00ean 1.000 {unit} \u2014 c\u00f9ng m\u1ed9t n\u1ed9i dung, c\u1ea3 hai ng\u00f4n ng\u1eef",
         "title_heatmap": "B\u1ed9i s\u1ed1 token so v\u1edbi ti\u1ebfng Anh ({corpus})",
         "title_cost_driver": "Y\u1ebfu t\u1ed1 sinh chi ph\u00ed: token tr\u00ean 1.000 k\u00fd t\u1ef1 \u2014 "
                              "{corpus} (th\u1ea5p h\u01a1n = r\u1ebb h\u01a1n)",
@@ -316,7 +316,7 @@ VI = Locale(
         "cap_read_against": "\u0110\u1ecdc c\u00f9ng bi\u1ec3u \u0111\u1ed3 t\u00ednh theo k\u00fd t\u1ef1: m\u1ed9t h\u1ec7 ch\u1eef c\u00f4 \u0111\u1ecdng "
                             "(ti\u1ebfng Trung) c\u1ea7n \u00edt k\u00fd t\u1ef1, n\u00ean c\u00e1ch t\u00ednh theo k\u00fd t\u1ef1 th\u1ed5i ph\u1ed3ng "
                             "chi ph\u00ed c\u1ee7a n\u00f3; t\u00ednh theo {unit} th\u00ec n\u00f3 x\u1ebfp th\u1ea5p h\u01a1n h\u1eb3n.",
-        "cap_dumbbell_gaps": "Kho\u1ea3ng c\u00e1ch l\u1edbn nh\u1ea5t: {widest}, +{widest_delta} tr\u00ean 1.000 c\u00e2u "
+        "cap_dumbbell_gaps": "Kho\u1ea3ng c\u00e1ch l\u1edbn nh\u1ea5t: {widest}, +{widest_delta} tr\u00ean 1.000 {unit} "
                              "({widest_ratio}\u00d7). T\u1ef7 l\u1ec7 d\u1ed1c nh\u1ea5t: {steepest} \u1edf {steepest_ratio}\u00d7 "
                              "\u2014 nh\u01b0ng ch\u1ec9 +{steepest_delta}, v\u00ec m\u1ed9t m\u00f4 h\u00ecnh r\u1ebb v\u1edbi b\u1ed9 t\u00e1ch token "
                              "k\u00e9m hi\u1ec7u qu\u1ea3 th\u00ec t\u1ed1n k\u00e9m v\u1ec1 t\u1ef7 l\u1ec7 v\u00e0 nh\u1ecf v\u1ec1 ti\u1ec1n.",
@@ -679,6 +679,23 @@ def _style_axes(ax, ylabel: str) -> None:
     ax.spines["bottom"].set_linewidth(0.8)
     ax.tick_params(colors=_T.ink_muted, labelsize=9, length=0)
     ax.set_ylabel(ylabel, fontsize=9, color=_T.ink_2)
+
+
+_TITLE_PAD = 30       # clears a single legend row
+_LEGEND_ROW_PTS = 17  # each wrapped row pushes the title up by about one line
+
+
+def _title_pad(n_series: int, ncol: int) -> float:
+    """Title offset that clears the legend, however many rows it wraps to.
+
+    `_legend_above` anchors the legend just above the axes, so a wrapped row
+    grows DOWNWARD toward the title while the title stays put. At 9 priced
+    counters against ncol=7 the second row overlapped the title outright. A
+    single-row legend returns the original pad unchanged, so figures that never
+    wrapped re-render byte-identical.
+    """
+    rows = -(-n_series // ncol)      # ceil
+    return _TITLE_PAD + (rows - 1) * _LEGEND_ROW_PTS
 
 
 def _legend_above(ax, ncol: int) -> None:
@@ -1280,7 +1297,7 @@ def vietnamese_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
         ax.annotate(_money(vals[c], 4), (vals[c], y), textcoords="offset points",
                     xytext=(6, 0), ha="left", va="center", fontsize=8.5,
                     color=_T.ink_2)
-    ax.set_xlabel(_s("xlabel_vi_ladder"), fontsize=9, color=_T.ink_2)
+    ax.set_xlabel(_s("xlabel_vi_ladder", unit=_unit(corpus_id)), fontsize=9, color=_T.ink_2)
     spread = max(vals.values()) / min(vals.values())
     ax.set_title(_s("title_vi_ladder", corpus=corpus_name, spread=_num(spread, 0)),
                  fontsize=11.5, color=_T.ink, pad=18, loc="left")
@@ -1371,7 +1388,7 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
                     labelcolor=_T.ink_2, handletextpad=0.4)
     for t in leg.get_texts():
         t.set_color(_T.ink_2)
-    ax.set_xlabel(_s("xlabel_dumbbell"), fontsize=9, color=_T.ink_2)
+    ax.set_xlabel(_s("xlabel_dumbbell", unit=_unit(corpus_id)), fontsize=9, color=_T.ink_2)
     # This axis draws DOLLARS, so the title must name the widest dollar gap. The
     # first version named the steepest RATIO (Haiku 4.5, 2.42x) and sent the
     # reader hunting for the longest line, which is one of the shortest on the
@@ -1384,6 +1401,7 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
                  fontsize=11.5, color=_T.ink, pad=18, loc="left")
     lines = [
         _s("cap_dumbbell_gaps",
+           unit=_unit(corpus_id),
            widest=_label(widest[0]),
            widest_delta=_money(widest[2] - widest[1], 4),
            widest_ratio=_num(widest[2] / widest[1], 2),
@@ -1437,9 +1455,11 @@ def dollar_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
     fig, ax = plt.subplots(figsize=(11, 4.8))
     _style_axes(ax, _s("ylabel_usd_per_1m_chars"))
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
+    ncol = min(len(counters), 7)
     ax.set_title(_s("title_dollar_chars", corpus=corpus_name),
-                 fontsize=11.5, color=_T.ink, pad=30, loc="left")
-    _legend_above(ax, ncol=min(len(counters), 7))
+                 fontsize=11.5, color=_T.ink, pad=_title_pad(len(counters), ncol),
+                 loc="left")
+    _legend_above(ax, ncol=ncol)
     _caption(fig, _cost_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
 
@@ -1487,9 +1507,11 @@ def dollar_cost_per_sentence_bars(cost: pd.DataFrame, agg: pd.DataFrame,
     fig, ax = plt.subplots(figsize=(11, 4.8))
     _style_axes(ax, _s("ylabel_usd_per_1k_units", unit=unit))
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
+    ncol = min(len(counters), 7)
     ax.set_title(_s("title_dollar_units", corpus=corpus_name, unit=unit),
-                 fontsize=11.5, color=_T.ink, pad=30, loc="left")
-    _legend_above(ax, ncol=min(len(counters), 7))
+                 fontsize=11.5, color=_T.ink, pad=_title_pad(len(counters), ncol),
+                 loc="left")
+    _legend_above(ax, ncol=ncol)
     _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
 
@@ -1505,9 +1527,11 @@ def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
     fig, ax = plt.subplots(figsize=(11, 4.8))
     _style_axes(ax, _s("ylabel_tokens_per_1k_chars"))
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
+    ncol = min(len(counters), 7)
     ax.set_title(_s("title_cost_driver", corpus=corpus_name),
-                 fontsize=11.5, color=_T.ink, pad=30, loc="left")
-    _legend_above(ax, ncol=min(len(counters), 7))
+                 fontsize=11.5, color=_T.ink, pad=_title_pad(len(counters), ncol),
+                 loc="left")
+    _legend_above(ax, ncol=ncol)
     _caption(fig, _legend_lines(agg, corpus_id, counters), ax)
     _save(fig, stem)
 
