@@ -598,6 +598,40 @@ class Price:
 #    bar; it also needs access this eval does not have. **Gemini 3.7 Flash**
 #    (Preview, $0.75 -> $1.50) is unmappable like 3.6 Flash and 3.5 Flash-Lite.
 #
+# ── 2026-08-26 currency check: one promotion seen, no price moved ────────────
+# Prompted by the article's fact-check. Re-verified against the vendor pages today.
+#  * **GPT-5.6 Sol $5.00 -> promotional $4.00 on 2026-08-21** (in; out $30 -> $20),
+#    described by OpenAI as promotional and available "at least through November 21,
+#    2026", with NO post-promotional rate published. NOT PRICED — this row stays at
+#    $5.00 undiscounted list, by the rule already written below for claude-sonnet-5's
+#    intro price. Note the asymmetry with that case: Sonnet 5 moved because Anthropic
+#    CANCELLED its reversion and made the low price standard, which dissolved the
+#    choice. Sol's promotion is live with an end date, so the choice is live too and
+#    is decided the same way it was for Sonnet 5 in the three weeks before it moved.
+#    Revisit after 2026-11-21.
+#  * Luna $0.20 and Terra $2.00 re-confirmed on the standard pricing table.
+#  * **Adding them as priced fold proxies was TRIED on this date and REVERTED.**
+#    Worth recording so nobody spends the afternoon again. They measure fine — all
+#    three GPT-5.6 tiers are o200k, so the counts are identical by construction and
+#    `eval.run` produced them offline in one pass. The blocker is the PALETTE, and
+#    it is structural, not cosmetic:
+#      - The dollar ramp encodes price as lightness, lighter = cheaper. Sol is the
+#        DEAREST of the three, so it must be the family's darkest step and the two
+#        new tiers must sit lighter than it.
+#      - Slot 3's amber #eda100 is already 2.17:1 on the white surface, 0.17 above
+#        the 2:1 fill floor. There is no room for two lighter steps above it.
+#      - Shifting the whole family darker (Sol #a86e00, Terra #d18a00, Luna
+#        inheriting #eda100) clears the contrast floor and the ordinal ramp — but
+#        fails the adjacency gate in 16 rendered pairs, and two of those are in the
+#        TOKENIZER charts that pass today: o200k_base #a86e00 lands at CVD ΔE 1.2
+#        against gemini-3-1-pro's green, where the gate needs 8.0. Indistinguishable
+#        to a red-green colourblind reader, on a figure that is currently fine.
+#      - Luna at #eda100 also lands ΔE 4.6 from Flash-Lite's green in the cost order.
+#    So the comparability caveat below stays a caveat, and the ARTICLE carries it in
+#    prose instead. Drawing OpenAI's price range needs a palette redesign with the
+#    external validator, not a tint step — that is a separate piece of work.
+#  * No published number moved, so no artifact regenerates and no figure changes.
+#
 # ── 2026-07-27 addendum: two Google rows added ───────────────────────────────
 # The re-ratification above covered the eleven entries that existed at the time and
 # moved no price. Separately and on the same date, the model-currency check (see the
@@ -631,13 +665,26 @@ class Price:
 #    Do not read the charts as "OpenAI costs $5.00 to serve"; read them as "the
 #    flagship tier does".
 PRICING: dict[str, Price] = {
-    "o200k_base": Price(5.00, "2026-08-16", "high",
-                        "GPT-5.6 Sol (SKU `gpt-5.6-sol`) input list price — the flagship "
+    "o200k_base": Price(5.00, "2026-08-26", "high",
+                        "GPT-5.6 Sol (SKU `gpt-5.6-sol`) UNDISCOUNTED input list price — "
+                        "the flagship "
                         "of three GPT-5.6 tiers that all share the o200k tokenizer "
                         "(Luna $0.20 / Terra $2.00 / Sol $5.00 in; the cheaper two were "
                         "cut from $1.00 and $2.50 between 2026-07-27 and 2026-08-16, "
                         "which does NOT move this row but widens the unseen range below "
-                        "it to 25x). Verified 2026-08-16 "
+                        "it to 25x). "
+                        "⚠️ PROMOTION IN FLIGHT, DELIBERATELY NOT PRICED: on 2026-08-21 "
+                        "OpenAI cut Sol to $4.00 in / $20.00 out, described as "
+                        "promotional and available 'at least through November 21, 2026', "
+                        "with NO post-promotional rate published. This row stays at "
+                        "$5.00 by the same rule that kept claude-sonnet-5 at $3.00 while "
+                        "its intro price was live: price every row undiscounted, so a "
+                        "time-boxed promotion does not put a temporarily-cheap bar in a "
+                        "list-price ladder. Unlike that case there is nothing to "
+                        "supersede yet — if OpenAI makes $4.00 standard, move this row "
+                        "and say so here. A drafter quoting current spend rather than "
+                        "comparable list should disclose the $4.00. "
+                        "Verified 2026-08-26 "
                         "vs. developers.openai.com/api/docs/pricing. `high` because the "
                         "number is primary-sourced for a NAMED SKU; the tier pick is an "
                         "editorial scope choice, not an uncertainty. Note the cheaper "
