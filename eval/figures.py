@@ -39,6 +39,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
+from string import Formatter
 
 import matplotlib
 matplotlib.use("Agg")
@@ -233,6 +234,13 @@ EN = Locale(
                                 "`source` in config.PRICING and `price_confidence` in "
                                 "cost_by_language.csv",
         "cap_same_tokens": "Same tokens, different price: {parts} (per 1M input tokens)",
+        # The confidence GRADE is prose too, not a code value. It reached the
+        # caption as a bare `Price.confidence` string, so a hedged price would
+        # have printed "(medium)" in the middle of a Vietnamese sentence.
+        "confidence_high": "high",
+        "confidence_medium": "medium",
+        "confidence_low": "low",
+        "confidence_unknown": "unknown",
         "cap_unpriced": "{names} omitted \u2014 no serving list price",
         "cap_usd_per_1m_chars": "USD to serve 1,000,000 input characters \u2014 input list "
                                 "price ({as_of}); VND = USD \u00d7 {rate}",
@@ -295,6 +303,10 @@ VI = Locale(
                                 "`source` trong config.PRICING v\u00e0 `price_confidence` trong "
                                 "cost_by_language.csv",
         "cap_same_tokens": "C\u00f9ng s\u1ed1 token, kh\u00e1c gi\u00e1: {parts} (tr\u00ean 1 tri\u1ec7u token \u0111\u1ea7u v\u00e0o)",
+        "confidence_high": "cao",
+        "confidence_medium": "trung b\u00ecnh",
+        "confidence_low": "th\u1ea5p",
+        "confidence_unknown": "ch\u01b0a r\u00f5",
         "cap_unpriced": "{names} \u0111\u01b0\u1ee3c b\u1ecf ra ngo\u00e0i \u2014 kh\u00f4ng c\u00f3 gi\u00e1 ni\u00eam y\u1ebft \u0111\u1ec3 ph\u1ee5c v\u1ee5",
         "cap_usd_per_1m_chars": "USD \u0111\u1ec3 ph\u1ee5c v\u1ee5 1.000.000 k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o \u2014 gi\u00e1 ni\u00eam y\u1ebft "
                                 "\u0111\u1ea7u v\u00e0o ({as_of}); VND = USD \u00d7 {rate}",
@@ -328,6 +340,26 @@ def _use_locale(locale: Locale):
         yield locale
     finally:
         _L = prev
+
+
+def _fields(template: str) -> set[str]:
+    """The `{placeholder}` names in a catalogue string."""
+    return {f for _, f, _, _ in Formatter().parse(template) if f is not None}
+
+
+def _confidence(grade: str) -> str:
+    """A `Price.confidence` grade as prose in the current locale.
+
+    Fails loudly on an unknown grade rather than falling back to the raw value:
+    a silent fallback is how the English word got into the Vietnamese caption in
+    the first place.
+    """
+    try:
+        return _L.t[f"confidence_{grade}"]
+    except KeyError:
+        raise ValueError(
+            f"no {_L.name!r} wording for price confidence {grade!r} — add "
+            f"'confidence_{grade}' to every Locale catalogue") from None
 
 
 def _s(key: str, **kw) -> str:
@@ -548,6 +580,44 @@ def _check_style_registries() -> None:
         if missing_keys or extra_keys:
             raise ValueError(f"Locale {loc.name!r} catalogue does not match EN's: "
                              f"missing {missing_keys}, unknown {extra_keys}")
+        # Matching KEYS are not enough — the placeholders inside them have to
+        # match too, and both directions fail in ways nothing downstream sees.
+        # A placeholder EN has and this locale lacks is SILENT: str.format drops
+        # the surplus kwarg, so the figure renders having quietly stopped saying
+        # what it measures. One this locale has and EN lacks raises KeyError, but
+        # only on the render path that uses the key — which `make test` never
+        # walks, so it escapes the suite and surfaces in a published asset.
+        for key, en_text in EN.t.items():
+            want = _fields(en_text)
+            got = _fields(loc.t[key])
+            if want != got:
+                raise ValueError(
+                    f"Locale {loc.name!r} key {key!r} has placeholders {sorted(got)}, "
+                    f"but EN has {sorted(want)} — a missing one is dropped silently "
+                    "at render, an extra one raises only on the path that uses it")
+        # Cheap guards on the fields that carry no placeholder to compare, each
+        # of which fails silently rather than loudly.
+        blank = sorted(k for k, v in loc.t.items() if not v.strip())
+        if blank:
+            raise ValueError(f"Locale {loc.name!r} has empty text for {blank} — the "
+                             "figure would ship with that element missing, not "
+                             "untranslated")
+        if "{v}" not in loc.money:
+            raise ValueError(f"Locale {loc.name!r} money template {loc.money!r} drops "
+                             "{v} — every price would render as bare currency")
+        if loc.decimal == loc.group:
+            raise ValueError(f"Locale {loc.name!r} uses {loc.decimal!r} for both the "
+                             "decimal mark and the thousands separator")
+    # The empty English suffix is the whole reason a new locale cannot rename an
+    # existing figure. Nothing else asserts it, and it is the property every
+    # "the English output is untouched" claim rests on.
+    if EN.suffix:
+        raise ValueError(f"EN.suffix must stay empty (is {EN.suffix!r}) — every "
+                         "committed English figure would be renamed")
+    suffixes = [l.suffix for l in LOCALES]
+    if len(set(suffixes)) != len(suffixes):
+        raise ValueError(f"two locales share a filename suffix: {suffixes} — they "
+                         "would overwrite each other's figures and exit 0")
 
 
 def _slot(cid: str) -> int:
@@ -714,6 +784,14 @@ def _fmt(v: float) -> str:
     return _num(v, 2)
 
 FIG_DIR = config.RESULTS_DIR / "figures"
+# Every stem prefix this module emits, longest-prefix-first so that
+# `_prune_stale` cannot match "fig-dollar-cost-" against a per-sentence figure
+# and read its corpus as "per-sentence-<corpus>". Read by _prune_stale and by
+# the test that pins the filename grammar; adding a figure means adding it here,
+# or the prune will never reach it.
+FIGURE_STEMS = ("fig-premium-heatmap-", "fig-cost-driver-bars-",
+                "fig-dollar-cost-per-sentence-", "fig-dollar-cost-",
+                "fig-vietnamese-cost-ladder-", "fig-vietnamese-tax-gap-")
 CONTRAST = [l for l in config.LANGUAGES if l != config.BASELINE_LANG]
 LEAD_LANG = "vie_Latn"  # article lead; canonical column order sorts by its premium
 
@@ -760,7 +838,7 @@ def _price_confidence_note(counters: list[str]) -> list[str]:
               and p.confidence != "high"]
     if not hedged:
         return []
-    named = ", ".join(f"{_label(c)} ({config.PRICING[c].confidence})"
+    named = ", ".join(f"{_label(c)} ({_confidence(config.PRICING[c].confidence)})"
                       for c in hedged)
     return [_s("cap_price_confidence", named=named)]
 
@@ -983,6 +1061,19 @@ def _caption(fig, lines: list[str], ax=None, pad: float = -46) -> None:
                 linespacing=1.6, annotation_clip=False)
 
 
+def _rendered_stem(stem: str) -> str:
+    """The on-disk stem for `stem` under the locale and theme in force.
+
+    The ONE statement of the filename grammar. `_prune_stale` parses it back to
+    recover the corpus, and the test pins the pair — so both have to read the
+    rule from here rather than restating it. A second copy is not a duplicate,
+    it is a way for the parse and the build to disagree without either changing
+    visibly: swap these two suffixes and every dark Vietnamese figure is deleted
+    by the run that writes it.
+    """
+    return f"{stem}{_L.suffix}{_T.suffix}"
+
+
 def _save(fig, stem: str) -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     # Paint the surface explicitly. Light's value is matplotlib's own default
@@ -995,7 +1086,7 @@ def _save(fig, stem: str) -> None:
     for ext in ("svg", "png"):
         # Drop the wall-clock Date from SVG metadata so re-runs are byte-identical.
         kw = {"metadata": {"Date": None}} if ext == "svg" else {}
-        fig.savefig(FIG_DIR / f"{stem}{_L.suffix}{_T.suffix}.{ext}",
+        fig.savefig(FIG_DIR / f"{_rendered_stem(stem)}.{ext}",
                     bbox_inches="tight", dpi=150,
                     facecolor=_T.surface, **kw)
     plt.close(fig)
@@ -1478,14 +1569,11 @@ def _prune_stale(live: set[str]) -> None:
     # Keyed on the four stems this module emits, so it can only ever remove files
     # it produced — and on `live` rather than config.CORPORA, since a corpus
     # retired from the config is exactly the case that leaves figures behind.
-    _STEMS = ("fig-premium-heatmap-", "fig-cost-driver-bars-",
-              "fig-dollar-cost-per-sentence-", "fig-dollar-cost-",
-              "fig-vietnamese-cost-ladder-", "fig-vietnamese-tax-gap-")
     if FIG_DIR.exists():
         for path in sorted(FIG_DIR.iterdir()):
             if path.suffix not in (".svg", ".png"):
                 continue
-            for pre in _STEMS:
+            for pre in FIGURE_STEMS:
                 if path.stem.startswith(pre):
                     corpus = path.stem[len(pre):]
                     # Strip the theme and locale suffixes before the corpus test,

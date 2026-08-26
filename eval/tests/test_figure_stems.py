@@ -25,13 +25,23 @@ from eval import config, figures
 
 
 def _stems() -> list[str]:
-    """Every stem `_render_all` would write, for every corpus/locale/theme."""
-    figs = ("fig-premium-heatmap", "fig-cost-driver-bars", "fig-dollar-cost",
-            "fig-dollar-cost-per-sentence", "fig-vietnamese-cost-ladder",
-            "fig-vietnamese-tax-gap")
-    return [f"{f}-{corpus}{loc.suffix}{theme.suffix}"
-            for f in figs for corpus in config.CORPORA
-            for loc in figures.LOCALES for theme in figures.THEMES]
+    """Every stem `_render_all` would write, for every corpus/locale/theme.
+
+    Both halves are taken from the module under test rather than restated here.
+    The figure names come from `FIGURE_STEMS` — the same tuple `_prune_stale`
+    matches on, so adding a figure to one and not the other cannot pass. The
+    suffix order comes from `_rendered_stem`, the single statement of the
+    grammar, so a test built on a private copy of the rule cannot keep passing
+    while `_save` changes underneath it.
+    """
+    out = []
+    for pre in figures.FIGURE_STEMS:
+        for corpus in config.CORPORA:
+            for loc in figures.LOCALES:
+                for theme in figures.THEMES:
+                    with figures._use_locale(loc), figures._use_theme(theme):
+                        out.append(figures._rendered_stem(f"{pre}{corpus}"))
+    return out
 
 
 class PruneParsesEveryStem(unittest.TestCase):
@@ -59,6 +69,22 @@ class PruneParsesEveryStem(unittest.TestCase):
                          "a retired corpus survived in some locale/theme — the "
                          "prune only reached the default variant")
         self.assertTrue(kept, "the prune removed everything, including live corpora")
+
+
+    def test_stem_grammar_is_corpus_then_locale_then_theme(self):
+        """Pins the suffix ORDER itself.
+
+        `_stems()` now derives from `_rendered_stem`, which makes the two prune
+        tests agree with `_save` by construction — and therefore blind to the
+        order changing. This is the assertion that is not blind: `_prune_stale`
+        strips themes before locales, so it only parses names built the other
+        way round.
+        """
+        with figures._use_locale(figures.VI), figures._use_theme(figures.DARK):
+            self.assertEqual(figures._rendered_stem("fig-premium-heatmap-flores"),
+                             "fig-premium-heatmap-flores-vi-dark",
+                             "locale must precede theme — _prune_stale strips "
+                             "themes first and would misread the corpus")
 
 
 if __name__ == "__main__":
