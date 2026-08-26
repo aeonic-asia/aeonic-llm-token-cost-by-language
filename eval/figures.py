@@ -13,6 +13,13 @@ legend beneath spelling out the folds. Which counters fold is config; that a
 "shared" fold really is byte-identical is re-verified here against the counts —
 never asserted, in every caption that makes the claim.
 
+**Two render axes beyond the data: theme and locale.** Every figure is emitted
+once per (locale, theme) pair, with both suffixes appended to the stem in that
+order — `fig-premium-heatmap-flores-vi-dark.svg`. English and light carry empty
+suffixes, so adding an axis never renames an existing file. Localisation happens
+here rather than by editing the SVGs because matplotlib draws every label as a
+`<path>`: there is no text in the output to translate.
+
 **Two column orders, not one.** The tokenizer figures (heatmap, cost-driver)
 ascend by the lead language's premium via `_headline_order`; the two dollar
 figures ascend by price via `_priced_order`. Both prefer FLORES+ for stability
@@ -163,6 +170,171 @@ def _use_theme(theme: Theme):
         yield theme
     finally:
         _T = prev
+
+
+# ── locale ──────────────────────────────────────────────────────────────────
+# A second render axis, built exactly like Theme above: one frozen record per
+# locale, a module-level current value, and a context manager to swap it. The
+# suffix lands in the filename the same way the theme's does, so English keeps
+# its existing stems byte-for-byte and a locale is additive by construction.
+#
+# Why the figures are localised at SOURCE rather than by editing the SVGs: every
+# label in a matplotlib SVG is a <path>, not text. There is no string in the file
+# to replace, so a translated figure can only be produced by re-rendering.
+#
+# The catalogue owns whole sentences, never fragments joined at the call site.
+# Vietnamese does not mark plurals with -s and orders its clauses differently, so
+# a template like "USD per 1,000 {unit}s" cannot be assembled from a translated
+# {unit} plus English glue — the glue is the part that has to move.
+@dataclass(frozen=True)
+class Locale:
+    name: str
+    suffix: str                 # appended to every figure stem ("" keeps English's filenames)
+    languages: dict[str, str]   # display name per FLORES code
+    units: dict[str, str]       # per-corpus counting unit (sentence / message)
+    decimal: str                # decimal mark
+    group: str                  # thousands separator
+    money: str                  # currency template, e.g. "${v}" or "{v} USD"
+    date: str                   # "iso" | "dmy"
+    t: dict[str, str]           # message catalogue
+
+
+EN = Locale(
+    name="en", suffix="",
+    languages=config.LANGUAGES,
+    units={"flores": "sentence", "massive": "message"},
+    decimal=".", group=",", money="${v}", date="iso",
+    t={
+        "ylabel_usd_per_1m_chars": "USD per 1,000,000 input characters",
+        "ylabel_usd_per_1k_units": "USD per 1,000 {unit}s",
+        "ylabel_tokens_per_1k_chars": "Tokens per 1,000 NFC characters",
+        "xlabel_vi_ladder": "USD per 1,000 sentences of Vietnamese input",
+        "xlabel_dumbbell": "USD per 1,000 sentences \u2014 same content, both languages",
+        "title_heatmap": "Token premium vs. English ({corpus})",
+        "title_cost_driver": "Cost driver: tokens per 1,000 characters \u2014 {corpus} "
+                             "(lower = cheaper)",
+        "title_dollar_chars": "Serving cost: USD per 1M input characters \u2014 {corpus} "
+                              "(price \u00d7 tokens; lower = cheaper)",
+        "title_dollar_units": "Serving cost: USD per 1,000 {unit}s \u2014 {corpus} "
+                              "(price \u00d7 tokens per {unit}; lower = cheaper)",
+        "title_vi_ladder": "What serving Vietnamese costs \u2014 {corpus} "
+                           "({spread}\u00d7 between the cheapest and dearest tier)",
+        "title_vi_tax": "The Vietnamese tax in money \u2014 {corpus} "
+                        "(each line is what the same content costs extra in Vietnamese)",
+        "cbar_premium": "\u00d7 English tokens (1.00 = parity)",
+        "legend_baseline_lang": "English (same content)",
+        "legend_lead_lang": "Vietnamese",
+        "cap_shared_tokenizer": "{names} \u2014 one shared tokenizer, identical counts "
+                                "(verified here)",
+        "cap_prices_differ_named": "; prices differ ({cheapest} cheapest)",
+        "cap_prices_differ": "; prices differ",
+        "cap_cl100k": "{label} \u2014 GPT-4/3.5-era baseline, historical anchor",
+        "cap_price_confidence": "Not every price is high-confidence \u2014 {named}. See "
+                                "`source` in config.PRICING and `price_confidence` in "
+                                "cost_by_language.csv",
+        "cap_same_tokens": "Same tokens, different price: {parts} (per 1M input tokens)",
+        "cap_unpriced": "{names} omitted \u2014 no serving list price",
+        "cap_usd_per_1m_chars": "USD to serve 1,000,000 input characters \u2014 input list "
+                                "price ({as_of}); VND = USD \u00d7 {rate}",
+        "cap_usd_per_1k_units": "USD to serve 1,000 {unit}s \u2014 parallel corpus, so the "
+                                "SAME content across languages (price \u00d7 tokens per "
+                                "{unit}); input list price ({as_of}); VND = USD \u00d7 {rate}",
+        "cap_read_against": "Read against the per-character chart: a dense script (Chinese) "
+                            "needs few characters, so per-character overstates its cost; "
+                            "per {unit} it ranks far lower.",
+        "cap_dumbbell_gaps": "Widest gap: {widest}, +{widest_delta} per 1,000 sentences "
+                             "({widest_ratio}\u00d7). Steepest ratio: {steepest} at "
+                             "{steepest_ratio}\u00d7 \u2014 only +{steepest_delta}, because a "
+                             "cheap model with an inefficient tokenizer is costly in "
+                             "proportion and small in money.",
+        "cap_dumbbell_axes": "The two are different axes: the tokenizer sets the ratio, the "
+                             "serving tier sets the size of the bill it applies to.",
+    })
+
+# Vietnamese. Terminology is held identical to the published Vietnamese article
+# so a reader moves between prose and figure without re-learning a word:
+# b\u1ed9 t\u00e1ch token (tokenizer), b\u1ed9i s\u1ed1 token (premium), ng\u1eef v\u1ef1c (register).
+VI = Locale(
+    name="vi", suffix="-vi",
+    languages={
+        "eng_Latn": "Ti\u1ebfng Anh",
+        "vie_Latn": "Ti\u1ebfng Vi\u1ec7t",
+        "zho_Hans": "Ti\u1ebfng Trung (gi\u1ea3n th\u1ec3)",
+        "rus_Cyrl": "Ti\u1ebfng Nga",
+        "deu_Latn": "Ti\u1ebfng \u0110\u1ee9c",
+    },
+    units={"flores": "c\u00e2u", "massive": "tin nh\u1eafn"},
+    decimal=",", group=".", money="{v} USD", date="dmy",
+    t={
+        "ylabel_usd_per_1m_chars": "USD tr\u00ean 1.000.000 k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o",
+        "ylabel_usd_per_1k_units": "USD tr\u00ean 1.000 {unit}",
+        "ylabel_tokens_per_1k_chars": "Token tr\u00ean 1.000 k\u00fd t\u1ef1 NFC",
+        "xlabel_vi_ladder": "USD tr\u00ean 1.000 c\u00e2u \u0111\u1ea7u v\u00e0o ti\u1ebfng Vi\u1ec7t",
+        "xlabel_dumbbell": "USD tr\u00ean 1.000 c\u00e2u \u2014 c\u00f9ng m\u1ed9t n\u1ed9i dung, c\u1ea3 hai ng\u00f4n ng\u1eef",
+        "title_heatmap": "B\u1ed9i s\u1ed1 token so v\u1edbi ti\u1ebfng Anh ({corpus})",
+        "title_cost_driver": "Y\u1ebfu t\u1ed1 sinh chi ph\u00ed: token tr\u00ean 1.000 k\u00fd t\u1ef1 \u2014 "
+                             "{corpus} (th\u1ea5p h\u01a1n = r\u1ebb h\u01a1n)",
+        "title_dollar_chars": "Chi ph\u00ed ph\u1ee5c v\u1ee5: USD tr\u00ean 1 tri\u1ec7u k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o \u2014 "
+                              "{corpus} (gi\u00e1 \u00d7 s\u1ed1 token; th\u1ea5p h\u01a1n = r\u1ebb h\u01a1n)",
+        "title_dollar_units": "Chi ph\u00ed ph\u1ee5c v\u1ee5: USD tr\u00ean 1.000 {unit} \u2014 {corpus} "
+                              "(gi\u00e1 \u00d7 s\u1ed1 token m\u1ed7i {unit}; th\u1ea5p h\u01a1n = r\u1ebb h\u01a1n)",
+        "title_vi_ladder": "Ph\u1ee5c v\u1ee5 ti\u1ebfng Vi\u1ec7t t\u1ed1n bao nhi\u00eau \u2014 {corpus} "
+                           "(ch\u00eanh {spread}\u00d7 gi\u1eefa b\u1eadc r\u1ebb nh\u1ea5t v\u00e0 b\u1eadc \u0111\u1eaft nh\u1ea5t)",
+        "title_vi_tax": "Thu\u1ebf ti\u1ebfng Vi\u1ec7t t\u00ednh b\u1eb1ng ti\u1ec1n \u2014 {corpus} "
+                        "(m\u1ed7i \u0111o\u1ea1n n\u1ed1i l\u00e0 ph\u1ea7n c\u00f9ng m\u1ed9t n\u1ed9i dung t\u1ed1n th\u00eam khi vi\u1ebft "
+                        "b\u1eb1ng ti\u1ebfng Vi\u1ec7t)",
+        "cbar_premium": "\u00d7 s\u1ed1 token ti\u1ebfng Anh (1,00 = ngang b\u1eb1ng)",
+        "legend_baseline_lang": "Ti\u1ebfng Anh (c\u00f9ng n\u1ed9i dung)",
+        "legend_lead_lang": "Ti\u1ebfng Vi\u1ec7t",
+        "cap_shared_tokenizer": "{names} \u2014 chung m\u1ed9t b\u1ed9 t\u00e1ch token, s\u1ed1 \u0111\u1ebfm gi\u1ed1ng h\u1ec7t "
+                                "(\u0111\u00e3 ki\u1ec3m ch\u1ee9ng t\u1ea1i \u0111\u00e2y)",
+        "cap_prices_differ_named": "; gi\u00e1 kh\u00e1c nhau ({cheapest} r\u1ebb nh\u1ea5t)",
+        "cap_prices_differ": "; gi\u00e1 kh\u00e1c nhau",
+        "cap_cl100k": "{label} \u2014 m\u1ed1c tham chi\u1ebfu th\u1eddi GPT-4/3.5, neo l\u1ecbch s\u1eed",
+        "cap_price_confidence": "Kh\u00f4ng ph\u1ea3i m\u1ecdi m\u1ee9c gi\u00e1 \u0111\u1ec1u \u0111\u1ed9 tin c\u1eady cao \u2014 {named}. Xem "
+                                "`source` trong config.PRICING v\u00e0 `price_confidence` trong "
+                                "cost_by_language.csv",
+        "cap_same_tokens": "C\u00f9ng s\u1ed1 token, kh\u00e1c gi\u00e1: {parts} (tr\u00ean 1 tri\u1ec7u token \u0111\u1ea7u v\u00e0o)",
+        "cap_unpriced": "{names} \u0111\u01b0\u1ee3c b\u1ecf ra ngo\u00e0i \u2014 kh\u00f4ng c\u00f3 gi\u00e1 ni\u00eam y\u1ebft \u0111\u1ec3 ph\u1ee5c v\u1ee5",
+        "cap_usd_per_1m_chars": "USD \u0111\u1ec3 ph\u1ee5c v\u1ee5 1.000.000 k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o \u2014 gi\u00e1 ni\u00eam y\u1ebft "
+                                "\u0111\u1ea7u v\u00e0o ({as_of}); VND = USD \u00d7 {rate}",
+        "cap_usd_per_1k_units": "USD \u0111\u1ec3 ph\u1ee5c v\u1ee5 1.000 {unit} \u2014 kho ng\u1eef li\u1ec7u song song, n\u00ean l\u00e0 "
+                                "C\u00d9NG M\u1ed8T n\u1ed9i dung tr\u00ean m\u1ecdi ng\u00f4n ng\u1eef (gi\u00e1 \u00d7 s\u1ed1 token m\u1ed7i "
+                                "{unit}); gi\u00e1 ni\u00eam y\u1ebft \u0111\u1ea7u v\u00e0o ({as_of}); VND = USD \u00d7 {rate}",
+        "cap_read_against": "\u0110\u1ecdc c\u00f9ng bi\u1ec3u \u0111\u1ed3 t\u00ednh theo k\u00fd t\u1ef1: m\u1ed9t h\u1ec7 ch\u1eef c\u00f4 \u0111\u1ecdng "
+                            "(ti\u1ebfng Trung) c\u1ea7n \u00edt k\u00fd t\u1ef1, n\u00ean c\u00e1ch t\u00ednh theo k\u00fd t\u1ef1 th\u1ed5i ph\u1ed3ng "
+                            "chi ph\u00ed c\u1ee7a n\u00f3; t\u00ednh theo {unit} th\u00ec n\u00f3 x\u1ebfp th\u1ea5p h\u01a1n h\u1eb3n.",
+        "cap_dumbbell_gaps": "Kho\u1ea3ng c\u00e1ch l\u1edbn nh\u1ea5t: {widest}, +{widest_delta} tr\u00ean 1.000 c\u00e2u "
+                             "({widest_ratio}\u00d7). T\u1ef7 l\u1ec7 d\u1ed1c nh\u1ea5t: {steepest} \u1edf {steepest_ratio}\u00d7 "
+                             "\u2014 nh\u01b0ng ch\u1ec9 +{steepest_delta}, v\u00ec m\u1ed9t m\u00f4 h\u00ecnh r\u1ebb v\u1edbi b\u1ed9 t\u00e1ch token "
+                             "k\u00e9m hi\u1ec7u qu\u1ea3 th\u00ec t\u1ed1n k\u00e9m v\u1ec1 t\u1ef7 l\u1ec7 v\u00e0 nh\u1ecf v\u1ec1 ti\u1ec1n.",
+        "cap_dumbbell_axes": "\u0110\u00e2y l\u00e0 hai tr\u1ee5c kh\u00e1c nhau: b\u1ed9 t\u00e1ch token \u0111\u1ecbnh ra t\u1ef7 l\u1ec7, c\u00f2n "
+                             "b\u1eadc ph\u1ee5c v\u1ee5 \u0111\u1ecbnh ra \u0111\u1ed9 l\u1edbn c\u1ee7a h\u00f3a \u0111\u01a1n m\u00e0 t\u1ef7 l\u1ec7 \u1ea5y \u00e1p l\u00ean.",
+    })
+
+LOCALES = (EN, VI)
+
+# The locale in force for the current render — module state for the same reason
+# _T is (see above).
+_L: Locale = EN
+
+
+@contextmanager
+def _use_locale(locale: Locale):
+    """Render under `locale`, restoring the previous one afterwards."""
+    global _L
+    prev, _L = _L, locale
+    try:
+        yield locale
+    finally:
+        _L = prev
+
+
+def _s(key: str, **kw) -> str:
+    """A catalogue string, formatted. Missing keys fail loudly rather than
+    falling back to English: a half-translated figure is worse than a build
+    error, because nothing downstream can detect it."""
+    return _L.t[key].format(**kw)
 
 
 # Colour follows the TOKENIZER; the tint STEP within that colour follows the
@@ -355,10 +527,27 @@ def _check_style_registries() -> None:
     if unknown_slots:
         raise ValueError(f"_SLOT_BY_FLAGSHIP keys with no counter in MODEL_MATRIX: "
                          f"{unknown_slots}")
-    unknown_units = sorted(set(_SENTENCE_UNIT) - set(config.CORPORA))
-    if unknown_units:
-        raise ValueError(f"_SENTENCE_UNIT keys with no corpus in config.CORPORA: "
-                         f"{unknown_units}")
+    for loc in LOCALES:
+        unknown_units = sorted(set(loc.units) - set(config.CORPORA))
+        if unknown_units:
+            raise ValueError(f"Locale {loc.name!r} names units for corpora that are "
+                             f"not in config.CORPORA: {unknown_units}")
+        missing_units = sorted(set(config.CORPORA) - set(loc.units))
+        if missing_units:
+            raise ValueError(f"Locale {loc.name!r} has no counting unit for corpora "
+                             f"{missing_units} — captions would print a word from "
+                             "another corpus")
+        missing_langs = sorted(set(config.LANGUAGES) - set(loc.languages))
+        if missing_langs:
+            raise ValueError(f"Locale {loc.name!r} has no display name for "
+                             f"{missing_langs} — the axis would lose a language")
+        # Every locale carries the WHOLE catalogue. A partial one renders half a
+        # figure in English with nothing downstream able to notice.
+        missing_keys = sorted(set(EN.t) - set(loc.t))
+        extra_keys = sorted(set(loc.t) - set(EN.t))
+        if missing_keys or extra_keys:
+            raise ValueError(f"Locale {loc.name!r} catalogue does not match EN's: "
+                             f"missing {missing_keys}, unknown {extra_keys}")
 
 
 def _slot(cid: str) -> int:
@@ -484,24 +673,50 @@ def _grouped_bars(ax, groups: list[str], series: list[str],
                     textcoords="offset points", xytext=(0, 3),
                     ha="center", va="bottom", fontsize=7.5, color=_T.ink_2)
     ax.set_xticks(x + slot * (len(series) - 1) / 2)
-    ax.set_xticklabels([config.LANGUAGES[l] for l in groups], fontsize=9)
+    ax.set_xticklabels([_L.languages[l] for l in groups], fontsize=9)
     ax.set_xlim(-0.5 * slot - 0.12, len(groups) - 1 + slot * len(series) + 0.02)
+
+
+def _num(v: float, dp: int) -> str:
+    """A number in the current locale's convention.
+
+    Python's `,` format spec always emits English separators, so every figure
+    number is formatted here and then re-punctuated. Vietnamese swaps both marks
+    (1.234,56 for 1,234.56), which is why the swap goes via a sentinel rather
+    than two chained replaces — replacing "," first and "." second would undo
+    itself on any number carrying both.
+    """
+    s = f"{v:,.{dp}f}"
+    return s.replace(",", "\x00").replace(".", _L.decimal).replace("\x00", _L.group)
+
+
+def _money(v: float, dp: int | None = None) -> str:
+    """A USD amount, punctuated and positioned per locale ($5.00 / 5,00 USD)."""
+    if dp is None:
+        dp = 0 if float(v).is_integer() else 2
+    return _L.money.format(v=_num(v, dp))
+
+
+def _date(iso: str) -> str:
+    """An ISO date in the locale's convention — d/m/yyyy for Vietnamese."""
+    if _L.date == "iso":
+        return iso
+    y, m, d = iso.split("-")
+    return f"{int(d)}/{int(m)}/{y}"
 
 
 def _fmt(v: float) -> str:
     """Compact tick/label text: no trailing noise on round numbers."""
     if v >= 100:
-        return f"{v:,.0f}"
+        return _num(v, 0)
     if v >= 10:
-        return f"{v:,.1f}"
-    return f"{v:,.2f}"
+        return _num(v, 1)
+    return _num(v, 2)
 
 FIG_DIR = config.RESULTS_DIR / "figures"
 CONTRAST = [l for l in config.LANGUAGES if l != config.BASELINE_LANG]
 LEAD_LANG = "vie_Latn"  # article lead; canonical column order sorts by its premium
 
-def _usd(v: float) -> str:
-    return f"${v:,.0f}" if float(v).is_integer() else f"${v:,.2f}"
 
 
 def _price_as_of(counters: list[str]) -> str:
@@ -517,8 +732,9 @@ def _price_as_of(counters: list[str]) -> str:
                     if config.PRICING.get(c)
                     and config.PRICING[c].input_usd_per_mtok is not None})
     if not dates:
-        return config.PRICING_AS_OF
-    return dates[0] if len(dates) == 1 else f"{dates[0]}–{dates[-1]}"
+        return _date(config.PRICING_AS_OF)
+    return (_date(dates[0]) if len(dates) == 1
+            else f"{_date(dates[0])}\u2013{_date(dates[-1])}")
 
 
 def _price_confidence_note(counters: list[str]) -> list[str]:
@@ -546,8 +762,7 @@ def _price_confidence_note(counters: list[str]) -> list[str]:
         return []
     named = ", ".join(f"{_label(c)} ({config.PRICING[c].confidence})"
                       for c in hedged)
-    return [f"Not every price is high-confidence — {named}. See `source` in "
-            f"config.PRICING and `price_confidence` in cost_by_language.csv"]
+    return [_s("cap_price_confidence", named=named)]
 
 
 def _same_tokens_diff_price(agg: pd.DataFrame, corpus_id: str,
@@ -580,12 +795,11 @@ def _same_tokens_diff_price(agg: pd.DataFrame, corpus_id: str,
         if key != cid and not _identical(agg, corpus_id, cid, key):
             continue
         groups.setdefault(key, []).append(
-            f"{_label(cid)} {_usd(price.input_usd_per_mtok)}")
+            f"{_label(cid)} {_money(price.input_usd_per_mtok)}")
     parts = [" / ".join(v) for v in groups.values() if len(v) > 1]
     if not parts:
         return []
-    return ["Same tokens, different price: " + "; ".join(parts)
-            + " (per 1M input tokens)"]
+    return [_s("cap_same_tokens", parts="; ".join(parts))]
 
 
 def _unpriced_line(cost: pd.DataFrame, drawn: list[str]) -> list[str]:
@@ -607,8 +821,7 @@ def _unpriced_line(cost: pd.DataFrame, drawn: list[str]) -> list[str]:
                     or config.PRICING[c.id].input_usd_per_mtok is None)]
     if not omitted:
         return []
-    return [", ".join(_label(c) for c in omitted)
-            + " omitted — no serving list price"]
+    return [_s("cap_unpriced", names=", ".join(_label(c) for c in omitted))]
 
 
 def _check_drawn_coverage(frame: pd.DataFrame, drawn: list[str], what: str) -> None:
@@ -719,7 +932,7 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
                   if m.fold_reason == "shared" and _identical(agg, corpus_id, m.id, flag)]
         if shared:
             names = " = ".join([_label(flag)] + [_label(m.id) for m in shared])
-            note = f"{names} — one shared tokenizer, identical counts (verified here)"
+            note = _s("cap_shared_tokenizer", names=names)
             # Same tokens, different serving price: name the cheapest member from
             # PRICING and from the models actually in this equality chain. This was
             # a hardcoded {"claude-new": "Sonnet 5", ...} keyed on the flagship id
@@ -734,12 +947,13 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
             if len(priced) > 1:
                 lo = min(priced)[0]
                 if sum(1 for p, _ in priced if p == lo) == 1:
-                    note += f"; prices differ ({_label(min(priced)[1])} cheapest)"
+                    note += _s("cap_prices_differ_named",
+                               cheapest=_label(min(priced)[1]))
                 else:
-                    note += "; prices differ"
+                    note += _s("cap_prices_differ")
             lines.append(note)
         if flag == "cl100k_base":
-            lines.append(f"{_label(flag)} — GPT-4/3.5-era baseline, historical anchor")
+            lines.append(_s("cap_cl100k", label=_label(flag)))
     return lines
 
 
@@ -781,7 +995,8 @@ def _save(fig, stem: str) -> None:
     for ext in ("svg", "png"):
         # Drop the wall-clock Date from SVG metadata so re-runs are byte-identical.
         kw = {"metadata": {"Date": None}} if ext == "svg" else {}
-        fig.savefig(FIG_DIR / f"{stem}{_T.suffix}.{ext}", bbox_inches="tight", dpi=150,
+        fig.savefig(FIG_DIR / f"{stem}{_L.suffix}{_T.suffix}.{ext}",
+                    bbox_inches="tight", dpi=150,
                     facecolor=_T.surface, **kw)
     plt.close(fig)
 
@@ -804,7 +1019,7 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     # dying as "ValueError: Invalid vmin or vmax" from inside matplotlib. inf is
     # reachable from _premium_table whenever a baseline total is 0.
     if not np.isfinite(mat).all():
-        bad = [(config.LANGUAGES[langs[i]], counters[j])
+        bad = [(_L.languages[langs[i]], counters[j])
                for i, j in zip(*np.where(~np.isfinite(mat)))]
         raise ValueError(
             f"premium_heatmap: non-finite premium for {bad}. Drawing these prints a "
@@ -852,7 +1067,7 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     ax.set_xticks(range(len(counters)))
     ax.set_xticklabels([_label(c) for c in counters], rotation=25, ha="right", fontsize=9)
     ax.set_yticks(range(len(langs)))
-    ax.set_yticklabels([config.LANGUAGES[l] for l in langs], fontsize=9)
+    ax.set_yticklabels([_L.languages[l] for l in langs], fontsize=9)
     # The heatmap does not go through _style_axes (it has no gridline or baseline
     # to style), so its chrome had no colour set at all and inherited matplotlib's
     # default black. That was invisible while every figure rendered on white, and
@@ -868,11 +1083,11 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
             # under either scale rather than assuming a light-to-dark ramp.
             r, g, b, _ = im.cmap(im.norm(mat[i, j]))
             lum = 0.299 * r + 0.587 * g + 0.114 * b
-            ax.text(j, i, f"{mat[i, j]:.2f}×", ha="center", va="center",
+            ax.text(j, i, f"{_num(mat[i, j], 2)}\u00d7", ha="center", va="center",
                     color="black" if lum > 0.55 else "white", fontsize=9)
-    ax.set_title(f"Token premium vs. English ({corpus_name})", fontsize=11,
+    ax.set_title(_s("title_heatmap", corpus=corpus_name), fontsize=11,
                  color=_T.ink)
-    cbar = fig.colorbar(im, ax=ax, label="× English tokens (1.00 = parity)")
+    cbar = fig.colorbar(im, ax=ax, label=_s("cbar_premium"))
     cbar.ax.yaxis.label.set_color(_T.ink_2)
     cbar.ax.tick_params(colors=_T.ink_muted)
     cbar.outline.set_edgecolor(_T.baseline)
@@ -971,14 +1186,12 @@ def vietnamese_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
     for y, c, fill in zip(ys, counters, fills):
         _rounded_end_bar(ax, x=0, y=y - 0.3, w=vals[c], h=0.6,
                          color=fill, horizontal=True)
-        ax.annotate(f"${vals[c]:,.4f}", (vals[c], y), textcoords="offset points",
+        ax.annotate(_money(vals[c], 4), (vals[c], y), textcoords="offset points",
                     xytext=(6, 0), ha="left", va="center", fontsize=8.5,
                     color=_T.ink_2)
-    ax.set_xlabel("USD per 1,000 sentences of Vietnamese input", fontsize=9,
-                  color=_T.ink_2)
+    ax.set_xlabel(_s("xlabel_vi_ladder"), fontsize=9, color=_T.ink_2)
     spread = max(vals.values()) / min(vals.values())
-    ax.set_title(f"What serving Vietnamese costs \u2014 {corpus_name} "
-                 f"({spread:.0f}\u00d7 between the cheapest and dearest tier)",
+    ax.set_title(_s("title_vi_ladder", corpus=corpus_name, spread=_num(spread, 0)),
                  fontsize=11.5, color=_T.ink, pad=18, loc="left")
     _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id, counters), ax)
     _save(fig, stem)
@@ -1050,15 +1263,15 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
         ax.plot([en], [y], marker="o", markersize=8, markerfacecolor=_T.surface,
                 markeredgecolor=fill, markeredgewidth=2.0, zorder=3)
         ax.plot([vi], [y], marker="o", markersize=9, color=fill, zorder=4)
-        ax.annotate(f"${vi:,.4f}  ({vi / en:.2f}\u00d7)", (vi, y),
+        ax.annotate(f"{_money(vi, 4)}  ({_num(vi / en, 2)}\u00d7)", (vi, y),
                     textcoords="offset points", xytext=(9, 0), ha="left",
                     va="center", fontsize=8.5, color=_T.ink_2)
     # Legend swatches are neutral: they explain the FILL convention, not a colour.
     ax.plot([], [], marker="o", markersize=8, markerfacecolor=_T.surface,
             markeredgecolor=_T.ink_muted, markeredgewidth=2.0, linestyle="none",
-            label="English (same content)")
+            label=_s("legend_baseline_lang"))
     ax.plot([], [], marker="o", markersize=9, color=_T.ink_muted, linestyle="none",
-            label="Vietnamese")
+            label=_s("legend_lead_lang"))
     # Upper right, not lower: the rows are sorted cheapest-first so the short bars
     # are at the top and the long ones at the bottom — a lower-right legend lands
     # squarely on the dearest row's value label, which is the one row a reader is
@@ -1067,8 +1280,7 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
                     labelcolor=_T.ink_2, handletextpad=0.4)
     for t in leg.get_texts():
         t.set_color(_T.ink_2)
-    ax.set_xlabel("USD per 1,000 sentences \u2014 same content, both languages",
-                  fontsize=9, color=_T.ink_2)
+    ax.set_xlabel(_s("xlabel_dumbbell"), fontsize=9, color=_T.ink_2)
     # This axis draws DOLLARS, so the title must name the widest dollar gap. The
     # first version named the steepest RATIO (Haiku 4.5, 2.42x) and sent the
     # reader hunting for the longest line, which is one of the shortest on the
@@ -1077,17 +1289,17 @@ def vietnamese_tax_dumbbell(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: st
     # which, is the article's own point rather than a caption apology.
     widest = max(pairs, key=lambda t: t[2] - t[1])
     steepest = max(pairs, key=lambda t: t[2] / t[1])
-    ax.set_title(f"The Vietnamese tax in money \u2014 {corpus_name} "
-                 f"(each line is what the same content costs extra in Vietnamese)",
+    ax.set_title(_s("title_vi_tax", corpus=corpus_name),
                  fontsize=11.5, color=_T.ink, pad=18, loc="left")
     lines = [
-        f"Widest gap: {_label(widest[0])}, +${widest[2] - widest[1]:,.4f} per "
-        f"1,000 sentences ({widest[2] / widest[1]:.2f}\u00d7). "
-        f"Steepest ratio: {_label(steepest[0])} at {steepest[2] / steepest[1]:.2f}\u00d7 "
-        f"— only +${steepest[2] - steepest[1]:,.4f}, because a cheap model with an "
-        f"inefficient tokenizer is costly in proportion and small in money.",
-        "The two are different axes: the tokenizer sets the ratio, the serving tier "
-        "sets the size of the bill it applies to.",
+        _s("cap_dumbbell_gaps",
+           widest=_label(widest[0]),
+           widest_delta=_money(widest[2] - widest[1], 4),
+           widest_ratio=_num(widest[2] / widest[1], 2),
+           steepest=_label(steepest[0]),
+           steepest_ratio=_num(steepest[2] / steepest[1], 2),
+           steepest_delta=_money(steepest[2] - steepest[1], 4)),
+        _s("cap_dumbbell_axes"),
     ] + _cost_per_sentence_legend_lines(cost, agg, corpus_id,
                                         [c for c, _, _ in pairs])
     _caption(fig, lines, ax)
@@ -1114,8 +1326,8 @@ def _priced_order(cost: pd.DataFrame) -> list[str]:
 def _cost_legend_lines(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
                        counters: list[str]) -> list[str]:
     return [
-        f"USD to serve 1,000,000 input characters — input list price "
-        f"({_price_as_of(counters)}); VND = USD × {int(config.USD_TO_VND):,}",
+        _s("cap_usd_per_1m_chars", as_of=_price_as_of(counters),
+           rate=_num(int(config.USD_TO_VND), 0)),
         *_price_confidence_note(counters),
         *_same_tokens_diff_price(agg, corpus_id, counters),
         *_unpriced_line(cost, counters),
@@ -1132,10 +1344,9 @@ def dollar_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
             for c in counters]
 
     fig, ax = plt.subplots(figsize=(11, 4.8))
-    _style_axes(ax, "USD per 1,000,000 input characters")
+    _style_axes(ax, _s("ylabel_usd_per_1m_chars"))
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
-    ax.set_title(f"Serving cost: USD per 1M input characters — {corpus_name} "
-                 f"(price × tokens; lower = cheaper)",
+    ax.set_title(_s("title_dollar_chars", corpus=corpus_name),
                  fontsize=11.5, color=_T.ink, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
     _caption(fig, _cost_legend_lines(cost, agg, corpus_id, counters), ax)
@@ -1147,20 +1358,21 @@ def dollar_cost_bars(cost: pd.DataFrame, agg: pd.DataFrame, corpus_id: str,
 # same *meaning* across languages; the honest unit for a message/document
 # workload. Deliberately contrasts with dollar_cost_bars (per character): a dense
 # script (Chinese) towers per character yet ranks low per sentence.
-_SENTENCE_UNIT = {"flores": "sentence", "massive": "message"}
+def _unit(corpus_id: str) -> str:
+    """The counting unit for a corpus, in the current locale. Falls back to the
+    sentence corpus's word rather than to English, so a locale can never leak an
+    untranslated unit into a caption."""
+    return _L.units.get(corpus_id, _L.units["flores"])
 
 
 def _cost_per_sentence_legend_lines(cost: pd.DataFrame, agg: pd.DataFrame,
                                     corpus_id: str,
                                     counters: list[str]) -> list[str]:
-    unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
+    unit = _unit(corpus_id)
     return [
-        f"USD to serve 1,000 {unit}s — parallel corpus, so the SAME content "
-        f"across languages (price × tokens per {unit}); input list price "
-        f"({_price_as_of(counters)}); VND = USD × {int(config.USD_TO_VND):,}",
-        f"Read against the per-character chart: a dense script (Chinese) needs "
-        f"few characters, so per-character overstates its cost; per {unit} it "
-        f"ranks far lower.",
+        _s("cap_usd_per_1k_units", unit=unit, as_of=_price_as_of(counters),
+           rate=_num(int(config.USD_TO_VND), 0)),
+        _s("cap_read_against", unit=unit),
         *_price_confidence_note(counters),
         *_same_tokens_diff_price(agg, corpus_id, counters),
         # Both dollar figures drop the same measured-but-unpriced counters, but
@@ -1176,16 +1388,15 @@ def dollar_cost_per_sentence_bars(cost: pd.DataFrame, agg: pd.DataFrame,
     counters = [c for c in order if c in set(cost.counter_id)]
     _check_drawn_coverage(cost, counters, "dollar")
     langs = list(config.LANGUAGES)
-    unit = _SENTENCE_UNIT.get(corpus_id, "sentence")
+    unit = _unit(corpus_id)
     vals = [[cost[(cost.counter_id == c) & (cost.lang == l)]
              ["cost_usd_per_sentence"].iloc[0] * 1000 for l in langs]  # USD / 1000 units
             for c in counters]
 
     fig, ax = plt.subplots(figsize=(11, 4.8))
-    _style_axes(ax, f"USD per 1,000 {unit}s")
+    _style_axes(ax, _s("ylabel_usd_per_1k_units", unit=unit))
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
-    ax.set_title(f"Serving cost: USD per 1,000 {unit}s — {corpus_name} "
-                 f"(price × tokens per {unit}; lower = cheaper)",
+    ax.set_title(_s("title_dollar_units", corpus=corpus_name, unit=unit),
                  fontsize=11.5, color=_T.ink, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
     _caption(fig, _cost_per_sentence_legend_lines(cost, agg, corpus_id, counters), ax)
@@ -1201,18 +1412,17 @@ def cost_driver_bars(cost: pd.DataFrame, agg: pd.DataFrame,
              ["tokens_per_1k_chars"].iloc[0] for l in langs] for c in counters]
 
     fig, ax = plt.subplots(figsize=(11, 4.8))
-    _style_axes(ax, "Tokens per 1,000 NFC characters")
+    _style_axes(ax, _s("ylabel_tokens_per_1k_chars"))
     _grouped_bars(ax, langs, counters, vals, [_label(c) for c in counters])
-    ax.set_title(f"Cost driver: tokens per 1,000 characters — {corpus_name} "
-                 f"(lower = cheaper)",
+    ax.set_title(_s("title_cost_driver", corpus=corpus_name),
                  fontsize=11.5, color=_T.ink, pad=30, loc="left")
     _legend_above(ax, ncol=min(len(counters), 7))
     _caption(fig, _legend_lines(agg, corpus_id, counters), ax)
     _save(fig, stem)
 
 
-# Called here rather than beside the tables: _SENTENCE_UNIT is defined further
-# down, and the check covers all three style registries in one place.
+# Called here rather than beside the tables: the check covers all three style
+# registries plus the locale catalogues in one place.
 _check_style_registries()
 
 
@@ -1225,11 +1435,13 @@ def make_figures() -> None:
     order = _headline_order(premium, sorted(set(premium.counter_id)))
     dollar_order = _priced_order(cost)
     live: set[str] = set()
-    for theme in THEMES:
-        with _use_theme(theme):
-            live |= _render_all(premium, cost, agg, order, dollar_order)
+    for locale in LOCALES:
+        for theme in THEMES:
+            with _use_locale(locale), _use_theme(theme):
+                live |= _render_all(premium, cost, agg, order, dollar_order)
     _prune_stale(live)
-    print(f"wrote figures to {FIG_DIR}/ (svg + png, themes: "
+    print(f"wrote figures to {FIG_DIR}/ (svg + png, locales: "
+          f"{', '.join(l.name for l in LOCALES)}; themes: "
           f"{', '.join(t.name for t in THEMES)})")
     print(f"  tokenizer columns: {[_label(c) for c in order]}")
     print(f"  dollar columns:    {[_label(c) for c in dollar_order]}")
@@ -1276,13 +1488,16 @@ def _prune_stale(live: set[str]) -> None:
             for pre in _STEMS:
                 if path.stem.startswith(pre):
                     corpus = path.stem[len(pre):]
-                    # Strip the theme suffix before the corpus test. Without this
+                    # Strip the theme and locale suffixes before the corpus test,
+                    # in the reverse of the order _save appends them. Without this
                     # every dark figure parses as corpus "<corpus>-dark", matches
-                    # nothing in `live`, and is deleted on the run that wrote it.
-                    for t in THEMES:
-                        if t.suffix and corpus.endswith(t.suffix):
-                            corpus = corpus[: -len(t.suffix)]
-                            break
+                    # nothing in `live`, and is deleted on the run that wrote it —
+                    # and the same holds for "<corpus>-vi".
+                    for group in (THEMES, LOCALES):
+                        for v in group:
+                            if v.suffix and corpus.endswith(v.suffix):
+                                corpus = corpus[: -len(v.suffix)]
+                                break
                     if corpus and corpus not in live:
                         print(f"  removing stale figure for corpus '{corpus}' "
                               f"(no longer in the dataset): {path.name}")
