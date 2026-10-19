@@ -88,6 +88,13 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
                     "corpus": corpus_id, "counter_id": counter_id,
                     "lang": lang, "language": name,
                     "premium_aggregate": round(agg_prem, 4),
+                    # The aggregate is always the whole corpus, for every counter.
+                    # The distribution_* columns below describe ONLY the
+                    # per-sentence percentiles, which API counters take on a head
+                    # slice — keeping the two bases in separately named columns
+                    # stops a reader taking the slice for the premium's basis.
+                    "aggregate_basis": f"full corpus ({corpus_n.get(corpus_id, 0)} "
+                                       "sentences, one count per language)",
                 }
                 # distribution only when per-sentence data exists (API counters
                 # are aggregate-only); otherwise leave the columns blank.
@@ -107,8 +114,8 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
                         # head slice a "full sweep", and at 1005 it called a genuine
                         # 2009-sentence sweep a head slice. The corpus size is the
                         # only honest reference, and it is already in scope.
-                        "n_sentences": int(len(ratios)),
-                        "sample_basis": ("full sweep"
+                        "distribution_n": int(len(ratios)),
+                        "distribution_basis": ("full sweep"
                                          if len(ratios) >= corpus_n.get(corpus_id, 0)
                                          else f"head slice [:{len(ratios)}], "
                                               "topically clustered — not a random sample"),

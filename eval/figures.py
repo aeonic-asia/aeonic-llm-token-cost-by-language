@@ -56,6 +56,7 @@ matplotlib.rcParams["svg.hashsalt"] = "aeonic-token-cost-eval"
 matplotlib.rcParams["text.parse_math"] = False
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import numpy as np
 import pandas as pd
 
@@ -746,6 +747,11 @@ def _grouped_bars(ax, groups: list[str], series: list[str],
     ax.set_xlim(-0.5 * slot - 0.12, len(groups) - 1 + slot * len(series) + 0.02)
 
 
+def _cbar_tick(v: float, _pos=None) -> str:
+    """Colour-bar tick label in the current locale (premium ticks need 1 dp)."""
+    return _num(v, 1)
+
+
 def _num(v: float, dp: int) -> str:
     """A number in the current locale's convention.
 
@@ -1169,6 +1175,9 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     ax.set_title(_s("title_heatmap", unit=_L.units[corpus_id]), fontsize=11,
                  color=_T.ink)
     cbar = fig.colorbar(im, ax=ax, label=_s("cbar_premium"))
+    # Through the locale formatter like every other figure number — matplotlib's
+    # default ticks print "0.5" in the Vietnamese figure beside "1,24×" cells.
+    cbar.ax.yaxis.set_major_formatter(FuncFormatter(_cbar_tick))
     cbar.ax.yaxis.label.set_color(_T.ink_2)
     cbar.ax.tick_params(colors=_T.ink_muted)
     cbar.outline.set_edgecolor(_T.baseline)
