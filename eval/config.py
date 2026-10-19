@@ -100,6 +100,10 @@ API_PER_SENTENCE_SUBSAMPLE = 200  # per-sentence calls per API counter for the
 # non-zero, so a stale counter cannot pass for a clean credentialed run.
 API_MAX_RETRIES = 8
 API_TIMEOUT_S = 30.0
+# Concurrent per-sentence calls per API counter. Calls are latency-bound (~1s on
+# OpenAI's endpoint), so a sequential pass took hours. 16 stays far below every
+# vendor's published count-tokens RPM; the SDK retry budget absorbs any 429.
+API_CONCURRENCY = 16
 
 @dataclass(frozen=True)
 class Counter:
@@ -176,23 +180,30 @@ MODEL_MATRIX: list[Counter] = [
             headline_display="Haiku 5.5", flagship_group="claude", fold_reason="shared"),
     # Google — Gemini API countTokens: the SDK's offline table maps no model newer
     # than 3.5 Flash, and assigning one by hand would assert an unpublished fact.
+    # TWO columns, measured 2026-10-19: Gemini 4 Argon tokenizes differently from
+    # the published gemma4 vocabulary (37% of sentences differ, both directions),
+    # while the Flash line still matches it sentence for sentence.
     Counter("gemini", "Gemini 4 Argon", "Google", "gemini_api", STATUS_NEEDS_KEY,
             spec="gemini-4-argon", headline_display="Gemini 4 Argon"),
-    Counter("gemini-3-8-flash", "Gemini 3.8 Flash (shared)", "Google", "gemini_api",
-            STATUS_NEEDS_KEY, spec="gemini-3.8-flash", headline=False,
-            headline_display="Gemini 3.8 Flash", flagship_group="gemini",
-            fold_reason="shared"),
+    Counter("gemini-3-8-flash", "Gemini 3.8 Flash", "Google", "gemini_api",
+            STATUS_NEEDS_KEY, spec="gemini-3.8-flash",
+            headline_display="Gemini 3.8 Flash"),
     Counter("gemini-3-5-flash-lite", "Gemini 3.5 Flash-Lite (shared)", "Google",
             "gemini_api", STATUS_NEEDS_KEY, spec="gemini-3.5-flash-lite", headline=False,
-            headline_display="Gemini 3.5 Flash-Lite", flagship_group="gemini",
+            headline_display="Gemini 3.5 Flash-Lite", flagship_group="gemini-3-8-flash",
             fold_reason="shared"),
-    # Offline proof: the published gemma4 tokenizer, which Google's Gemma reports
-    # state is unchanged from Gemini 2.0. `spec` is a key into the SDK's
-    # model->tokenizer table, not an endpoint.
+    # Offline proof that the Flash line is the published gemma4 tokenizer, which
+    # Google's Gemma reports state is unchanged from Gemini 2.0. `spec` is a key
+    # into the SDK's model->tokenizer table, not an endpoint. Its FLORES Vietnamese
+    # total sits 8 tokens off the API's: all of it is the corpus's one line of HTML
+    # (vie_Latn 429, `km<sup>2</sup>`: 104 via the API, 112 offline), so the
+    # coincidence check lists the pair as coincident on MASSIVE only. Not a
+    # language finding.
     Counter("gemma4", "gemma4 tokenizer (offline)", "Google", "gemini_local",
             STATUS_NEEDS_SDK, spec="gemini-3.5-flash", headline=False,
-            stands_in_for="hypothesis: Gemini 4 keeps the published gemma4 vocabulary",
-            headline_display="gemma4", flagship_group="gemini", fold_reason="shared"),
+            stands_in_for="the Gemini Flash line's published tokenizer",
+            headline_display="gemma4", flagship_group="gemini-3-8-flash",
+            fold_reason="shared"),
     # Open-weight — Qwen 3.8 (ungated Apache-2.0; needs `transformers`, no token).
     # Content tokens only (no BOS/EOS), matching tiktoken.
     Counter("qwen", "Qwen 3.8 (open-weight)", "Alibaba", "hf", STATUS_NEEDS_SDK,
@@ -291,9 +302,8 @@ class Price:
 
 # Input list prices per 1M tokens (serving price — the counting endpoints are
 # free). Each row carries its own verification date. Rules:
-#  * Undiscounted STANDARD list price. Where a vendor publishes a dated step-up
-#    (an introductory price ending on a stated date), the post-step price is the
-#    list price; the current lower price is noted in the source string.
+#  * TODAY's list price, as of the row's date. Where a vendor publishes a dated
+#    step-up, the later price is noted in the source string; re-price on that date.
 #  * Unpriced (None) means there is no list price to record — a self-hosted model,
 #    a tokenizer with no SKU, or an offline proof whose bar its API model draws.
 #  * The cheapest context tier is the right one: every request here is one
@@ -325,20 +335,20 @@ PRICING: dict[str, Price] = {
                               "Claude Haiku 5.5 (`claude-haiku-5-5`) $0.10 in / $0.50 out "
                               "for prompts up to 100K tokens ($0.50 / $2.50 above) — "
                               "platform.claude.com Haiku 5.5 overview"),
-    "gemini": Price(4.00, "2026-10-19", "high",
-                    "Gemini 4 Argon (`gemini-4-argon`) $4.00 in / $20.00 out from "
-                    "2026-12-01; $2.00 / $10.00 until 2026-11-30 — "
+    "gemini": Price(2.00, "2026-10-19", "high",
+                    "Gemini 4 Argon (`gemini-4-argon`) $2.00 in / $10.00 out until "
+                    "2026-11-30; $4.00 / $20.00 from 2026-12-01 — "
                     "ai.google.dev/gemini-api/docs/pricing"),
-    "gemini-3-8-flash": Price(1.50, "2026-10-19", "high",
-                              "Gemini 3.8 Flash (`gemini-3.8-flash`) $1.50 in / $7.50 "
-                              "out from 2027-01-01; $0.75 / $3.75 until 2026-12-31 — "
+    "gemini-3-8-flash": Price(0.75, "2026-10-19", "high",
+                              "Gemini 3.8 Flash (`gemini-3.8-flash`) $0.75 in / $3.75 "
+                              "out until 2026-12-31; $1.50 / $7.50 from 2027-01-01 — "
                               "ai.google.dev/gemini-api/docs/pricing"),
     "gemini-3-5-flash-lite": Price(0.30, "2026-10-19", "high",
                                    "Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`) $0.30 "
                                    "in / $2.50 out (text) — "
                                    "ai.google.dev/gemini-api/docs/pricing"),
     "gemma4": Price(None, "2026-10-19", "unknown",
-                    "offline tokenizer proof; the Gemini API rows carry the prices"),
+                    "offline tokenizer proof; the Gemini Flash API rows carry the prices"),
     "qwen": Price(None, "2026-10-19", "unknown",
                   "self-hosted open-weight model; no single per-token list price"),
 }
