@@ -53,6 +53,8 @@ passes are stable.
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+
 import datetime
 import json
 import os
@@ -245,16 +247,18 @@ def run() -> None:
         print(f"  run   {spec.id:16s} ({spec.display}){note if is_api else ''}")
         try:
             # Message-envelope floor (0 for bare-text counters): subtract it from
-            # per-sentence counts so a wrapped-message counter (Claude) is
-            # comparable to the offline counters. Measured once per counter.
+            # per-sentence counts so an API counter is comparable to the offline
+            # counters. Measured once per counter, sequentially, BEFORE any
+            # concurrent call — it also creates the API client, so the threads
+            # below never race to build one.
             envelope = counter.envelope_tokens()
             envelope_by_counter[spec.id] = envelope
             # Per-probe frames, not just the chosen one. The frame is the FLOOR
             # across a diverse probe set, so any probe above it is a multi-token
             # character on this endpoint — a measured fact about the tokenizer
             # that would otherwise be computed and thrown away. Recording it is
-            # what lets a reader see which classes the endpoint splits (digits on
-            # the older Claude tokenizer, uppercase 'Z' on the newer) instead of
+            # what lets a reader see which classes the endpoint splits ('Z' on
+            # the Claude tokenizer) instead of
             # taking the frame on trust.
             if counter.envelope_probe_frames:
                 probe_frames_by_counter[spec.id] = dict(counter.envelope_probe_frames)
@@ -264,15 +268,8 @@ def run() -> None:
                 for lang in langs:
                     sentences = corpus[lang]
                     # aggregate: paper-style — concatenate, count once. Left
-                    # envelope-inclusive. The frame's share of the call depends on
-                    # the corpus: measured at 0.0073% (FLORES/newer) but 0.0286%
-                    # and 0.0463% on MASSIVE, whose English totals are ~1.5-2.1x10^4
-                    # tokens rather than ~10^5. Worst resulting bias on a published
-                    # premium is +0.0007 (massive/claude-old/vie), i.e. below the
-                    # 4th decimal — negligible, but note the aggregate is
-                    # envelope-INCLUSIVE while the per-sentence distribution is
-                    # envelope-stripped, so the two are on near-identical rather
-                    # than identical bases.
+                    # envelope-INCLUSIVE (the frame is <0.05% of any corpus total);
+                    # the per-sentence distribution below is envelope-stripped.
                     joined = " ".join(sentences)
                     aggregate.append({
                         "corpus": cid, "counter_id": spec.id, "lang": lang,
@@ -289,8 +286,16 @@ def run() -> None:
                     # per-sentence: for the premium distribution. n_tokens is the
                     # raw counter output; n_tokens_content strips the envelope so
                     # the distribution compares like with like.
-                    for idx, sent in enumerate(sentences[:max_per_sentence]):
-                        raw_tok = counter.count(sent)
+                    # API calls are latency-bound, so they run concurrently;
+                    # map() keeps input order, so rows stay byte-identical to a
+                    # sequential pass. Offline counters are CPU-bound: sequential.
+                    batch = sentences[:max_per_sentence]
+                    if is_api:
+                        with ThreadPoolExecutor(config.API_CONCURRENCY) as pool:
+                            counts = list(pool.map(counter.count, batch))
+                    else:
+                        counts = [counter.count(sent) for sent in batch]
+                    for idx, (sent, raw_tok) in enumerate(zip(batch, counts)):
                         per_sentence.append({
                             "corpus": cid, "counter_id": spec.id, "lang": lang,
                             "spec": spec.spec, "measured_on": measured_on,
