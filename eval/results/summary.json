@@ -1,5 +1,5 @@
 {
-  "dataset_as_of": "2026-07-25",
+  "dataset_as_of": "2026-10-19",
   "premium_vs": "English (eng_Latn)",
   "corpora": {
     "flores": "FLORES+",
@@ -13,65 +13,71 @@
         "Russian": 2.4889,
         "German": 1.5795
       },
-      "claude-fable-5": {
+      "claude": {
         "Vietnamese": 1.8434,
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
-        "German": 1.7384
+        "German": 1.7383
       },
-      "claude-haiku-4-5": {
-        "Vietnamese": 2.4217,
-        "Chinese (Simplified)": 1.6811,
-        "Russian": 1.9318,
-        "German": 1.7565
-      },
-      "claude-new": {
+      "claude-fable-5-1": {
         "Vietnamese": 1.8434,
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
-        "German": 1.7384
+        "German": 1.7383
       },
-      "claude-old": {
-        "Vietnamese": 2.4217,
-        "Chinese (Simplified)": 1.6811,
-        "Russian": 1.9318,
-        "German": 1.7565
-      },
-      "claude-opus-4-8": {
+      "claude-haiku-5-5": {
         "Vietnamese": 1.8434,
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
-        "German": 1.7384
+        "German": 1.7383
       },
-      "claude-sonnet-5": {
+      "claude-sonnet-5-5": {
         "Vietnamese": 1.8434,
         "Chinese (Simplified)": 1.1749,
         "Russian": 1.3432,
-        "German": 1.7384
+        "German": 1.7383
       },
-      "gemini-3-1-flash-lite": {
+      "gemini": {
+        "Vietnamese": 1.3493,
+        "Chinese (Simplified)": 1.0666,
+        "Russian": 1.3599,
+        "German": 1.3057
+      },
+      "gemini-3-5-flash-lite": {
+        "Vietnamese": 1.3602,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3188
+      },
+      "gemini-3-8-flash": {
+        "Vietnamese": 1.3602,
+        "Chinese (Simplified)": 1.1078,
+        "Russian": 1.3703,
+        "German": 1.3188
+      },
+      "gemma4": {
         "Vietnamese": 1.3604,
         "Chinese (Simplified)": 1.1078,
         "Russian": 1.3703,
         "German": 1.3189
       },
-      "gemini-3-1-pro": {
-        "Vietnamese": 1.3604,
-        "Chinese (Simplified)": 1.1078,
-        "Russian": 1.3703,
-        "German": 1.3189
+      "gpt": {
+        "Vietnamese": 1.482,
+        "Chinese (Simplified)": 1.2834,
+        "Russian": 1.422,
+        "German": 1.3035
       },
-      "gemini-3-5-flash": {
-        "Vietnamese": 1.3604,
-        "Chinese (Simplified)": 1.1078,
-        "Russian": 1.3703,
-        "German": 1.3189
+      "gpt-6-astra": {
+        "Vietnamese": 1.482,
+        "Chinese (Simplified)": 1.2834,
+        "Russian": 1.422,
+        "German": 1.3035
       },
-      "llama-4": {
-        "Vietnamese": 1.3241,
-        "Chinese (Simplified)": 1.094,
-        "Russian": 1.2362,
-        "German": 1.2888
+      "gpt-6-luna": {
+        "Vietnamese": 1.482,
+        "Chinese (Simplified)": 1.2834,
+        "Russian": 1.422,
+        "German": 1.3035
       },
       "o200k_base": {
         "Vietnamese": 1.482,
@@ -79,13 +85,7 @@
         "Russian": 1.4221,
         "German": 1.3035
       },
-      "qwen-3-6": {
-        "Vietnamese": 1.2955,
-        "Chinese (Simplified)": 0.9591,
-        "Russian": 1.3559,
-        "German": 1.3041
-      },
-      "qwen-3-8": {
+      "qwen": {
         "Vietnamese": 1.2955,
         "Chinese (Simplified)": 0.9591,
         "Russian": 1.3559,
@@ -99,65 +99,71 @@
         "Russian": 2.2923,
         "German": 1.3787
       },
-      "claude-fable-5": {
-        "Vietnamese": 2.0013,
+      "claude": {
+        "Vietnamese": 2.0012,
         "Chinese (Simplified)": 1.2636,
-        "Russian": 1.406,
+        "Russian": 1.4059,
         "German": 1.6031
       },
-      "claude-haiku-4-5": {
-        "Vietnamese": 2.544,
-        "Chinese (Simplified)": 1.7532,
-        "Russian": 1.943,
-        "German": 1.5508
-      },
-      "claude-new": {
-        "Vietnamese": 2.0013,
+      "claude-fable-5-1": {
+        "Vietnamese": 2.0012,
         "Chinese (Simplified)": 1.2636,
-        "Russian": 1.406,
+        "Russian": 1.4059,
         "German": 1.6031
       },
-      "claude-old": {
-        "Vietnamese": 2.544,
-        "Chinese (Simplified)": 1.7532,
-        "Russian": 1.943,
-        "German": 1.5508
-      },
-      "claude-opus-4-8": {
-        "Vietnamese": 2.0013,
+      "claude-haiku-5-5": {
+        "Vietnamese": 2.0012,
         "Chinese (Simplified)": 1.2636,
-        "Russian": 1.406,
+        "Russian": 1.4059,
         "German": 1.6031
       },
-      "claude-sonnet-5": {
-        "Vietnamese": 2.0013,
+      "claude-sonnet-5-5": {
+        "Vietnamese": 2.0012,
         "Chinese (Simplified)": 1.2636,
-        "Russian": 1.406,
+        "Russian": 1.4059,
         "German": 1.6031
       },
-      "gemini-3-1-flash-lite": {
+      "gemini": {
+        "Vietnamese": 1.2629,
+        "Chinese (Simplified)": 0.9362,
+        "Russian": 1.1949,
+        "German": 1.2024
+      },
+      "gemini-3-5-flash-lite": {
         "Vietnamese": 1.2738,
         "Chinese (Simplified)": 0.9784,
         "Russian": 1.2126,
         "German": 1.2072
       },
-      "gemini-3-1-pro": {
+      "gemini-3-8-flash": {
         "Vietnamese": 1.2738,
         "Chinese (Simplified)": 0.9784,
         "Russian": 1.2126,
         "German": 1.2072
       },
-      "gemini-3-5-flash": {
+      "gemma4": {
         "Vietnamese": 1.2738,
         "Chinese (Simplified)": 0.9784,
         "Russian": 1.2126,
         "German": 1.2072
       },
-      "llama-4": {
-        "Vietnamese": 1.2524,
-        "Chinese (Simplified)": 1.0099,
-        "Russian": 1.1183,
-        "German": 1.2289
+      "gpt": {
+        "Vietnamese": 1.3978,
+        "Chinese (Simplified)": 1.1539,
+        "Russian": 1.2772,
+        "German": 1.204
+      },
+      "gpt-6-astra": {
+        "Vietnamese": 1.3978,
+        "Chinese (Simplified)": 1.1539,
+        "Russian": 1.2772,
+        "German": 1.204
+      },
+      "gpt-6-luna": {
+        "Vietnamese": 1.3978,
+        "Chinese (Simplified)": 1.1539,
+        "Russian": 1.2772,
+        "German": 1.204
       },
       "o200k_base": {
         "Vietnamese": 1.398,
@@ -165,63 +171,11 @@
         "Russian": 1.2773,
         "German": 1.2041
       },
-      "qwen-3-6": {
+      "qwen": {
         "Vietnamese": 1.2351,
         "Chinese (Simplified)": 0.8863,
         "Russian": 1.2034,
         "German": 1.2088
-      },
-      "qwen-3-8": {
-        "Vietnamese": 1.2351,
-        "Chinese (Simplified)": 0.8863,
-        "Russian": 1.2034,
-        "German": 1.2088
-      }
-    }
-  },
-  "within_vendor_claude_inflation_new_over_old_by_corpus": {
-    "flores": {
-      "English": {
-        "inflation": 1.4451,
-        "pct": 44.5
-      },
-      "Vietnamese": {
-        "inflation": 1.1,
-        "pct": 10.0
-      },
-      "Chinese (Simplified)": {
-        "inflation": 1.0099,
-        "pct": 1.0
-      },
-      "Russian": {
-        "inflation": 1.0048,
-        "pct": 0.5
-      },
-      "German": {
-        "inflation": 1.4302,
-        "pct": 43.0
-      }
-    },
-    "massive": {
-      "English": {
-        "inflation": 1.3887,
-        "pct": 38.9
-      },
-      "Vietnamese": {
-        "inflation": 1.0924,
-        "pct": 9.2
-      },
-      "Chinese (Simplified)": {
-        "inflation": 1.0009,
-        "pct": 0.1
-      },
-      "Russian": {
-        "inflation": 1.0048,
-        "pct": 0.5
-      },
-      "German": {
-        "inflation": 1.4355,
-        "pct": 43.5
       }
     }
   },
@@ -243,150 +197,201 @@
     }
   },
   "tokenizer_coincidence_check": {
-    "definition": "a pair is 'shared' only if its token totals are identical in every corpus; equality in one register is not identity",
+    "definition": "a pair is 'shared' only if its content token totals (total minus the counter's measured message envelope) are identical in every corpus; equality in one register is not identity",
     "corpora_checked": [
       "flores",
       "massive"
     ],
     "shared_in_all_corpora": [
       [
-        "claude-fable-5",
-        "claude-new"
+        "claude",
+        "claude-fable-5-1"
       ],
       [
-        "claude-fable-5",
-        "claude-opus-4-8"
+        "claude",
+        "claude-haiku-5-5"
       ],
       [
-        "claude-fable-5",
-        "claude-sonnet-5"
+        "claude",
+        "claude-sonnet-5-5"
       ],
       [
-        "claude-haiku-4-5",
-        "claude-old"
+        "claude-fable-5-1",
+        "claude-haiku-5-5"
       ],
       [
-        "claude-new",
-        "claude-opus-4-8"
+        "claude-fable-5-1",
+        "claude-sonnet-5-5"
       ],
       [
-        "claude-new",
-        "claude-sonnet-5"
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
       ],
       [
-        "claude-opus-4-8",
-        "claude-sonnet-5"
+        "gemini-3-5-flash-lite",
+        "gemini-3-8-flash"
       ],
       [
-        "gemini-3-1-flash-lite",
-        "gemini-3-1-pro"
+        "gpt",
+        "gpt-6-astra"
       ],
       [
-        "gemini-3-1-flash-lite",
-        "gemini-3-5-flash"
+        "gpt",
+        "gpt-6-luna"
       ],
       [
-        "gemini-3-1-pro",
-        "gemini-3-5-flash"
+        "gpt",
+        "o200k_base"
       ],
       [
-        "qwen-3-6",
-        "qwen-3-8"
+        "gpt-6-astra",
+        "gpt-6-luna"
+      ],
+      [
+        "gpt-6-astra",
+        "o200k_base"
+      ],
+      [
+        "gpt-6-luna",
+        "o200k_base"
       ]
     ],
-    "coincident_in_some_corpora": [],
+    "coincident_in_some_corpora": [
+      {
+        "pair": [
+          "gemini-3-5-flash-lite",
+          "gemma4"
+        ],
+        "corpora": [
+          "massive"
+        ]
+      },
+      {
+        "pair": [
+          "gemini-3-8-flash",
+          "gemma4"
+        ],
+        "corpora": [
+          "massive"
+        ]
+      }
+    ],
     "incomparable_coverage": [],
     "raw_equality_by_corpus": {
       "flores": [
         [
-          "claude-fable-5",
-          "claude-new"
+          "claude",
+          "claude-fable-5-1"
         ],
         [
-          "claude-fable-5",
-          "claude-opus-4-8"
+          "claude",
+          "claude-haiku-5-5"
         ],
         [
-          "claude-fable-5",
-          "claude-sonnet-5"
+          "claude",
+          "claude-sonnet-5-5"
         ],
         [
-          "claude-haiku-4-5",
-          "claude-old"
+          "claude-fable-5-1",
+          "claude-haiku-5-5"
         ],
         [
-          "claude-new",
-          "claude-opus-4-8"
+          "claude-fable-5-1",
+          "claude-sonnet-5-5"
         ],
         [
-          "claude-new",
-          "claude-sonnet-5"
+          "claude-haiku-5-5",
+          "claude-sonnet-5-5"
         ],
         [
-          "claude-opus-4-8",
-          "claude-sonnet-5"
+          "gemini-3-5-flash-lite",
+          "gemini-3-8-flash"
         ],
         [
-          "gemini-3-1-flash-lite",
-          "gemini-3-1-pro"
+          "gpt",
+          "gpt-6-astra"
         ],
         [
-          "gemini-3-1-flash-lite",
-          "gemini-3-5-flash"
+          "gpt",
+          "gpt-6-luna"
         ],
         [
-          "gemini-3-1-pro",
-          "gemini-3-5-flash"
+          "gpt",
+          "o200k_base"
         ],
         [
-          "qwen-3-6",
-          "qwen-3-8"
+          "gpt-6-astra",
+          "gpt-6-luna"
+        ],
+        [
+          "gpt-6-astra",
+          "o200k_base"
+        ],
+        [
+          "gpt-6-luna",
+          "o200k_base"
         ]
       ],
       "massive": [
         [
-          "claude-fable-5",
-          "claude-new"
+          "claude",
+          "claude-fable-5-1"
         ],
         [
-          "claude-fable-5",
-          "claude-opus-4-8"
+          "claude",
+          "claude-haiku-5-5"
         ],
         [
-          "claude-fable-5",
-          "claude-sonnet-5"
+          "claude",
+          "claude-sonnet-5-5"
         ],
         [
-          "claude-haiku-4-5",
-          "claude-old"
+          "claude-fable-5-1",
+          "claude-haiku-5-5"
         ],
         [
-          "claude-new",
-          "claude-opus-4-8"
+          "claude-fable-5-1",
+          "claude-sonnet-5-5"
         ],
         [
-          "claude-new",
-          "claude-sonnet-5"
+          "claude-haiku-5-5",
+          "claude-sonnet-5-5"
         ],
         [
-          "claude-opus-4-8",
-          "claude-sonnet-5"
+          "gemini-3-5-flash-lite",
+          "gemini-3-8-flash"
         ],
         [
-          "gemini-3-1-flash-lite",
-          "gemini-3-1-pro"
+          "gemini-3-5-flash-lite",
+          "gemma4"
         ],
         [
-          "gemini-3-1-flash-lite",
-          "gemini-3-5-flash"
+          "gemini-3-8-flash",
+          "gemma4"
         ],
         [
-          "gemini-3-1-pro",
-          "gemini-3-5-flash"
+          "gpt",
+          "gpt-6-astra"
         ],
         [
-          "qwen-3-6",
-          "qwen-3-8"
+          "gpt",
+          "gpt-6-luna"
+        ],
+        [
+          "gpt",
+          "o200k_base"
+        ],
+        [
+          "gpt-6-astra",
+          "gpt-6-luna"
+        ],
+        [
+          "gpt-6-astra",
+          "o200k_base"
+        ],
+        [
+          "gpt-6-luna",
+          "o200k_base"
         ]
       ]
     }
@@ -394,54 +399,54 @@
   "coverage": {
     "counters_in_dataset": [
       "cl100k_base",
-      "claude-fable-5",
-      "claude-haiku-4-5",
-      "claude-new",
-      "claude-old",
-      "claude-opus-4-8",
-      "claude-sonnet-5",
-      "gemini-3-1-flash-lite",
-      "gemini-3-1-pro",
-      "gemini-3-5-flash",
-      "llama-4",
+      "claude",
+      "claude-fable-5-1",
+      "claude-haiku-5-5",
+      "claude-sonnet-5-5",
+      "gemini",
+      "gemini-3-5-flash-lite",
+      "gemini-3-8-flash",
+      "gemma4",
+      "gpt",
+      "gpt-6-astra",
+      "gpt-6-luna",
       "o200k_base",
-      "qwen-3-6",
-      "qwen-3-8"
+      "qwen"
     ],
     "counters_measured_last_pass": [
-      "qwen-3-8"
+      "gpt",
+      "gpt-6-astra",
+      "gpt-6-luna",
+      "claude",
+      "claude-fable-5-1",
+      "claude-sonnet-5-5",
+      "claude-haiku-5-5"
     ],
     "counters_carried_forward": [
       "cl100k_base",
-      "claude-fable-5",
-      "claude-haiku-4-5",
-      "claude-new",
-      "claude-old",
-      "claude-opus-4-8",
-      "claude-sonnet-5",
-      "gemini-3-1-flash-lite",
-      "gemini-3-1-pro",
-      "gemini-3-5-flash",
-      "llama-4",
+      "gemini",
+      "gemini-3-5-flash-lite",
+      "gemini-3-8-flash",
+      "gemma4",
       "o200k_base",
-      "qwen-3-6"
+      "qwen"
     ],
     "counters_skipped": [],
     "measured_on_by_counter": {
-      "cl100k_base": "2026-07-26",
-      "claude-fable-5": "2026-07-26",
-      "claude-haiku-4-5": "2026-07-26",
-      "claude-new": "2026-07-26",
-      "claude-old": "2026-07-26",
-      "claude-opus-4-8": "2026-07-26",
-      "claude-sonnet-5": "2026-07-26",
-      "gemini-3-1-flash-lite": "2026-07-27",
-      "gemini-3-1-pro": "2026-07-26",
-      "gemini-3-5-flash": "2026-07-27",
-      "llama-4": "2026-07-26",
-      "o200k_base": "2026-07-26",
-      "qwen-3-6": "2026-07-26",
-      "qwen-3-8": "2026-08-16"
+      "cl100k_base": "2026-10-19",
+      "claude": "2026-10-19",
+      "claude-fable-5-1": "2026-10-19",
+      "claude-haiku-5-5": "2026-10-19",
+      "claude-sonnet-5-5": "2026-10-19",
+      "gemini": "2026-10-19",
+      "gemini-3-5-flash-lite": "2026-10-19",
+      "gemini-3-8-flash": "2026-10-19",
+      "gemma4": "2026-10-19",
+      "gpt": "2026-10-19",
+      "gpt-6-astra": "2026-10-19",
+      "gpt-6-luna": "2026-10-19",
+      "o200k_base": "2026-10-19",
+      "qwen": "2026-10-19"
     },
     "corpora_fingerprint": {
       "flores": {
@@ -459,8 +464,9 @@
       "pandas": "3.0.3",
       "numpy": "2.5.1",
       "matplotlib": "3.11.1",
-      "anthropic": "0.117.0",
-      "google-genai": "2.12.1",
+      "anthropic": "1.15.0",
+      "openai": "3.35.1",
+      "google-genai": "2.31.0",
       "transformers": "5.14.1",
       "sentencepiece": "0.2.2"
     },
@@ -469,11 +475,11 @@
     "oracle_passes": true,
     "note": "`counters_carried_forward` were NOT re-measured in the last pass; their counts come from an earlier one. Cross-check `measured_on_by_counter` before citing a specific counter's date."
   },
-  "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): Anthropic count_tokens counts a wrapped chat message, so a fixed frame (see run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count and is left envelope-INCLUSIVE, so the two are on near-identical rather than identical bases. The frame's share of the call is corpus-dependent — 0.0073%/0.0124% of the English total on FLORES (newer/older Claude) but 0.0286%/0.0463% on MASSIVE, whose totals are ~1.5-2.1x10^4 tokens rather than ~10^5. Worst resulting bias on a published aggregate premium is +0.0007 (massive/claude-old/vie), i.e. below the 4th decimal.",
-  "pricing_as_of": "2026-08-16",
+  "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): the vendor count-tokens APIs count a wrapped request, so each API counter's fixed frame (run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count and is left envelope-INCLUSIVE; the frame is <0.05% of any corpus total, so the two bases are near-identical rather than identical.",
+  "pricing_as_of": "2026-10-19",
   "usd_to_vnd": {
-    "rate": 26295.0,
-    "as_of": "2026-07-17"
+    "rate": 25890.0,
+    "as_of": "2026-10-19"
   },
-  "cost_note": "token density is measured; USD/VND cost emitted only where config.PRICING has a dated price. Forward-dated flagships are premium-only until price ratification. Cost is reported under two denominators — per-1k-NFC-chars and per-sentence (parallel corpus, so per-sentence = same meaning across languages); they rank dense scripts (CJK) very differently."
+  "cost_note": "token density is measured; USD/VND cost emitted only where config.PRICING has a dated price. Cost is reported under two denominators — per-1k-NFC-chars and per-sentence (parallel corpus, so per-sentence = same meaning across languages); they rank dense scripts (CJK) very differently."
 }

@@ -28,27 +28,129 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
+    "gpt",
+    "gpt-6-astra",
+    "gpt-6-luna",
+    "claude",
+    "claude-fable-5-1",
+    "claude-sonnet-5-5",
+    "claude-haiku-5-5"
+  ],
+  "counters_carried_forward": [
     "cl100k_base",
-    "o200k_base",
+    "gemini",
+    "gemini-3-5-flash-lite",
+    "gemini-3-8-flash",
     "gemma4",
+    "o200k_base",
     "qwen"
   ],
-  "counters_carried_forward": [],
   "counters_skipped": [],
   "measured_on_by_counter": {
     "cl100k_base": "2026-10-19",
+    "claude": "2026-10-19",
+    "claude-fable-5-1": "2026-10-19",
+    "claude-haiku-5-5": "2026-10-19",
+    "claude-sonnet-5-5": "2026-10-19",
+    "gemini": "2026-10-19",
+    "gemini-3-5-flash-lite": "2026-10-19",
+    "gemini-3-8-flash": "2026-10-19",
     "gemma4": "2026-10-19",
+    "gpt": "2026-10-19",
+    "gpt-6-astra": "2026-10-19",
+    "gpt-6-luna": "2026-10-19",
     "o200k_base": "2026-10-19",
     "qwen": "2026-10-19"
   },
   "counters_without_per_sentence_rows": [],
   "envelope_tokens_by_counter": {
     "cl100k_base": 0,
+    "claude": 8,
+    "claude-fable-5-1": 8,
+    "claude-haiku-5-5": 8,
+    "claude-sonnet-5-5": 8,
+    "gemini": 31,
+    "gemini-3-5-flash-lite": 1,
+    "gemini-3-8-flash": 1,
     "gemma4": 0,
+    "gpt": 6,
+    "gpt-6-astra": 6,
+    "gpt-6-luna": 6,
     "o200k_base": 0,
     "qwen": 0
   },
-  "envelope_probe_frames_by_counter": {},
+  "envelope_probe_frames_by_counter": {
+    "claude": {
+      "x": 8,
+      "q": 8,
+      "a": 8,
+      "Z": 9,
+      "#": 8,
+      "é": 8,
+      "7": 8,
+      "0": 8
+    },
+    "claude-fable-5-1": {
+      "x": 8,
+      "q": 8,
+      "a": 8,
+      "Z": 9,
+      "#": 8,
+      "é": 8,
+      "7": 8,
+      "0": 8
+    },
+    "claude-haiku-5-5": {
+      "x": 8,
+      "q": 8,
+      "a": 8,
+      "Z": 9,
+      "#": 8,
+      "é": 8,
+      "7": 8,
+      "0": 8
+    },
+    "claude-sonnet-5-5": {
+      "x": 8,
+      "q": 8,
+      "a": 8,
+      "Z": 9,
+      "#": 8,
+      "é": 8,
+      "7": 8,
+      "0": 8
+    },
+    "gpt": {
+      "x": 6,
+      "q": 6,
+      "a": 6,
+      "Z": 6,
+      "#": 6,
+      "é": 6,
+      "7": 6,
+      "0": 6
+    },
+    "gpt-6-astra": {
+      "x": 6,
+      "q": 6,
+      "a": 6,
+      "Z": 6,
+      "#": 6,
+      "é": 6,
+      "7": 6,
+      "0": 6
+    },
+    "gpt-6-luna": {
+      "x": 6,
+      "q": 6,
+      "a": 6,
+      "Z": 6,
+      "#": 6,
+      "é": 6,
+      "7": 6,
+      "0": 6
+    }
+  },
   "versions": {
     "tiktoken": "0.13.0",
     "pandas": "3.0.3",
