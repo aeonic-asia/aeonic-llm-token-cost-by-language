@@ -4,27 +4,34 @@
 
 ## Aeonic eval (`eval/`)
 
-Measures how many tokens the same content costs across **English (baseline), Vietnamese, Chinese, Russian, German** on the 2026 model matrix, across **two committed parallel corpora** — FLORES+ (formal prose) and MASSIVE (short virtual-assistant utterances) — so the premium is reported in both a formal and a conversational register. Premium is always measured relative to English.
+Measures how many tokens the same content costs across **English (baseline), Vietnamese, Chinese, Russian, German** on each vendor's current models, across **two committed parallel corpora** — FLORES+ (formal prose) and MASSIVE (short virtual-assistant utterances) — so the premium is reported in both a formal and a conversational register. Premium is always measured relative to English.
 
 ```bash
 make setup       # create the venv, install pinned deps (requirements-eval.txt)
-make reproduce   # counters -> premium/cost analysis -> figures (fully offline)
+make reproduce   # counters -> premium/cost analysis -> figures
 make test        # reproduce the paper's cl100k premiums (correctness gate)
 ```
 
-`make reproduce` is offline: the tiktoken BPE ranks are committed under `eval/tiktoken_cache/`. Outputs land in `eval/results/` (raw counts, premium and cost tables, figures) with a `run_manifest.json` recording exactly which counters ran.
+The offline counters need no network once set up (the tiktoken BPE ranks are committed under `eval/tiktoken_cache/`). Outputs land in `eval/results/` (raw counts, premium and cost tables, figures) with a `run_manifest.json` recording exactly which counters ran.
 
 Both corpora are loaded through `eval/corpora.py`, but they sit at different levels: **FLORES+** is the upstream copy at the repo root (`flores200_dataset/`, reused not duplicated — the committed files are the FLORES-200 release that FLORES+ continues; CC BY-SA 4.0, see `flores200_dataset/ATTRIBUTION.md`), while the Aeonic-built **MASSIVE** slice lives under `eval/massive/` (CC BY 4.0, see its `PROVENANCE.md`). This is deliberate — see `CLAUDE.md` ("Corpora on disk") for why.
 
 **Correctness is anchored to the paper.** The eval reproduces the upstream `cl100k_base` premiums (Vietnamese 2.45, Chinese 1.91, German 1.58) to within 0.005 — see `make test`.
 
-**Like-for-like across vendors.** Anthropic's `count_tokens` counts a wrapped chat message, so its counts carry a fixed turn/role frame (measured: 6 tokens for the newer Claude tokenizer, 7 for the older) that the offline tokenizers — which count bare text — do not. The eval measures that frame per Claude counter and subtracts it from the **per-sentence** counts (`raw_counts.csv` keeps both the raw `n_tokens` and the frame-stripped `n_tokens_content`; the premium distribution uses the latter). The whole-corpus aggregate is one call, so its frame is negligible and left in. See `CLAUDE.md` → "Message-envelope correction".
+**What is measured.** Each vendor's current models, plus OpenAI's 2023-era `cl100k_base` as a historical anchor (as of 2026-10-19):
 
-**Coverage as committed — every counter below is already measured and in `eval/results/`.** What follows is what you need in order to *re-measure* each one, not a list of gaps.
+| Vendor | Models | How it is counted |
+|---|---|---|
+| Anthropic | Claude Opus 5.5, Fable 5.1, Sonnet 5.5, Haiku 5.5 | `count_tokens` API (`ANTHROPIC_API_KEY`) |
+| OpenAI | GPT-6 Sol, Astra, Luna | Responses API input-token count (`OPENAI_API_KEY`); counts match the offline `o200k_base` on every sampled sentence |
+| Google | Gemini 4 Argon; Gemini 3.8 Flash, 3.5 Flash-Lite | Gemini API `countTokens` (`GEMINI_API_KEY`); the Flash line matches the offline `gemma4` tokenizer on every sampled sentence, Argon does not |
+| Alibaba | Qwen 3.8 (open-weight) | HF `AutoTokenizer`, offline |
 
-OpenAI `o200k_base` and `cl100k_base` run offline from the committed tiktoken cache, so a plain `make setup && make reproduce` re-measures them with no credentials. The six Anthropic `count_tokens` counters (both tokenizer generations — the newer measured on the `claude-opus-5` endpoint — plus the shared-tokenizer models that confirm the fold: Opus 4.8, Sonnet 5, Fable 5, Haiku 4.5) need an `ANTHROPIC_API_KEY` to re-measure; without one they are carried forward from the committed dataset rather than dropped. The three **Gemini** counters (`gemini-3.1-pro-preview`, Google's current Pro model, plus the `gemini-3.5-flash` and `gemini-3.1-flash-lite` serving tiers that share its `gemma4` tokenizer) run offline via the google-genai `LocalTokenizer` — no key — once `google-genai[local-tokenizer]` is installed.
+The three count-tokens endpoints are free. Models that share a tokenizer are measured separately anyway, and `summary.json` → `tokenizer_coincidence_check` records which ones the data confirms as identical. Without a key, a counter's committed rows are carried forward rather than dropped; `run_manifest.json` records what each pass actually measured. `make reproduce COUNTERS=<id>` re-measures a single counter.
 
-*One* Gemini column, deliberately — three counters, but one tokenizer: `gemma3` and `gemma4` are two distribution artifacts of the same 262,144-entry text vocabulary (they differ only in chat-control tokens), Google's Gemma 3 and Gemma 4 technical reports both state the tokenizer is unchanged from Gemini 2.0, and the earlier second column measured `gemini-3-pro-preview`, which Google shut down on 2026-03-09 and now aliases to 3.1 Pro. The two Flash counters exist for the *dollar* figures rather than the tokenizer ones: identical token counts at $1.50 and $0.25 against Pro's $2.00, so one tokenizer is drawn across an 8× price range instead of a single bar. Three newer models — Gemini 3.6 Flash, 3.5 Flash-Lite (both GA) and 3.7 Flash (Preview) — are deliberately absent: the SDK's model→tokenizer table maps none of them (re-checked 2026-08-16 against the pinned 2.12.1 and `main`, still identical), and this eval will not assign a tokenizer the vendor has not published. The **open-weight** counters need `transformers`: **Llama 4** (`meta-llama/Llama-4-Scout-17B-16E`) is a *gated* repo and additionally needs an `HF_TOKEN`; **Qwen 3.8** (`Qwen/Qwen3.8-27B`, Apache-2.0) is *ungated* and downloads with no credentials, with **Qwen 3.6** retained as a fold proxy after the 2026-08-16 rotation. Alibaba changed nothing about tokenization between the two: a direct diff of both `tokenizer.json` files found the 248,044-entry text vocabulary byte-identical (no piece added, removed, or re-numbered) and the 247,587 BPE merge rules identical, the only difference being seven audio/TTS control tokens in 3.8. Equal counts are therefore guaranteed by construction, and the in-dataset check confirms it. Add a single counter without re-measuring the rest via `make reproduce COUNTERS=<id>` (per-counter carry-forward, the counter analogue of `CORPORA=`). Both corpora (FLORES+ and MASSIVE) are committed and run every pass; the MASSIVE slice is a CC BY 4.0 derivative built once by `python -m eval.build_massive` (see `eval/massive/PROVENANCE.md`). `run_manifest.json` records what a pass actually did — which counters ran, which were carried forward, which were skipped and why; nothing is estimated. One caveat about the *committed* copy: the dataset's last pass applied deterministic transforms rather than re-measuring, so that file carries a hand-authored `migration_2026_07_25` note, an empty `counters_ran`, and a `versions` map from an earlier run. It describes the dataset's history honestly, but it is not the output of a single `make reproduce` — the first credentialed full pass regenerates it (and widens the CSV schema with the `spec` / `measured_on` provenance columns, a large diff in which no measured value changes).
+**Like-for-like across vendors.** The count-tokens APIs count a wrapped request, so each carries a fixed frame the offline tokenizers do not. The eval measures that frame per API counter and subtracts it from the per-sentence counts (`raw_counts.csv` keeps both `n_tokens` and `n_tokens_content`). See `CLAUDE.md` → "Message-envelope correction".
+
+Both corpora are committed and run every pass; the MASSIVE slice is a CC BY 4.0 derivative built once by `python -m eval.build_massive` (see `eval/massive/PROVENANCE.md`).
 
 ---
 
