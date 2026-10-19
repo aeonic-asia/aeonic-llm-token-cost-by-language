@@ -184,8 +184,26 @@ def _cost_table(agg: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def content_totals(agg: pd.DataFrame) -> pd.DataFrame:
+    """`agg` with each total reduced by its counter's measured message envelope.
+
+    An API counter's aggregate is one call over the joined corpus, so its total
+    carries exactly one fixed frame that an offline counter's does not. Comparing
+    raw totals would make an API model and the offline tokenizer it runs on look
+    different by that frame alone (GPT-6 vs o200k_base: +6 in every cell). This is
+    the basis for every "shared tokenizer" equality test; the published premiums
+    stay on the raw totals.
+    """
+    with open(config.RESULTS_DIR / "run_manifest.json") as f:
+        env = json.load(f).get("envelope_tokens_by_counter", {})
+    out = agg.copy()
+    out["total_tokens"] = out["total_tokens"] - out["counter_id"].map(env).fillna(0)
+    return out
+
+
 def _coincidence_check(agg: pd.DataFrame) -> dict:
-    """Counter pairs whose per-language token totals coincide.
+    """Counter pairs whose per-language CONTENT token totals coincide (see
+    content_totals).
 
     Equality is evidence of a shared tokenizer, not proof of one — two genuinely
     different tokenizers can agree on a corpus that happens not to exercise their
@@ -200,6 +218,7 @@ def _coincidence_check(agg: pd.DataFrame) -> dict:
     `coincident_in_some_corpora`, with the corpora named, so the near-miss is
     still visible without being labelled an identity.
     """
+    agg = content_totals(agg)
     per_corpus: dict[str, set[tuple[str, str]]] = {}
     incomparable: list[dict] = []
     for corpus_id in agg["corpus"].unique():
@@ -238,8 +257,10 @@ def _coincidence_check(agg: pd.DataFrame) -> dict:
     somewhere = set.union(*per_corpus.values()) if per_corpus else set()
     partial = sorted(somewhere - everywhere)
     return {
-        "definition": "a pair is 'shared' only if its token totals are identical "
-                      "in every corpus; equality in one register is not identity",
+        "definition": "a pair is 'shared' only if its content token totals "
+                      "(total minus the counter's measured message envelope) are "
+                      "identical in every corpus; equality in one register is not "
+                      "identity",
         "corpora_checked": corpora_ids,
         "shared_in_all_corpora": [list(p) for p in sorted(everywhere)],
         "coincident_in_some_corpora": [
@@ -395,7 +416,7 @@ def analyze() -> None:
         # Renamed from `shared_tokenizer_pairs_by_corpus`: the old key promised an
         # identity finding while holding a per-corpus equality result, and a
         # machine reading it could not tell the two apart.
-        "tokenizer_coincidence_check": _coincidence_check(agg),
+        "tokenizer_coincidence_check": (coin := _coincidence_check(agg)),
         "coverage": _coverage(agg, oracle),
         "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION "
                      "(median/p10..p90 in premium_by_language.csv) is measured on "
@@ -429,7 +450,7 @@ def analyze() -> None:
     print("\ncl100k oracle vs. paper Table 1 (FLORES+):")
     for name, o in oracle.items():
         print(f"  {name:22s} ours {o['ours']}  paper {o['paper']}  Δ {o['delta']}")
-    _coin = _coincidence_check(agg)
+    _coin = coin
     print(f"\nshared tokenizers (identical in ALL corpora): "
           f"{_coin['shared_in_all_corpora']}")
     if _coin["coincident_in_some_corpora"]:

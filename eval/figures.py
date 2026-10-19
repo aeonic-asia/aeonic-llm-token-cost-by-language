@@ -60,6 +60,7 @@ import numpy as np
 import pandas as pd
 
 from . import config
+from .analyze import content_totals
 
 # ── design tokens ────────────────────────────────────────────────────────────
 # Categorical hues assigned in FIXED slot order and never cycled (provenance and
@@ -134,8 +135,7 @@ LIGHT = Theme(
     series=_LIGHT_SERIES, tints={
         "claude-sonnet-5-5": "#f06d67",
         "claude-fable-5-1": "#b51221",
-        "gemini-3-8-flash": "#36a231",
-        "gemini-3-5-flash-lite": "#59c253",
+        "gemini-3-5-flash-lite": "#6c62d2",  # $0.30 — lighter than 3.8 Flash's violet
         "claude-haiku-5-5": "#fc8b83",       # $0.10 — lightest red step
         "gpt-6-luna": "#5e99e5",             # $0.10 — lighter than Sol's base blue
         "gpt-6-astra": "#0059b5",            # $10 — darker than Sol's base blue
@@ -146,13 +146,15 @@ DARK = Theme(
     surface="#1a1a19",
     ink="#f5f4f1", ink_2="#b8b6b0", ink_muted="#8a8880",
     grid="#2a2926", baseline="#3d3b37",
-    # Slot 6 (violet) is the one lifted value; every other slot is light's.
-    series=_LIGHT_SERIES[:6] + ("#6156c5",) + _LIGHT_SERIES[7:],
+    # Slot 6 (violet) is the one dark-specific value; every other slot is light's.
+    # Same OKLCH hue as light's #4a3aa7, chosen (2026-10-19) to clear blue — its
+    # neighbour in the tokenizer order — at CVD ΔE 10.0 while holding 2.23:1 on
+    # this surface. The earlier lift (#6156c5) sat at CVD ΔE 5.0 from blue.
+    series=_LIGHT_SERIES[:6] + ("#5437c0",) + _LIGHT_SERIES[7:],
     tints={
         "claude-sonnet-5-5": "#f06d67",
         "claude-fable-5-1": "#b51221",
-        "gemini-3-8-flash": "#36a231",
-        "gemini-3-5-flash-lite": "#59c253",
+        "gemini-3-5-flash-lite": "#6e60d2",  # same hue as #5437c0, ΔL +0.10
         "claude-haiku-5-5": "#fc8b83",       # $0.10 — lightest red step
         "gpt-6-luna": "#5e99e5",             # $0.10 — lighter than Sol's base blue
         "gpt-6-astra": "#0059b5",            # $10 — darker than Sol's base blue
@@ -495,8 +497,12 @@ def _s(key: str, **kw) -> str:
 # hue and differ by a LIGHTNESS STEP (see Theme.tints); texture was the
 # previous mechanism and is gone.
 _SLOT_BY_FLAGSHIP: dict[str, int] = {
-    "gpt": 0, "qwen": 1, "cl100k_base": 2, "gemini": 5, "claude": 7,
-    # Slots 3 (amber), 4 (magenta) and 6 (violet) are unassigned headroom.
+    # Chosen 2026-10-19 by exhaustive search over every slot assignment against
+    # the gates below, in every rendered order (tokenizer, dollar, both ladders)
+    # and both themes, holding gpt/claude on their validated ramps.
+    "gpt": 0, "gemini": 1, "qwen": 2, "cl100k_base": 3, "gemini-3-8-flash": 6,
+    "claude": 7,
+    # Slots 4 (magenta) and 5 (green) are unassigned headroom.
 }
 
 # LIGHTNESS separates SKUs that share a tokenizer, and therefore a hue. Fills
@@ -989,8 +995,9 @@ def _headline_order(premium: pd.DataFrame, present: list[str]) -> list[str]:
 
 
 def _identical(agg: pd.DataFrame, corpus_id: str, a: str, b: str) -> bool:
-    """True iff counters `a` and `b` produce identical per-language token totals
-    in `corpus_id` — the in-dataset proof behind a "shared tokenizer" claim."""
+    """True iff counters `a` and `b` produce identical per-language content token
+    totals in `corpus_id` — the in-dataset proof behind a "shared tokenizer" claim."""
+    agg = content_totals(agg)
     piv = (agg[agg.corpus == corpus_id]
            .pivot(index="lang", columns="counter_id", values="total_tokens"))
     if a not in piv.columns or b not in piv.columns:
