@@ -217,7 +217,8 @@ EN = Locale(
         "ylabel_tokens_per_1k_chars": "Tokens per 1,000 NFC characters",
         "xlabel_vi_ladder": "USD per 1,000 {unit}s of Vietnamese input",
         "xlabel_dumbbell": "USD per 1,000 {unit}s \u2014 same content, both languages",
-        "title_heatmap": "Token premium vs. English ({corpus})",
+        "title_heatmap": "Tokens the same {unit} needs, compared with English",
+        "cap_corpus": "Data: {corpus}, the same content in each language",
         "title_cost_driver": "Cost driver: tokens per 1,000 characters \u2014 {corpus} "
                              "(lower = cheaper)",
         "title_dollar_chars": "Serving cost: USD per 1M input characters \u2014 {corpus} "
@@ -228,14 +229,11 @@ EN = Locale(
                            "({spread}\u00d7 between the cheapest and dearest tier)",
         "title_vi_tax": "The Vietnamese tax in money \u2014 {corpus} "
                         "(each line is what the same content costs extra in Vietnamese)",
-        "cbar_premium": "\u00d7 English tokens (1.00 = parity)",
+        "cbar_premium": "\u00d7 English tokens (1.00 = same as English)",
         "legend_baseline_lang": "English (same content)",
         "legend_lead_lang": "Vietnamese",
-        "cap_shared_tokenizer": "{names} \u2014 one shared tokenizer, identical counts "
-                                "(verified here)",
-        "cap_prices_differ_named": "; prices differ ({cheapest} cheapest)",
-        "cap_prices_differ": "; prices differ",
-        "cap_cl100k": "{label} \u2014 GPT-4/3.5-era baseline, historical anchor",
+        "cap_shared_tokenizer": "{names}: identical token counts (one shared tokenizer)",
+        "cap_cl100k": "{label}: the 2023 tokenizer, shown for comparison",
         "cap_price_confidence": "Not every price is high-confidence \u2014 {named}. See "
                                 "`source` in config.PRICING and `price_confidence` in "
                                 "cost_by_language.csv",
@@ -285,7 +283,8 @@ VI = Locale(
         "ylabel_tokens_per_1k_chars": "Token tr\u00ean 1.000 k\u00fd t\u1ef1 NFC",
         "xlabel_vi_ladder": "USD tr\u00ean 1.000 {unit} \u0111\u1ea7u v\u00e0o ti\u1ebfng Vi\u1ec7t",
         "xlabel_dumbbell": "USD tr\u00ean 1.000 {unit} \u2014 c\u00f9ng m\u1ed9t n\u1ed9i dung, c\u1ea3 hai ng\u00f4n ng\u1eef",
-        "title_heatmap": "B\u1ed9i s\u1ed1 token so v\u1edbi ti\u1ebfng Anh ({corpus})",
+        "title_heatmap": "C\u00f9ng m\u1ed9t {unit}, c\u1ea7n bao nhi\u00eau token so v\u1edbi ti\u1ebfng Anh",
+        "cap_corpus": "D\u1eef li\u1ec7u: {corpus}, c\u00f9ng m\u1ed9t n\u1ed9i dung \u1edf m\u1ed7i ng\u00f4n ng\u1eef",
         "title_cost_driver": "Y\u1ebfu t\u1ed1 sinh chi ph\u00ed: token tr\u00ean 1.000 k\u00fd t\u1ef1 \u2014 "
                              "{corpus} (th\u1ea5p h\u01a1n = r\u1ebb h\u01a1n)",
         "title_dollar_chars": "Chi ph\u00ed ph\u1ee5c v\u1ee5: USD tr\u00ean 1 tri\u1ec7u k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o \u2014 "
@@ -300,11 +299,8 @@ VI = Locale(
         "cbar_premium": "\u00d7 s\u1ed1 token ti\u1ebfng Anh (1,00 = ngang b\u1eb1ng)",
         "legend_baseline_lang": "Ti\u1ebfng Anh (c\u00f9ng n\u1ed9i dung)",
         "legend_lead_lang": "Ti\u1ebfng Vi\u1ec7t",
-        "cap_shared_tokenizer": "{names} \u2014 chung m\u1ed9t b\u1ed9 t\u00e1ch token, s\u1ed1 \u0111\u1ebfm gi\u1ed1ng h\u1ec7t "
-                                "(\u0111\u00e3 ki\u1ec3m ch\u1ee9ng t\u1ea1i \u0111\u00e2y)",
-        "cap_prices_differ_named": "; gi\u00e1 kh\u00e1c nhau ({cheapest} r\u1ebb nh\u1ea5t)",
-        "cap_prices_differ": "; gi\u00e1 kh\u00e1c nhau",
-        "cap_cl100k": "{label} \u2014 m\u1ed1c tham chi\u1ebfu th\u1eddi GPT-4/3.5, neo l\u1ecbch s\u1eed",
+        "cap_shared_tokenizer": "{names}: s\u1ed1 token gi\u1ed1ng h\u1ec7t nhau (c\u00f9ng m\u1ed9t b\u1ed9 t\u00e1ch token)",
+        "cap_cl100k": "{label}: b\u1ed9 t\u00e1ch token n\u0103m 2023, \u0111\u1ec3 so s\u00e1nh",
         "cap_price_confidence": "Kh\u00f4ng ph\u1ea3i m\u1ecdi m\u1ee9c gi\u00e1 \u0111\u1ec1u \u0111\u1ed9 tin c\u1eady cao \u2014 {named}. Xem "
                                 "`source` trong config.PRICING v\u00e0 `price_confidence` trong "
                                 "cost_by_language.csv",
@@ -947,6 +943,11 @@ def _check_drawn_coverage(frame: pd.DataFrame, drawn: list[str], what: str) -> N
             "the order rather than letting the chart disagree with the dataset.")
 
 
+def _family_label(cid: str) -> str:
+    """Heatmap column label: names every model the column covers."""
+    return config.MATRIX_BY_ID[cid].family_display or _label(cid)
+
+
 def _label(cid: str) -> str:
     c = config.MATRIX_BY_ID[cid]
     return c.headline_display or c.display
@@ -1032,28 +1033,13 @@ def _legend_lines(agg: pd.DataFrame, corpus_id: str, shown: list[str]) -> list[s
         # diff rather than by quoting a divergence percentage.
         shared = [m for m in folded
                   if m.fold_reason == "shared" and _identical(agg, corpus_id, m.id, flag)]
+        # Name sold models only. Folded offline proofs (o200k_base, gemma4) carry no
+        # price; their identity with the API models is recorded in summary.json.
+        shared = [m for m in shared if (config.PRICING.get(m.id) and
+                                        config.PRICING[m.id].input_usd_per_mtok is not None)]
         if shared:
             names = " = ".join([_label(flag)] + [_label(m.id) for m in shared])
-            note = _s("cap_shared_tokenizer", names=names)
-            # Same tokens, different serving price: name the cheapest member from
-            # PRICING and from the models actually in this equality chain. This was
-            # a hardcoded {"claude-new": "Sonnet 5", ...} keyed on the flagship id
-            # alone — so it printed "prices differ (Sonnet 5 cheapest)" even when
-            # Sonnet 5 had no bar and no measurement in the corpus, and it could not
-            # track a price change (Sonnet 5's intro price reverts 2026-09-01). Same
-            # defect, and same fix, as _same_tokens_diff_price above.
-            priced = [(config.PRICING[c].input_usd_per_mtok, c)
-                      for c in [flag] + [m.id for m in shared]
-                      if config.PRICING.get(c)
-                      and config.PRICING[c].input_usd_per_mtok is not None]
-            if len(priced) > 1:
-                lo = min(priced)[0]
-                if sum(1 for p, _ in priced if p == lo) == 1:
-                    note += _s("cap_prices_differ_named",
-                               cheapest=_label(min(priced)[1]))
-                else:
-                    note += _s("cap_prices_differ")
-            lines.append(note)
+            lines.append(_s("cap_shared_tokenizer", names=names))
         if flag == "cl100k_base":
             lines.append(_s("cap_cl100k", label=_label(flag)))
     return lines
@@ -1180,7 +1166,8 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
         imshow_kw = {"vmin": float(mat.min()), "vmax": 1.0}
     im = ax.imshow(mat, cmap=cmap, norm=norm, **imshow_kw, aspect="auto")
     ax.set_xticks(range(len(counters)))
-    ax.set_xticklabels([_label(c) for c in counters], rotation=25, ha="right", fontsize=9)
+    ax.set_xticklabels([_family_label(c) for c in counters], rotation=25, ha="right",
+                       fontsize=9)
     ax.set_yticks(range(len(langs)))
     ax.set_yticklabels([_L.languages[l] for l in langs], fontsize=9)
     # The heatmap does not go through _style_axes (it has no gridline or baseline
@@ -1200,7 +1187,7 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
             lum = 0.299 * r + 0.587 * g + 0.114 * b
             ax.text(j, i, f"{_num(mat[i, j], 2)}\u00d7", ha="center", va="center",
                     color="black" if lum > 0.55 else "white", fontsize=9)
-    ax.set_title(_s("title_heatmap", corpus=corpus_name), fontsize=11,
+    ax.set_title(_s("title_heatmap", unit=_L.units[corpus_id]), fontsize=11,
                  color=_T.ink)
     cbar = fig.colorbar(im, ax=ax, label=_s("cbar_premium"))
     cbar.ax.yaxis.label.set_color(_T.ink_2)
@@ -1208,7 +1195,8 @@ def premium_heatmap(premium: pd.DataFrame, agg: pd.DataFrame,
     cbar.outline.set_edgecolor(_T.baseline)
     # Rotated x tick labels here are taller than the bar charts' upright ones, so
     # the caption needs more clearance than the shared default.
-    _caption(fig, _legend_lines(agg, corpus_id, counters), ax, pad=-86)
+    _caption(fig, [_s("cap_corpus", corpus=corpus_name)]
+             + _legend_lines(agg, corpus_id, counters), ax, pad=-86)
     _save(fig, stem)
 
 
