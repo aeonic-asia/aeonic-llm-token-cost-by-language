@@ -1,5 +1,5 @@
 {
-  "dataset_as_of": "2026-07-25",
+  "dataset_as_of": "2026-10-19",
   "corpora": {
     "flores": "FLORES+",
     "massive": "MASSIVE"
@@ -28,56 +28,25 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "qwen-3-8"
-  ],
-  "counters_carried_forward": [
     "cl100k_base",
-    "claude-fable-5",
-    "claude-haiku-4-5",
-    "claude-new",
-    "claude-old",
-    "claude-opus-4-8",
-    "claude-sonnet-5",
-    "gemini-3-1-flash-lite",
-    "gemini-3-1-pro",
-    "gemini-3-5-flash",
-    "llama-4",
     "o200k_base",
-    "qwen-3-6"
+    "gemma4",
+    "qwen"
   ],
+  "counters_carried_forward": [],
   "counters_skipped": [],
   "measured_on_by_counter": {
-    "cl100k_base": "2026-07-26",
-    "claude-fable-5": "2026-07-26",
-    "claude-haiku-4-5": "2026-07-26",
-    "claude-new": "2026-07-26",
-    "claude-old": "2026-07-26",
-    "claude-opus-4-8": "2026-07-26",
-    "claude-sonnet-5": "2026-07-26",
-    "gemini-3-1-flash-lite": "2026-07-27",
-    "gemini-3-1-pro": "2026-07-26",
-    "gemini-3-5-flash": "2026-07-27",
-    "llama-4": "2026-07-26",
-    "o200k_base": "2026-07-26",
-    "qwen-3-6": "2026-07-26",
-    "qwen-3-8": "2026-08-16"
+    "cl100k_base": "2026-10-19",
+    "gemma4": "2026-10-19",
+    "o200k_base": "2026-10-19",
+    "qwen": "2026-10-19"
   },
   "counters_without_per_sentence_rows": [],
   "envelope_tokens_by_counter": {
     "cl100k_base": 0,
-    "claude-fable-5": 6,
-    "claude-haiku-4-5": 7,
-    "claude-new": 6,
-    "claude-old": 7,
-    "claude-opus-4-8": 6,
-    "claude-sonnet-5": 6,
-    "gemini-3-1-flash-lite": 0,
-    "gemini-3-1-pro": 0,
-    "gemini-3-5-flash": 0,
-    "llama-4": 0,
+    "gemma4": 0,
     "o200k_base": 0,
-    "qwen-3-6": 0,
-    "qwen-3-8": 0
+    "qwen": 0
   },
   "envelope_probe_frames_by_counter": {},
   "versions": {
@@ -85,11 +54,12 @@
     "pandas": "3.0.3",
     "numpy": "2.5.1",
     "matplotlib": "3.11.1",
-    "anthropic": "0.117.0",
-    "google-genai": "2.12.1",
+    "anthropic": "1.15.0",
+    "openai": "3.35.1",
+    "google-genai": "2.31.0",
     "transformers": "5.14.1",
     "sentencepiece": "0.2.2"
   },
-  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. Anthropic counters run when ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample per corpus); Gemini via offline google-genai LocalTokenizer (no key); open-weight via HF AutoTokenizer — Llama 4 (gated, needs HF_TOKEN) and Qwen 3.6 (ungated Apache-2.0, no token). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:api_per_sentence_subsample] of the FLORES+ dev split / MASSIVE), not a random sample — so its percentiles describe that fixed slice; offline counters do the full per-sentence sweep.",
+  "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); premium reported per corpus. API counters (Anthropic, OpenAI, Gemini count-tokens endpoints) run when their key is present (aggregate + per-sentence subsample per corpus); offline proofs via tiktoken and google-genai LocalTokenizer; open-weight Qwen via HF AutoTokenizer (ungated, no token). `corpora_carried_forward` / `counters_carried_forward` list slices preserved verbatim from the prior dataset (not re-measured this pass); the measured set is their complement. `envelope_tokens_by_counter` is the per-message chat frame (measured, 0 for bare-text counters) subtracted from raw_counts.n_tokens_content so the per-sentence premium distribution compares Claude's wrapped counts like-for-like with the offline counters; the aggregate is left envelope-inclusive. API per-sentence rows are a DETERMINISTIC head-slice (sentences[:api_per_sentence_subsample] of the FLORES+ dev split / MASSIVE), not a random sample — so its percentiles describe that fixed slice; offline counters do the full per-sentence sweep.",
   "api_per_sentence_subsample": 200
 }
