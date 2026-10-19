@@ -28,20 +28,20 @@
   },
   "baseline_language": "eng_Latn",
   "counters_ran": [
-    "gpt",
-    "gpt-6-astra",
-    "gpt-6-luna",
-    "claude",
-    "claude-fable-5-1",
-    "claude-sonnet-5-5",
-    "claude-haiku-5-5"
+    "gpt"
   ],
   "counters_carried_forward": [
     "cl100k_base",
+    "claude",
+    "claude-fable-5-1",
+    "claude-haiku-5-5",
+    "claude-sonnet-5-5",
     "gemini",
     "gemini-3-5-flash-lite",
     "gemini-3-8-flash",
     "gemma4",
+    "gpt-6-astra",
+    "gpt-6-luna",
     "o200k_base",
     "qwen"
   ],
@@ -80,67 +80,7 @@
     "qwen": 0
   },
   "envelope_probe_frames_by_counter": {
-    "claude": {
-      "x": 8,
-      "q": 8,
-      "a": 8,
-      "Z": 9,
-      "#": 8,
-      "é": 8,
-      "7": 8,
-      "0": 8
-    },
-    "claude-fable-5-1": {
-      "x": 8,
-      "q": 8,
-      "a": 8,
-      "Z": 9,
-      "#": 8,
-      "é": 8,
-      "7": 8,
-      "0": 8
-    },
-    "claude-haiku-5-5": {
-      "x": 8,
-      "q": 8,
-      "a": 8,
-      "Z": 9,
-      "#": 8,
-      "é": 8,
-      "7": 8,
-      "0": 8
-    },
-    "claude-sonnet-5-5": {
-      "x": 8,
-      "q": 8,
-      "a": 8,
-      "Z": 9,
-      "#": 8,
-      "é": 8,
-      "7": 8,
-      "0": 8
-    },
     "gpt": {
-      "x": 6,
-      "q": 6,
-      "a": 6,
-      "Z": 6,
-      "#": 6,
-      "é": 6,
-      "7": 6,
-      "0": 6
-    },
-    "gpt-6-astra": {
-      "x": 6,
-      "q": 6,
-      "a": 6,
-      "Z": 6,
-      "#": 6,
-      "é": 6,
-      "7": 6,
-      "0": 6
-    },
-    "gpt-6-luna": {
       "x": 6,
       "q": 6,
       "a": 6,
