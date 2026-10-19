@@ -258,8 +258,7 @@ def run() -> None:
             # character on this endpoint — a measured fact about the tokenizer
             # that would otherwise be computed and thrown away. Recording it is
             # what lets a reader see which classes the endpoint splits ('Z' on
-            # the Claude tokenizer) instead of
-            # taking the frame on trust.
+            # the Claude tokenizer) instead of taking the frame on trust.
             if counter.envelope_probe_frames:
                 probe_frames_by_counter[spec.id] = dict(counter.envelope_probe_frames)
             for cid, corpus in corpora.items():
@@ -329,6 +328,7 @@ def run() -> None:
     carried_raw = carried_agg = None
     carried_corpora: list[str] = []
     carried_counters: list[str] = []
+    prior_manifest: dict = {}
     # Either file on its own is enough to carry from. Gating this on ex_raw alone
     # reintroduced the very bug the independent loads above fix: with
     # raw_counts.csv missing, a loadable aggregate_counts.csv was silently
@@ -367,14 +367,13 @@ def run() -> None:
         # corpus version, but corpus_size() and the per-character denominator are
         # re-read from disk at analyze time — so a rebuilt or edited corpus
         # silently re-normalizes every carried counter's per-sentence cost.
-        prior_fp = {}
         manifest_path = config.RESULTS_DIR / "run_manifest.json"
         if manifest_path.exists():
             try:
-                prior_fp = json.loads(manifest_path.read_text()).get(
-                    "corpora_fingerprint", {}) or {}
+                prior_manifest = json.loads(manifest_path.read_text())
             except (json.JSONDecodeError, OSError):
-                prior_fp = {}
+                prior_manifest = {}
+        prior_fp = prior_manifest.get("corpora_fingerprint", {}) or {}
         carried_corpora_ids = set(ref_existing.corpus) & known_corpora
         for cid in sorted(carried_corpora_ids - set(selected)):
             was, now = prior_fp.get(cid), fingerprints.get(cid)
@@ -516,6 +515,12 @@ def run() -> None:
             if not vals.empty:
                 envelope_by_counter[cid] = int(vals.iloc[0])
     envelope_by_counter = dict(sorted(envelope_by_counter.items()))
+    # The probes behind a carried frame live only in the prior manifest (the CSVs
+    # record the frame, not the probes), so carry them from there.
+    prior_probes = prior_manifest.get("envelope_probe_frames_by_counter", {}) or {}
+    for cid in carried_counters:
+        if cid not in probe_frames_by_counter and cid in prior_probes:
+            probe_frames_by_counter[cid] = prior_probes[cid]
 
     # Per-counter measurement vintage. `dataset_as_of` is one date for what is
     # actually a merge of many passes, which is the same false-provenance failure
@@ -551,12 +556,10 @@ def run() -> None:
         # design". Recorded so summary.json can distinguish the two.
         "counters_without_per_sentence_rows": lost,
         "envelope_tokens_by_counter": envelope_by_counter,
-        # Per-probe evidence behind the frame above, for counters measured this
-        # pass. The frame is the floor across the probe set; a probe reported
-        # above it is a multi-token character on that endpoint. Only counters
-        # re-measured this pass appear — unlike the frame itself, this is not
-        # carried forward, because the committed CSVs record the frame per row
-        # and have never recorded the probes.
+        # Per-probe evidence behind the frame above. The frame is the floor across
+        # the probe set; a probe reported above it is a multi-token character on
+        # that endpoint. Carried counters keep the probes of the pass that
+        # measured them; a counter measured before probes were recorded has none.
         "envelope_probe_frames_by_counter": {
             k: probe_frames_by_counter[k] for k in sorted(probe_frames_by_counter)},
         # Record every library that can move a number or a committed byte, not just
