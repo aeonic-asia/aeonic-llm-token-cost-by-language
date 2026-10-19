@@ -154,9 +154,9 @@ MODEL_MATRIX: list[Counter] = [
             headline_display="GPT-4 (2023)"),
     # OpenAI — GPT-6, measured through the Responses API input-token count:
     # tiktoken maps no GPT-6 model and OpenAI has not named its tokenizer.
-    Counter("gpt", "GPT-6 Sol", "OpenAI", "openai", STATUS_NEEDS_KEY,
-            spec="gpt-6-sol", headline_display="GPT-6 Sol",
-            family_display="GPT-6 Luna / Sol / Astra"),
+    Counter("gpt", "GPT-6.1 Sol", "OpenAI", "openai", STATUS_NEEDS_KEY,
+            spec="gpt-6.1-sol", headline_display="GPT-6.1 Sol",
+            family_display="GPT-6 Luna / 6.1 Sol / Astra"),
     Counter("gpt-6-astra", "GPT-6 Astra (shared)", "OpenAI", "openai",
             STATUS_NEEDS_KEY, spec="gpt-6-astra", headline=False,
             headline_display="GPT-6 Astra", flagship_group="gpt", fold_reason="shared"),
@@ -316,7 +316,7 @@ PRICING: dict[str, Price] = {
     "cl100k_base": Price(None, "2026-10-19", "unknown",
                          "historical tokenizer; no current SKU is served on it"),
     "gpt": Price(2.00, "2026-10-19", "high",
-                 "GPT-6 Sol (`gpt-6-sol`) $2.00 in / $10.00 out — "
+                 "GPT-6.1 Sol (`gpt-6.1-sol`) $2.00 in / $10.00 out — "
                  "developers.openai.com/api/docs/pricing"),
     "gpt-6-astra": Price(10.00, "2026-10-19", "high",
                          "GPT-6 Astra (`gpt-6-astra`) $10.00 in / $50.00 out — "

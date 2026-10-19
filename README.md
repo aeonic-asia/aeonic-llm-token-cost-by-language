@@ -23,7 +23,7 @@ Both corpora are loaded through `eval/corpora.py`, but they sit at different lev
 | Vendor | Models | How it is counted |
 |---|---|---|
 | Anthropic | Claude Opus 5.5, Fable 5.1, Sonnet 5.5, Haiku 5.5 | `count_tokens` API (`ANTHROPIC_API_KEY`) |
-| OpenAI | GPT-6 Sol, Astra, Luna | Responses API input-token count (`OPENAI_API_KEY`); counts match the offline `o200k_base` on every sampled sentence |
+| OpenAI | GPT-6.1 Sol, GPT-6 Astra, GPT-6 Luna | Responses API input-token count (`OPENAI_API_KEY`); counts match the offline `o200k_base` on every sampled sentence |
 | Google | Gemini 4 Argon; Gemini 3.8 Flash, 3.5 Flash-Lite | Gemini API `countTokens` (`GEMINI_API_KEY`); the Flash line matches the offline `gemma4` tokenizer on every sampled sentence, Argon does not |
 | Alibaba | Qwen 3.8 (open-weight) | HF `AutoTokenizer`, offline |
 
