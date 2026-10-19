@@ -266,7 +266,7 @@ EN = Locale(
 
 # Vietnamese. Terminology is held identical to the published Vietnamese article
 # so a reader moves between prose and figure without re-learning a word:
-# b\u1ed9 t\u00e1ch token (tokenizer), b\u1ed9i s\u1ed1 token (premium), ng\u1eef v\u1ef1c (register).
+# b\u1ed9 t\u00e1ch token (tokenizer), h\u1ec7 s\u1ed1 token (premium), ng\u1eef v\u1ef1c (register).
 VI = Locale(
     name="vi", suffix="-vi",
     languages={
@@ -284,8 +284,8 @@ VI = Locale(
         "ylabel_tokens_per_1k_chars": "Token tr\u00ean 1.000 k\u00fd t\u1ef1 NFC",
         "xlabel_vi_ladder": "USD tr\u00ean 1.000 {unit} \u0111\u1ea7u v\u00e0o ti\u1ebfng Vi\u1ec7t",
         "xlabel_dumbbell": "USD tr\u00ean 1.000 {unit} \u2014 c\u00f9ng m\u1ed9t n\u1ed9i dung, c\u1ea3 hai ng\u00f4n ng\u1eef",
-        "title_heatmap": "C\u00f9ng m\u1ed9t {unit}, c\u1ea7n bao nhi\u00eau token so v\u1edbi ti\u1ebfng Anh",
-        "cap_corpus": "D\u1eef li\u1ec7u: {corpus}, c\u00f9ng m\u1ed9t n\u1ed9i dung \u1edf m\u1ed7i ng\u00f4n ng\u1eef",
+        "title_heatmap": "M\u1ed7i {unit} c\u1ea7n bao nhi\u00eau token so v\u1edbi ti\u1ebfng Anh",
+        "cap_corpus": "D\u1eef li\u1ec7u: {corpus}, n\u1ed9i dung t\u01b0\u01a1ng \u0111\u01b0\u01a1ng \u1edf m\u1ecdi ng\u00f4n ng\u1eef",
         "title_cost_driver": "Y\u1ebfu t\u1ed1 sinh chi ph\u00ed: token tr\u00ean 1.000 k\u00fd t\u1ef1 \u2014 "
                              "{corpus} (th\u1ea5p h\u01a1n = r\u1ebb h\u01a1n)",
         "title_dollar_chars": "Chi ph\u00ed ph\u1ee5c v\u1ee5: USD tr\u00ean 1 tri\u1ec7u k\u00fd t\u1ef1 \u0111\u1ea7u v\u00e0o \u2014 "
@@ -300,7 +300,7 @@ VI = Locale(
         "cbar_premium": "\u00d7 s\u1ed1 token ti\u1ebfng Anh (1,00 = ngang b\u1eb1ng)",
         "legend_baseline_lang": "Ti\u1ebfng Anh (c\u00f9ng n\u1ed9i dung)",
         "legend_lead_lang": "Ti\u1ebfng Vi\u1ec7t",
-        "cap_shared_tokenizer": "{names}: s\u1ed1 token gi\u1ed1ng h\u1ec7t nhau (c\u00f9ng m\u1ed9t b\u1ed9 t\u00e1ch token)",
+        "cap_shared_tokenizer": "{names}: s\u1ed1 token gi\u1ed1ng h\u1ec7t nhau (d\u00f9ng chung b\u1ed9 t\u00e1ch token)",
         "cap_cl100k": "{label}: b\u1ed9 t\u00e1ch token n\u0103m 2023, \u0111\u1ec3 so s\u00e1nh",
         "cap_price_confidence": "Kh\u00f4ng ph\u1ea3i m\u1ecdi m\u1ee9c gi\u00e1 \u0111\u1ec1u \u0111\u1ed9 tin c\u1eady cao \u2014 {named}. Xem "
                                 "`source` trong config.PRICING v\u00e0 `price_confidence` trong "
