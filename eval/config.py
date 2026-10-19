@@ -129,6 +129,8 @@ class Counter:
     # map onto it. Nothing here affects measurement.
     headline: bool = True     # own column in the headline figures?
     headline_display: str = ""  # short chart/legend label (falls back to display)
+    family_display: str = ""    # heatmap column label naming every model the
+    #                             column covers (falls back to headline_display)
     flagship_group: str = ""  # id of the headline column a folded counter maps to
     fold_reason: str = ""     # why folded — "shared" (byte-identical tokenizer,
     #                           re-verified against the counts before any caption
@@ -153,7 +155,8 @@ MODEL_MATRIX: list[Counter] = [
     # OpenAI — GPT-6, measured through the Responses API input-token count:
     # tiktoken maps no GPT-6 model and OpenAI has not named its tokenizer.
     Counter("gpt", "GPT-6 Sol", "OpenAI", "openai", STATUS_NEEDS_KEY,
-            spec="gpt-6-sol", headline_display="GPT-6 Sol"),
+            spec="gpt-6-sol", headline_display="GPT-6 Sol",
+            family_display="GPT-6 Luna / Sol / Astra"),
     Counter("gpt-6-astra", "GPT-6 Astra (shared)", "OpenAI", "openai",
             STATUS_NEEDS_KEY, spec="gpt-6-astra", headline=False,
             headline_display="GPT-6 Astra", flagship_group="gpt", fold_reason="shared"),
@@ -168,7 +171,8 @@ MODEL_MATRIX: list[Counter] = [
     # Anthropic — count_tokens API. Anthropic documents every current model on the
     # tokenizer introduced with Claude Opus 4.7 and publishes no artifact for it.
     Counter("claude", "Claude Opus 5.5", "Anthropic", "anthropic", STATUS_NEEDS_KEY,
-            spec="claude-opus-5-5", headline_display="Claude Opus 5.5"),
+            spec="claude-opus-5-5", headline_display="Claude Opus 5.5",
+            family_display="Claude 5.5 / Fable 5.1"),
     Counter("claude-fable-5-1", "Claude Fable 5.1 (shared)", "Anthropic", "anthropic",
             STATUS_NEEDS_KEY, spec="claude-fable-5-1", headline=False,
             headline_display="Fable 5.1", flagship_group="claude", fold_reason="shared"),
@@ -187,7 +191,7 @@ MODEL_MATRIX: list[Counter] = [
             spec="gemini-4-argon", headline_display="Gemini 4 Argon"),
     Counter("gemini-3-8-flash", "Gemini 3.8 Flash", "Google", "gemini_api",
             STATUS_NEEDS_KEY, spec="gemini-3.8-flash",
-            headline_display="Gemini 3.8 Flash"),
+            headline_display="Gemini 3.8 Flash", family_display="Gemini Flash / Flash-Lite"),
     Counter("gemini-3-5-flash-lite", "Gemini 3.5 Flash-Lite (shared)", "Google",
             "gemini_api", STATUS_NEEDS_KEY, spec="gemini-3.5-flash-lite", headline=False,
             headline_display="Gemini 3.5 Flash-Lite", flagship_group="gemini-3-8-flash",
