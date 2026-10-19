@@ -233,6 +233,38 @@ class CarryForwardTest(unittest.TestCase):
         self.assertEqual(set(m["measured_on_by_counter"]), {"alpha", "beta"})
         self.assertIn("beta", m["counters_carried_forward"])
 
+    def test_carried_counter_keeps_its_envelope_probes(self):
+        """The probes behind a carried frame must survive a pass that skips it."""
+        probes = {"x": 8, "Z": 9}
+
+        def _build(spec):
+            c = _FakeCounter(spec, self._built[spec.id])
+            c.envelope_probe_frames = probes if spec.id == "beta" else {}
+            return c, ""
+        run_mod.build_counter = _build
+        run_mod.run()
+        self._fail = {"beta"}
+        run_mod.build_counter = self._build
+        run_mod.run()
+        m = json.loads((self.results / "run_manifest.json").read_text())
+        self.assertEqual(m["envelope_probe_frames_by_counter"].get("beta"), probes)
+
+    def test_concurrent_api_counts_land_on_their_own_sentences(self):
+        """The thread-pool path must keep each count on its sentence.
+
+        Totals and the aggregate premium survive a reordering, so only a per-row
+        check sees it — and the sentence lengths must differ for one to exist.
+        """
+        config.API_KINDS = {"tiktoken"}
+        corpus = {"eng_Latn": ["a", "bb", "ccc", "dddd"],
+                  "vie_Latn": ["e", "ff", "ggg", "hhhh"]}
+        run_mod.load_corpus = lambda cid, langs: {l: corpus[l] for l in langs}
+        run_mod.run()
+        raw = pd.read_csv(self.results / "raw_counts.csv")
+        factor = raw.counter_id.map(self._built)
+        self.assertTrue((raw.n_tokens == raw.n_chars * factor).all(),
+                        "a per-sentence count landed on the wrong sentence")
+
 
 if __name__ == "__main__":
     unittest.main()
