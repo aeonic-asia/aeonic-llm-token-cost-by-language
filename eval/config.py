@@ -65,15 +65,15 @@ STATUS_NEEDS_SDK = "needs_sdk"
 API_KINDS = {"anthropic", "openai", "gemini_api"}
 
 # Message-envelope calibration. A count-tokens endpoint counts the fully rendered
-# request, so a fixed turn/role frame can sit on top of the content (measured on
-# the Claude tokenizer: 6). Offline counters count bare text. Left uncorrected the
-# frame inflates per-sentence counts — a true 2.0x premium reads ~1.6x when +6
-# lands on both sides of a short sentence's ratio. So every API counter measures
+# request, so a fixed turn/role frame can sit on top of the content (per counter in
+# run_manifest.envelope_tokens_by_counter; Claude 5.5: 8). Offline counters count
+# bare text. Left uncorrected the frame inflates per-sentence counts — a true 2.0x
+# premium reads ~1.6x when +8 lands on both sides of a short sentence's ratio. So every API counter measures
 # its own frame (measure.ApiCounter.envelope_tokens) and the driver subtracts it
 # from the per-sentence counts. count(probe) is MEASURED; the subtrahend — a lone
 # character is one token — is ASSUMED, and tested across character classes rather
 # than trusted. The aggregate stays the paper-style raw total (envelope-inclusive;
-# the frame is <0.05% of any corpus total).
+# the frame is <0.25% of any corpus total).
 ENVELOPE_PROBE = "x"
 ENVELOPE_PROBE_TOKENS = 1
 # Probes span lowercase / uppercase / digit / punctuation / non-ASCII. A single
@@ -186,7 +186,8 @@ MODEL_MATRIX: list[Counter] = [
     # than 3.5 Flash, and assigning one by hand would assert an unpublished fact.
     # TWO columns, measured 2026-10-19: Gemini 4 Argon tokenizes differently from
     # the published gemma4 vocabulary (37% of sentences differ, both directions),
-    # while the Flash line still matches it sentence for sentence.
+    # while the Flash line matches it on MASSIVE; on FLORES it differs only on the
+    # HTML-bearing vie_Latn 429 (summary.json: coincident_in_some_corpora).
     Counter("gemini", "Gemini 4 Argon", "Google", "gemini_api", STATUS_NEEDS_KEY,
             spec="gemini-4-argon", headline_display="Gemini 4 Argon"),
     Counter("gemini-3-8-flash", "Gemini 3.8 Flash", "Google", "gemini_api",
@@ -306,8 +307,9 @@ class Price:
 
 # Input list prices per 1M tokens (serving price — the counting endpoints are
 # free). Each row carries its own verification date. Rules:
-#  * TODAY's list price, as of the row's date. Where a vendor publishes a dated
-#    step-up, the later price is noted in the source string; re-price on that date.
+#  * TODAY's list price, as of the row's date: the dataset is a dated snapshot and
+#    is not re-priced later. A vendor's announced dated step-up is noted in the
+#    source string, not tracked.
 #  * Unpriced (None) means there is no list price to record — a self-hosted model,
 #    a tokenizer with no SKU, or an offline proof whose bar its API model draws.
 #  * The cheapest context tier is the right one: every request here is one

@@ -119,9 +119,8 @@ def _rendered_orders() -> list[tuple[str, list[str]]]:
     One rendered order is not the whole surface, and testing only one is how this
     gate goes stale. `_priced_order` ranks by cost-per-1k-CHARS averaged across
     corpora; the Vietnamese ladder and the tax dumbbell re-sort by cost per
-    SENTENCE within one corpus, which is a different sequence (on MASSIVE,
-    gemini-3-1-pro and claude-haiku-4-5 swap) and therefore a different set of
-    adjacent pairs. The tokenizer bars draw `_headline_order`, which includes the
+    SENTENCE within one corpus, which can be a different sequence and therefore a
+    different set of adjacent pairs. The tokenizer bars draw `_headline_order`, which includes the
     unpriced counters no dollar figure ever reaches.
 
     So: derive each order the way its own figure derives it, and gate all of them.

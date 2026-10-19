@@ -517,30 +517,10 @@ _SLOT_BY_FLAGSHIP: dict[str, int] = {
 #
 # Steps are explicit validated hexes rather than computed at render time: the
 # ramp is a published design decision, and deriving it from matrix position
-# would let a MODEL_MATRIX reorder silently repaint a figure. Generated in OKLCH
-# at fixed hue and chroma, then validated as ordinal ramps (see the provenance
-# note above for the tool and its portability caveat):
-#
-#   red / claude-new    #f06d67 -> #e34948 -> #b51221   (Sonnet 5 $2, Opus 5 $5, Fable 5 $10)
-#   violet / claude-old #6c62d2 -> #4a3aa7              (Haiku 4.5 $1, Sonnet 4.6 $3)
-#   green / gemini      #59c253 -> #36a231 -> #008300   (Flash-Lite $0.25, 3.5 Flash $1.50,
-#                                                        3.1 Pro $2.00)
-#
-# All three pass monotone lightness, adjacent OKLCH ΔL >= 0.06, single hue, and a
-# light end clearing 2:1 on this surface (red 2.48:1, violet 4.74:1, green 2.21:1).
-# The CROSS-family adjacencies these steps create are validated categorically, like
-# any other neighbouring pair: worst is #4a3aa7 -> #fe7a73 at CVD ΔE 29.2.
-#
-# The green ramp was generated the same way as the other two — fixed OKLCH hue and
-# chroma (H 142.5, C 0.180, in gamut at every step, so chroma needed no clamping),
-# stepping lightness DOWN as price rises: L 0.727 -> 0.628 -> 0.529, ΔL 0.0995 and
-# 0.0993. Its light end is the tightest of the three at 2.21:1, which is why
-# Flash-Lite sits at L 0.727 rather than lighter: L 0.749 would read as a cleaner
-# ramp step and falls to 2.05:1, and this ramp's cheap end is a real bar in the
-# published dollar figures rather than a legend swatch. Note the base hue #008300
-# is the DEAREST member here, where in the Claude families the base sits mid-ramp —
-# Gemini's flagship is its most expensive tier, so the ramp only runs lighter.
-# (the per-theme values now live on LIGHT.tints / DARK.tints above)
+# would let a MODEL_MATRIX reorder silently repaint a figure. Each ramp is
+# generated in OKLCH at fixed hue and chroma; the values live on LIGHT.tints /
+# DARK.tints above, and tests/test_palette_adjacency.py gates every ramp
+# (monotone, ΔL >= 0.06, light end >= 2:1) and every cross-family neighbour.
 
 
 def _check_style_registries() -> None:
@@ -819,9 +799,8 @@ LEAD_LANG = "vie_Latn"  # article lead; canonical column order sorts by its prem
 def _price_as_of(counters: list[str]) -> str:
     """As-of stamp covering the prices actually used, as a range if they differ.
 
-    Rows carry their own `as_of` (claude-new was re-verified 2026-07-25 when it
-    began naming Opus 5, a model that did not exist on the 2026-07-18 ratification
-    date). Printing the single global constant would date every price to the
+    Rows carry their own `as_of`, because prices are verified on different days.
+    Printing the single global constant would date every price to the
     oldest ratification; printing the newest would claim they were all re-checked
     then. Neither is true, so print what is.
     """

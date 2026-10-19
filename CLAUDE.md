@@ -22,7 +22,7 @@ A self-contained package, deliberately separate from the upstream pipeline below
 ```bash
 make setup       # venv + pinned deps (requirements-eval.txt); optional counter deps are listed there
 make reproduce   # counters -> premium/cost analysis -> figures
-make test        # correctness gates: the paper oracle, palette, carry-forward, envelope, figure stems
+make test        # correctness gates: the paper oracle, palette, carry-forward, envelope, figure stems, shared tokenizer
 ```
 
 API counters need `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (all three count-tokens endpoints are free; Anthropic's still requires a positive credit balance). Without a key a counter's committed rows are carried forward.
@@ -41,11 +41,11 @@ API counters need `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (all t
 - **Anthropic publishes no tokenizer**; it is measurable only through `count_tokens`.
 - **A changed `spec` refuses carry-forward** (`run.py`), so a relabelled column can never keep another model's numbers. Retired counter ids are purged automatically.
 
-**Message-envelope correction.** Count-tokens endpoints count a wrapped request, so a fixed frame sits on top of the content (measured per counter in `run_manifest.envelope_tokens_by_counter`; it differs by vendor and model and has changed between Claude generations). `measure.ApiCounter.envelope_tokens` probes eight single characters across classes and takes the **floor** — a character is never fewer than one token, so a multi-token probe can only push its frame up (on the Claude tokenizer, uppercase `Z` costs two). At least `ENVELOPE_MIN_AGREEING` probes must reach the floor. The subtrahend (a lone character is one token) is an assumption, tested rather than verified. Per-sentence counts are envelope-stripped (`n_tokens_content`); the aggregate stays the raw paper-style total, envelope-inclusive (<0.05% of any corpus total).
+**Message-envelope correction.** Count-tokens endpoints count a wrapped request, so a fixed frame sits on top of the content (measured per counter in `run_manifest.envelope_tokens_by_counter`; it differs by vendor and model and has changed between Claude generations). `measure.ApiCounter.envelope_tokens` probes eight single characters across classes and takes the **floor** — a character is never fewer than one token, so a multi-token probe can only push its frame up (on the Claude tokenizer, uppercase `Z` costs two). At least `ENVELOPE_MIN_AGREEING` probes must reach the floor. The subtrahend (a lone character is one token) is an assumption, tested rather than verified. Per-sentence counts are envelope-stripped (`n_tokens_content`); the aggregate stays the raw paper-style total, envelope-inclusive (<0.25% of any corpus total).
 
 **Runs.** `make reproduce COUNTERS=<id,...> CORPORA=<name>` re-measures only what is selected and carries every other row forward byte-for-byte. A credentialed counter that was available but produced no rows (e.g. retries exhausted) keeps its rows but makes `run.py` exit non-zero. API per-sentence calls run on a thread pool (`API_CONCURRENCY`); `map()` preserves order, so output is byte-identical to a sequential pass. Never run two passes at once — both rewrite the same result files.
 
-**Prices** (`config.PRICING`) are today's input list prices, each row dated and sourced; a vendor's announced dated step-up is noted in the row, and the row is re-priced on that date. Unpriced = no list price exists (self-hosted, historical, or an offline proof whose API model carries the price).
+**Prices** (`config.PRICING`) are today's input list prices, each row dated and sourced; the dataset is a dated snapshot and is not re-priced later; a vendor's announced dated step-up is noted in the row, not tracked. Unpriced = no list price exists (self-hosted, historical, or an offline proof whose API model carries the price).
 
 **Figures render once per (locale, theme)**: `fig-<stem>-<corpus>[-vi][-dark].svg`. Labels are localised at source from whole-sentence message catalogues (`figures.LOCALES`) — matplotlib draws text as paths, so there is nothing to translate afterwards; `_check_style_registries` fails at import on a missing key, language or unit.
 
