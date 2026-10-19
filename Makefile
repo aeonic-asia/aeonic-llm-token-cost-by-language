@@ -60,5 +60,4 @@ test: check-venv
 clean:
 	rm -rf eval/results/figures
 	rm -f eval/results/summary.json eval/results/premium_by_language.csv \
-	      eval/results/cost_by_language.csv eval/results/within_vendor_inflation.csv \
-	      eval/results/run_manifest.json
+	      eval/results/cost_by_language.csv eval/results/run_manifest.json

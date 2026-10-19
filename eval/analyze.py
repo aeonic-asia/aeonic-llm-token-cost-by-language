@@ -123,37 +123,6 @@ def _premium_table(agg: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _within_vendor_inflation(agg: pd.DataFrame) -> pd.DataFrame:
-    """Absolute token inflation of the newer tokenizer over the older one.
-
-    This is the article's headline hook and a *different* metric from premium:
-    tokens(new)/tokens(old) for the SAME language. Premium is a ratio vs.
-    English; this is a ratio vs. the previous tokenizer generation. They can
-    move in opposite directions (if English inflates fastest, the non-English
-    premium falls even as absolute non-English tokens rise). Reported per corpus.
-    """
-    new_id, old_id = "claude-new", "claude-old"
-    if new_id not in set(agg.counter_id) or old_id not in set(agg.counter_id):
-        return pd.DataFrame()
-    rows = []
-    for corpus_id in agg["corpus"].unique():
-        sub = agg[agg.corpus == corpus_id]
-        if new_id not in set(sub.counter_id) or old_id not in set(sub.counter_id):
-            continue
-        p = sub.pivot(index="lang", columns="counter_id", values="total_tokens")
-        for lang, name in config.LANGUAGES.items():
-            if lang not in p.index:
-                continue   # language added since the Claude pair was measured
-            old, new = int(p.loc[lang, old_id]), int(p.loc[lang, new_id])
-            rows.append({
-                "corpus": corpus_id, "lang": lang, "language": name,
-                "tokens_old": old, "tokens_new": new,
-                "inflation": round(new / old, 4),
-                "inflation_pct": round((new / old - 1) * 100, 1),
-            })
-    return pd.DataFrame(rows)
-
-
 def _cost_table(agg: pd.DataFrame) -> pd.DataFrame:
     """Cost under two denominators, because they tell different stories.
 
@@ -373,18 +342,8 @@ def analyze() -> None:
 
     premium = _premium_table(agg, raw)
     cost = _cost_table(agg)
-    inflation = _within_vendor_inflation(agg)
     premium.to_csv(config.RESULTS_DIR / "premium_by_language.csv", index=False)
     cost.to_csv(config.RESULTS_DIR / "cost_by_language.csv", index=False)
-    # Inflation needs both Claude generations. Write it when present; otherwise
-    # remove any prior copy so a stale file can't disagree with summary.json
-    # (which would show no inflation) after a run that dropped the Claude pair.
-    infl_path = config.RESULTS_DIR / "within_vendor_inflation.csv"
-    if not inflation.empty:
-        inflation.to_csv(infl_path, index=False)
-    elif infl_path.exists():
-        infl_path.unlink()
-
     # headline: aggregate premium per corpus × counter × language (contrast langs)
     headline: dict[str, dict] = {}
     for corpus_id in premium.corpus.unique():
@@ -427,18 +386,11 @@ def analyze() -> None:
             f"{absent}. The validation gate would silently check fewer languages "
             "and report a tighter delta. Re-run `make reproduce COUNTERS=cl100k_base`.")
 
-    infl: dict[str, dict] = {}
-    if not inflation.empty:
-        for _, r in inflation.iterrows():
-            infl.setdefault(r["corpus"], {})[r["language"]] = {
-                "inflation": r["inflation"], "pct": r["inflation_pct"]}
-
     summary = {
         "dataset_as_of": config.DATASET_AS_OF,
         "premium_vs": "English (eng_Latn)",
         "corpora": config.CORPORA,
         "headline_premiums_aggregate_by_corpus": headline,
-        "within_vendor_claude_inflation_new_over_old_by_corpus": infl,
         "cl100k_oracle_vs_paper_table1_flores": oracle,
         # Renamed from `shared_tokenizer_pairs_by_corpus`: the old key promised an
         # identity finding while holding a per-corpus equality result, and a
@@ -448,22 +400,17 @@ def analyze() -> None:
         "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION "
                      "(median/p10..p90 in premium_by_language.csv) is measured on "
                      "envelope-stripped content tokens (raw_counts.n_tokens_content): "
-                     "Anthropic count_tokens counts a wrapped chat message, so a "
-                     "fixed frame (see run_manifest.envelope_tokens_by_counter) is "
-                     "subtracted to compare like-for-like with the bare-text offline "
+                     "the vendor count-tokens APIs count a wrapped request, so each "
+                     "API counter's fixed frame (run_manifest.envelope_tokens_by_counter) "
+                     "is subtracted to compare like-for-like with the bare-text offline "
                      "counters. The AGGREGATE premium is the raw paper-style "
-                     "concatenated count and is left envelope-INCLUSIVE, so the two "
-                     "are on near-identical rather than identical bases. The frame's "
-                     "share of the call is corpus-dependent — 0.0073%/0.0124% of the "
-                     "English total on FLORES (newer/older Claude) but 0.0286%/0.0463% "
-                     "on MASSIVE, whose totals are ~1.5-2.1x10^4 tokens rather than "
-                     "~10^5. Worst resulting bias on a published aggregate premium is "
-                     "+0.0007 (massive/claude-old/vie), i.e. below the 4th decimal.",
+                     "concatenated count and is left envelope-INCLUSIVE; the frame is "
+                     "<0.05% of any corpus total, so the two bases are near-identical "
+                     "rather than identical.",
         "pricing_as_of": config.PRICING_AS_OF,
         "usd_to_vnd": {"rate": config.USD_TO_VND, "as_of": config.USD_TO_VND_AS_OF},
         "cost_note": "token density is measured; USD/VND cost emitted only where "
-                     "config.PRICING has a dated price. Forward-dated flagships are "
-                     "premium-only until price ratification. Cost is reported under "
+                     "config.PRICING has a dated price. Cost is reported under "
                      "two denominators — per-1k-NFC-chars and per-sentence (parallel "
                      "corpus, so per-sentence = same meaning across languages); they "
                      "rank dense scripts (CJK) very differently.",
@@ -479,13 +426,6 @@ def analyze() -> None:
         view = (premium[premium.corpus == corpus_id]
                 .pivot(index="language", columns="counter_id", values="premium_aggregate"))
         print(view.to_string())
-    if not inflation.empty:
-        print("\nWithin-vendor Claude inflation (newer/older tokenizer, same language):")
-        for _, r in inflation.iterrows():
-            print(f"  [{r['corpus']:7s}] {r['language']:22s} "
-                  f"{r['tokens_old']:>7d} -> {r['tokens_new']:>7d}  "
-                  # sign from the value, not hardcoded: deflation printed "(+-3.2%)"
-                  f"= {r['inflation']}x  ({r['inflation_pct']:+}%)")
     print("\ncl100k oracle vs. paper Table 1 (FLORES+):")
     for name, o in oracle.items():
         print(f"  {name:22s} ours {o['ours']}  paper {o['paper']}  Δ {o['delta']}")
@@ -495,8 +435,7 @@ def analyze() -> None:
     if _coin["coincident_in_some_corpora"]:
         print(f"  coincident in some corpora only (NOT an identity): "
               f"{_coin['coincident_in_some_corpora']}")
-    print("wrote premium_by_language.csv, cost_by_language.csv, "
-          "within_vendor_inflation.csv, summary.json")
+    print("wrote premium_by_language.csv, cost_by_language.csv, summary.json")
 
 
 if __name__ == "__main__":

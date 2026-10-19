@@ -6,7 +6,7 @@ The upstream `TokenizerInterface` (compute/tokenizer_interface.py) requires
 back. Closed models expose only a `count_tokens` endpoint: a count, no strings.
 So this eval hangs off a deliberately narrower contract — `TokenCounter`, which
 promises only `count(text) -> int`. Offline tokenizers satisfy it trivially
-(`len(encode(text))`); the Anthropic API satisfies it directly. One contract,
+(`len(encode(text))`); the vendor count-tokens APIs satisfy it directly. One contract,
 both worlds, no fake `encode` on the closed models.
 """
 from __future__ import annotations
@@ -92,54 +92,42 @@ class TiktokenCounter(TokenCounter):
         return len(self._enc.encode(nfc(text)))
 
 
-class AnthropicCounter(TokenCounter):
-    """Claude token counts via the Anthropic `count_tokens` API.
+class ApiCounter(TokenCounter):
+    """Base for vendor count-tokens endpoints: a count, never token strings.
 
-    Built and plumbed now; it only runs when an API key is present. This is the
-    article's headline hook (the newer Claude tokenizer counts materially more),
-    so it must be measured, never estimated — hence the hard failure below
-    instead of a silent fallback.
+    Subclasses name the credential (`KEY_ENVS`) and implement `_make_client` and
+    `_count`. These are the article's headline numbers, so they are measured,
+    never estimated: a missing key skips the counter, and a failing call raises.
     """
+
+    #: Environment variables any one of which authorizes the client.
+    KEY_ENVS: tuple[str, ...] = ()
 
     def __init__(self, spec: config.Counter):
         self.spec = spec
-        self._client = None  # lazily created so import/availability checks are cheap
+        self._client = None  # lazy, so availability checks stay cheap
 
-    @staticmethod
-    def available() -> bool:
+    @classmethod
+    def available(cls) -> bool:
         import os
-        return bool(os.environ.get("ANTHROPIC_API_KEY"))
+        return any(os.environ.get(k) for k in cls.KEY_ENVS)
 
-    def _ensure_client(self):
-        if self._client is None:
-            import anthropic  # not installed in the offline slice; installed with the key
-            # Retry and timeout are set EXPLICITLY, not left to the SDK defaults.
-            # The SDK already retries 408/409/429/5xx and connection errors with
-            # exponential backoff and obeys `retry-after` — that machinery is
-            # correct and must not be hand-rolled around. What is wrong for this
-            # workload is its sizing: max_retries=2 is ~1.5s of backoff, too
-            # little to ride out a sustained limit over ~12,000 sequential calls,
-            # while the 10-minute default timeout is multiplied by every retry.
-            # Rationale and arithmetic live with the constants in config.
-            self._client = anthropic.Anthropic(
-                max_retries=config.ANTHROPIC_MAX_RETRIES,
-                timeout=config.ANTHROPIC_TIMEOUT_S,
-            )
-        return self._client
+    def _make_client(self):
+        raise NotImplementedError
+
+    def _count(self, client, text: str) -> int:
+        raise NotImplementedError
 
     def count(self, text: str) -> int:
-        client = self._ensure_client()
-        resp = client.messages.count_tokens(
-            model=self.spec.spec,
-            messages=[{"role": "user", "content": nfc(text)}],
-        )
-        return resp.input_tokens
+        if self._client is None:
+            self._client = self._make_client()
+        return self._count(self._client, nfc(text))
 
     def envelope_tokens(self) -> int:
         """Turn/role frame `count_tokens` wraps around the content.
 
-        `count_tokens` counts the fully-rendered prompt, so every call carries a
-        fixed frame on top of the content tokens. `count(probe)` is measured; the
+        A count-tokens endpoint counts the fully-rendered request, so every call
+        can carry a fixed frame on top of the content tokens. `count(probe)` is measured; the
         frame is then `count(probe) - ENVELOPE_PROBE_TOKENS`.
 
         Be precise about what is measured and what is assumed. The subtrahend
@@ -194,8 +182,56 @@ class AnthropicCounter(TokenCounter):
         return envelope
 
 
+class AnthropicCounter(ApiCounter):
+    """Claude via the Anthropic `messages.count_tokens` API."""
+
+    KEY_ENVS = ("ANTHROPIC_API_KEY",)
+
+    def _make_client(self):
+        import anthropic
+        return anthropic.Anthropic(max_retries=config.API_MAX_RETRIES,
+                                   timeout=config.API_TIMEOUT_S)
+
+    def _count(self, client, text: str) -> int:
+        return client.messages.count_tokens(
+            model=self.spec.spec, messages=[{"role": "user", "content": text}],
+        ).input_tokens
+
+
+class OpenAICounter(ApiCounter):
+    """OpenAI via the Responses API input-token count (`responses.input_tokens`)."""
+
+    KEY_ENVS = ("OPENAI_API_KEY",)
+
+    def _make_client(self):
+        import openai
+        return openai.OpenAI(max_retries=config.API_MAX_RETRIES,
+                             timeout=config.API_TIMEOUT_S)
+
+    def _count(self, client, text: str) -> int:
+        return client.responses.input_tokens.count(
+            model=self.spec.spec, input=text).input_tokens
+
+
+class GeminiApiCounter(ApiCounter):
+    """Gemini via the Gemini API `models.count_tokens` endpoint."""
+
+    KEY_ENVS = ("GEMINI_API_KEY", "GOOGLE_API_KEY")
+
+    def _make_client(self):
+        from google import genai
+        from google.genai import types
+        return genai.Client(http_options=types.HttpOptions(
+            timeout=int(config.API_TIMEOUT_S * 1000),  # milliseconds
+            retry_options=types.HttpRetryOptions(attempts=config.API_MAX_RETRIES + 1)))
+
+    def _count(self, client, text: str) -> int:
+        return client.models.count_tokens(model=self.spec.spec,
+                                          contents=text).total_tokens
+
+
 class HFCounter(TokenCounter):
-    """Open-weight tokenizer via HuggingFace `AutoTokenizer` (e.g. Llama 4, Qwen 3.6).
+    """Open-weight tokenizer via HuggingFace `AutoTokenizer` (e.g. Qwen).
 
     Offline once the tokenizer files are cached, but the first load downloads
     them. Some repos are *gated* (Meta Llama) and need an HF access token (read
@@ -302,10 +338,12 @@ def build_counter(spec: config.Counter) -> tuple[TokenCounter | None, str]:
             return None, (f"tiktoken encoding '{spec.spec}' unavailable "
                           f"({type(exc).__name__}) — check the name and that it is "
                           "present in eval/tiktoken_cache/")
-    if spec.kind == "anthropic":
-        if not AnthropicCounter.available():
-            return None, "ANTHROPIC_API_KEY unset — run later with a key"
-        return AnthropicCounter(spec), ""
+    api = {"anthropic": AnthropicCounter, "openai": OpenAICounter,
+           "gemini_api": GeminiApiCounter}.get(spec.kind)
+    if api:
+        if not api.available():
+            return None, f"{' / '.join(api.KEY_ENVS)} unset — run later with a key"
+        return api(spec), ""
     if spec.kind == "hf":
         ok, reason = HFCounter.available(spec.gated)
         return (HFCounter(spec), "") if ok else (None, reason)

@@ -27,11 +27,11 @@ from __future__ import annotations
 import unittest
 
 from eval import config
-from eval.measure import AnthropicCounter
+from eval.measure import ApiCounter
 
 
-class _ScriptedCounter(AnthropicCounter):
-    """AnthropicCounter with count() scripted from a table. No API, no key."""
+class _ScriptedCounter(ApiCounter):
+    """ApiCounter with count() scripted from a table. No API, no key."""
 
     def __init__(self, counts: dict[str, int]):
         self.spec = config.Counter("scripted", "Scripted", "X", "anthropic", "live",
