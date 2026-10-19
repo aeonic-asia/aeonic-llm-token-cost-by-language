@@ -414,20 +414,20 @@
       "qwen"
     ],
     "counters_measured_last_pass": [
-      "gpt",
-      "gpt-6-astra",
-      "gpt-6-luna",
-      "claude",
-      "claude-fable-5-1",
-      "claude-sonnet-5-5",
-      "claude-haiku-5-5"
+      "gpt"
     ],
     "counters_carried_forward": [
       "cl100k_base",
+      "claude",
+      "claude-fable-5-1",
+      "claude-haiku-5-5",
+      "claude-sonnet-5-5",
       "gemini",
       "gemini-3-5-flash-lite",
       "gemini-3-8-flash",
       "gemma4",
+      "gpt-6-astra",
+      "gpt-6-luna",
       "o200k_base",
       "qwen"
     ],
@@ -475,7 +475,7 @@
     "oracle_passes": true,
     "note": "`counters_carried_forward` were NOT re-measured in the last pass; their counts come from an earlier one. Cross-check `measured_on_by_counter` before citing a specific counter's date."
   },
-  "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): the vendor count-tokens APIs count a wrapped request, so each API counter's fixed frame (run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count and is left envelope-INCLUSIVE; the frame is <0.05% of any corpus total, so the two bases are near-identical rather than identical.",
+  "per_sentence_premium_note": "The per-sentence premium DISTRIBUTION (median/p10..p90 in premium_by_language.csv) is measured on envelope-stripped content tokens (raw_counts.n_tokens_content): the vendor count-tokens APIs count a wrapped request, so each API counter's fixed frame (run_manifest.envelope_tokens_by_counter) is subtracted to compare like-for-like with the bare-text offline counters. The AGGREGATE premium is the raw paper-style concatenated count and is left envelope-INCLUSIVE; the frame is <0.25% of any corpus total, so the two bases are near-identical rather than identical.",
   "pricing_as_of": "2026-10-19",
   "usd_to_vnd": {
     "rate": 25890.0,
