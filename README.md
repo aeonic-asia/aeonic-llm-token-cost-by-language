@@ -9,7 +9,7 @@ Measures how many tokens the same content costs across **English (baseline), Vie
 ```bash
 make setup       # create the venv, install pinned deps (requirements-eval.txt)
 make reproduce   # counters -> premium/cost analysis -> figures
-make test        # reproduce the paper's cl100k premiums (correctness gate)
+make test        # correctness gates (listed in CLAUDE.md)
 ```
 
 The offline counters need no network once set up (the tiktoken BPE ranks are committed under `eval/tiktoken_cache/`). Outputs land in `eval/results/` (raw counts, premium and cost tables, figures) with a `run_manifest.json` recording exactly which counters ran.
@@ -23,8 +23,8 @@ Both corpora are loaded through `eval/corpora.py`, but they sit at different lev
 | Vendor | Models | How it is counted |
 |---|---|---|
 | Anthropic | Claude Opus 5.5, Fable 5.1, Sonnet 5.5, Haiku 5.5 | `count_tokens` API (`ANTHROPIC_API_KEY`) |
-| OpenAI | GPT-6.1 Sol, GPT-6 Astra, GPT-6 Luna | Responses API input-token count (`OPENAI_API_KEY`); counts match the offline `o200k_base` on every sampled sentence |
-| Google | Gemini 4 Argon; Gemini 3.8 Flash, 3.5 Flash-Lite | Gemini API `countTokens` (`GEMINI_API_KEY`); the Flash line matches the offline `gemma4` tokenizer on every sampled sentence, Argon does not |
+| OpenAI | GPT-6.1 Sol, GPT-6 Astra, GPT-6 Luna | Responses API input-token count (`OPENAI_API_KEY`); totals match the offline `o200k_base` in both corpora |
+| Google | Gemini 4 Argon; Gemini 3.8 Flash, 3.5 Flash-Lite | Gemini API `countTokens` (`GEMINI_API_KEY` or `GOOGLE_API_KEY`); the Flash line matches the offline `gemma4` tokenizer on MASSIVE (FLORES differs on one HTML-bearing line), Argon does not |
 | Alibaba | Qwen 3.8 (open-weight) | HF `AutoTokenizer`, offline |
 
 The three count-tokens endpoints are free. Models that share a tokenizer are measured separately anyway, and `summary.json` → `tokenizer_coincidence_check` records which ones the data confirms as identical. Without a key, a counter's committed rows are carried forward rather than dropped; `run_manifest.json` records what each pass actually measured. `make reproduce COUNTERS=<id>` re-measures a single counter.

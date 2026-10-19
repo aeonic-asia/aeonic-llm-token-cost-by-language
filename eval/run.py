@@ -267,7 +267,7 @@ def run() -> None:
                 for lang in langs:
                     sentences = corpus[lang]
                     # aggregate: paper-style — concatenate, count once. Left
-                    # envelope-INCLUSIVE (the frame is <0.05% of any corpus total);
+                    # envelope-INCLUSIVE (the frame is <0.25% of any corpus total);
                     # the per-sentence distribution below is envelope-stripped.
                     joined = " ".join(sentences)
                     aggregate.append({
@@ -581,7 +581,7 @@ def run() -> None:
                  "`envelope_tokens_by_counter` is the per-message chat frame "
                  "(measured, 0 for bare-text counters) subtracted from "
                  "raw_counts.n_tokens_content so the per-sentence premium "
-                 "distribution compares Claude's wrapped counts like-for-like with "
+                 "distribution compares API counters' wrapped counts like-for-like with "
                  "the offline counters; the aggregate is left envelope-inclusive. "
                  "API per-sentence rows are a DETERMINISTIC head-slice "
                  "(sentences[:api_per_sentence_subsample] of the FLORES+ dev split / "

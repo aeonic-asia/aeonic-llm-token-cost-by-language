@@ -1,9 +1,9 @@
 # Aeonic token-cost eval — reproducible, offline from committed data.
 #
 #   make setup       create the eval venv and install pinned deps
-#   make reproduce   run counters -> analysis -> figures (offline)
-#   make test        correctness gates: the paper's cl100k oracle + the
-#                    carry-forward invariant (committed rows are never lost)
+#   make reproduce   run counters -> analysis -> figures (API counters need keys;
+#                    without one their committed rows are carried forward)
+#   make test        correctness gates (listed in CLAUDE.md)
 #   make clean       remove generated results (keeps the committed dataset in git)
 #
 # Offline: the tiktoken BPE ranks are committed under eval/tiktoken_cache/, so
@@ -27,7 +27,7 @@ check-venv:
 
 # CORPORA / COUNTERS (optional): comma-separated subsets to (re)measure, e.g.
 #   make reproduce CORPORA=massive
-#   make reproduce COUNTERS=gemini-3-1-pro       # add one counter, keep the rest
+#   make reproduce COUNTERS=gemini               # re-measure one counter, keep the rest
 # Cells outside the selected (corpus × counter) grid are carried forward verbatim
 # from the committed dataset. Empty (default) = full rebuild of everything.
 CORPORA ?=

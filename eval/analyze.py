@@ -426,7 +426,7 @@ def analyze() -> None:
                      "is subtracted to compare like-for-like with the bare-text offline "
                      "counters. The AGGREGATE premium is the raw paper-style "
                      "concatenated count and is left envelope-INCLUSIVE; the frame is "
-                     "<0.05% of any corpus total, so the two bases are near-identical "
+                     "<0.25% of any corpus total, so the two bases are near-identical "
                      "rather than identical.",
         "pricing_as_of": config.PRICING_AS_OF,
         "usd_to_vnd": {"rate": config.USD_TO_VND, "as_of": config.USD_TO_VND_AS_OF},
