@@ -137,7 +137,7 @@ def _versions() -> dict[str, str]:
     import importlib.metadata as md
     out: dict[str, str] = {}
     for pkg in ("tiktoken", "pandas", "numpy", "matplotlib",
-                "anthropic", "google-genai", "transformers", "sentencepiece"):
+                "anthropic", "openai", "google-genai", "transformers", "sentencepiece"):
         try:
             out[pkg] = md.version(pkg)
         except md.PackageNotFoundError:
@@ -449,8 +449,8 @@ def run() -> None:
         # "a true reset". The real causes are missing credentials or a corpus/results
         # tree that git can restore.
         raise SystemExit("measured 0 counters and nothing to carry forward — "
-                         "refusing to write an empty dataset. Check ANTHROPIC_API_KEY / "
-                         "HF_TOKEN / google-genai, or restore the committed dataset "
+                         "refusing to write an empty dataset. Check the API keys "
+                         "(ANTHROPIC / OPENAI / GEMINI) and optional SDKs, or restore the committed dataset "
                          "with `git checkout -- eval/results/`.")
 
     # Counters that will end up with an aggregate but no per-sentence rows lose
@@ -562,11 +562,11 @@ def run() -> None:
         # from the manifest of the run that used it defeated the point.
         "versions": _versions(),
         "notes": "Dual-register: FLORES+ (formal) + MASSIVE (assistant utterances); "
-                 "premium reported per corpus. Anthropic counters run when "
-                 "ANTHROPIC_API_KEY is present (aggregate + per-sentence subsample "
-                 "per corpus); Gemini via offline google-genai LocalTokenizer (no "
-                 "key); open-weight via HF AutoTokenizer — Llama 4 (gated, needs "
-                 "HF_TOKEN) and Qwen 3.6 (ungated Apache-2.0, no token). "
+                 "premium reported per corpus. API counters (Anthropic, OpenAI, "
+                 "Gemini count-tokens endpoints) run when their key is present "
+                 "(aggregate + per-sentence subsample per corpus); offline proofs via "
+                 "tiktoken and google-genai LocalTokenizer; open-weight Qwen via HF "
+                 "AutoTokenizer (ungated, no token). "
                  "`corpora_carried_forward` / `counters_carried_forward` list "
                  "slices preserved verbatim from the prior dataset (not re-measured "
                  "this pass); the measured set is their complement. "

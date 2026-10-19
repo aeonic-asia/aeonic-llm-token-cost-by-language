@@ -6,7 +6,7 @@ computed from a `medium` price rendered under a caption reading only "input list
 price", carrying exactly the authority of a fully-sourced one. The hedge was
 visible solely to a reader who opened the CSV, which is not who reads a chart.
 
-Every priced row is `high` as of 2026-07-27, so the qualifier renders nothing
+Every priced row is `high` as of 2026-10-19, so the qualifier renders nothing
 today. That is precisely why it needs a test: a guard that is inert against the
 current data will not be exercised by running the pipeline, and would rot
 silently until the day it mattered.
@@ -30,7 +30,7 @@ class PriceConfidenceNoteTest(unittest.TestCase):
         self.assertEqual(figures._price_confidence_note(priced), [])
 
     def test_committed_prices_are_all_high(self):
-        """Pins the 2026-07-27 re-ratification: o200k was the last `medium`.
+        """Pins the current pricing layer: no priced row is hedged.
 
         Not redundant with the test above — that one asserts the *renderer* is
         quiet, this one asserts *why*. If a future price is added as `medium`,
@@ -44,20 +44,20 @@ class PriceConfidenceNoteTest(unittest.TestCase):
     def test_hedged_price_reaches_the_caption_by_name(self):
         """The whole point: a non-high price must surface, and must be named."""
         hedged = dict(config.PRICING)
-        hedged["o200k_base"] = config.Price(5.00, "2026-07-27", "medium",
+        hedged["gpt"] = config.Price(2.00, "2026-10-19", "medium",
                                             "scripted for test")
         with mock.patch.object(config, "PRICING", hedged):
-            lines = figures._price_confidence_note(["o200k_base", "claude-new"])
+            lines = figures._price_confidence_note(["gpt", "claude"])
         self.assertEqual(len(lines), 1)
         self.assertIn("medium", lines[0])
         # Named, not counted — a reader needs to know WHICH bar to distrust.
-        self.assertIn(figures._label("o200k_base"), lines[0])
-        self.assertNotIn(figures._label("claude-new"), lines[0])
+        self.assertIn(figures._label("gpt"), lines[0])
+        self.assertNotIn(figures._label("claude"), lines[0])
 
     def test_unpriced_rows_never_trigger_the_note(self):
         """`unknown` on an unpriced row grades nothing — it draws no bar.
 
-        cl100k, Llama 4, Qwen 3.6 and Opus 4.8 all carry `unknown` by design. If
+        cl100k, the offline proofs and Qwen all carry `unknown` by design. If
         the note keyed on confidence alone it would fire permanently, and a
         permanently-present warning is one nobody reads.
         """

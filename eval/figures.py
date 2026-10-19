@@ -132,11 +132,13 @@ LIGHT = Theme(
     ink="#0b0b0b", ink_2="#52514e", ink_muted="#898781",
     grid="#e1e0d9", baseline="#c3c2b7",
     series=_LIGHT_SERIES, tints={
-        "claude-sonnet-5": "#f06d67",        # $2 — lightest of the newer-Claude family
-        "claude-fable-5": "#b51221",         # $10 — darkest
-        "claude-haiku-4-5": "#6c62d2",       # $1 — lighter of the older-Claude pair
-        "gemini-3-5-flash": "#36a231",       # $1.50 — middle step of the green ramp
-        "gemini-3-1-flash-lite": "#59c253",  # $0.25 — lightest; cheapest bar in the chart
+        "claude-sonnet-5-5": "#f06d67",
+        "claude-fable-5-1": "#b51221",
+        "gemini-3-8-flash": "#36a231",
+        "gemini-3-5-flash-lite": "#59c253",
+        "claude-haiku-5-5": "#fc8b83",       # $0.10 — lightest red step
+        "gpt-6-luna": "#5e99e5",             # $0.10 — lighter than Sol's base blue
+        "gpt-6-astra": "#0059b5",            # $10 — darker than Sol's base blue
     })
 
 DARK = Theme(
@@ -147,11 +149,13 @@ DARK = Theme(
     # Slot 6 (violet) is the one lifted value; every other slot is light's.
     series=_LIGHT_SERIES[:6] + ("#6156c5",) + _LIGHT_SERIES[7:],
     tints={
-        "claude-sonnet-5": "#f06d67",
-        "claude-fable-5": "#b51221",
-        "claude-haiku-4-5": "#857ef1",       # lifted with its family (was #6c62d2)
-        "gemini-3-5-flash": "#36a231",
-        "gemini-3-1-flash-lite": "#59c253",
+        "claude-sonnet-5-5": "#f06d67",
+        "claude-fable-5-1": "#b51221",
+        "gemini-3-8-flash": "#36a231",
+        "gemini-3-5-flash-lite": "#59c253",
+        "claude-haiku-5-5": "#fc8b83",       # $0.10 — lightest red step
+        "gpt-6-luna": "#5e99e5",             # $0.10 — lighter than Sol's base blue
+        "gpt-6-astra": "#0059b5",            # $10 — darker than Sol's base blue
     })
 
 THEMES = (LIGHT, DARK)
@@ -491,12 +495,8 @@ def _s(key: str, **kw) -> str:
 # hue and differ by a LIGHTNESS STEP (see Theme.tints); texture was the
 # previous mechanism and is gone.
 _SLOT_BY_FLAGSHIP: dict[str, int] = {
-    "qwen-3-8": 1, "llama-4": 0, "gemini-3-1-pro": 5, "o200k_base": 3,
-    "claude-new": 7, "claude-old": 6, "cl100k_base": 2,
-    # slot 4 (#e87ba4, magenta) is deliberately unassigned — headroom for one
-    # more tokenizer without disturbing any existing hue. Re-validate both
-    # rendered orders when spending it: it is sub-3:1 on this surface and sits
-    # ΔE 6.1 from aqua under protanopia, so where it lands is not free.
+    "gpt": 0, "qwen": 1, "cl100k_base": 2, "gemini": 5, "claude": 7,
+    # Slots 3 (amber), 4 (magenta) and 6 (violet) are unassigned headroom.
 }
 
 # LIGHTNESS separates SKUs that share a tokenizer, and therefore a hue. Fills
@@ -1588,8 +1588,7 @@ def _prune_stale(live: set[str]) -> None:
     # Remove figures for corpora this dataset no longer covers. The loop above
     # simply stops emitting them, which left four committed, publishable
     # `fig-*-<retired>.{svg,png}` on disk and in git, silently stale beside CSVs
-    # that no longer carried the corpus. analyze.py already unlinks
-    # within_vendor_inflation.csv for exactly this reason; this is its counterpart.
+    # that no longer carried the corpus.
     # Keyed on the four stems this module emits, so it can only ever remove files
     # it produced — and on `live` rather than config.CORPORA, since a corpus
     # retired from the config is exactly the case that leaves figures behind.
