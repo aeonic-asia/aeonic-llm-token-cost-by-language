@@ -2,6 +2,8 @@
 
 > **Aeonic fork** of [`AleksandarPetrov/tokenization-fairness`](https://github.com/AleksandarPetrov/tokenization-fairness) (MIT). The upstream research (below) measured 2023-era tokenizers. This fork extends the same method to a **current-generation, five-language token-cost eval** — the reproducible companion to Aeonic's *Vietnamese Token Tax* analysis.
 
+**Analysis of these results:** [Vietnamese on AI Models: The Cost Now Depends on the Vendor](https://aeonic.asia/insights/vietnamese-token-tax/) ([Tiếng Việt](https://aeonic.asia/vi/insights/thue-token-tieng-viet/))
+
 ## Aeonic eval (`eval/`)
 
 Measures how many tokens the same content costs across **English (baseline), Vietnamese, Chinese, Russian, German** on each vendor's current models, across **two committed parallel corpora** — FLORES+ (formal prose) and MASSIVE (short virtual-assistant utterances) — so the premium is reported in both a formal and a conversational register. Premium is always measured relative to English.
